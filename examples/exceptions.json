@@ -1,0 +1,47 @@
+{
+  "$schema": "../src/HardeningLens/Schema/exception.schema.json",
+  "schemaVersion": "1.0",
+  "exceptions": [
+    {
+      "id": "EXC-AVD-REMOTE-ASSISTANCE",
+      "controlId": "HL-RA-001",
+      "status": "Approved",
+      "owner": "Workplace Engineering",
+      "reason": "The approved support workflow uses solicited Remote Assistance on pilot session hosts.",
+      "ticket": "SEC-1842",
+      "expires": "2027-12-31",
+      "targets": [
+        "AVD-PILOT-*"
+      ],
+      "baselines": [
+        "AVDSessionHost"
+      ],
+      "approvedBy": "Security Engineering",
+      "approvedOn": "2026-07-01",
+      "compensatingControls": [
+        "Access is restricted to the support group.",
+        "Session activity is logged and reviewed.",
+        "The exception is limited to the pilot host pool."
+      ]
+    },
+    {
+      "id": "EXC-LAB-BITLOCKER",
+      "controlId": "HL-BIT-001",
+      "status": "Draft",
+      "owner": "Infrastructure Engineering",
+      "reason": "Disposable lab virtual machines are rebuilt from trusted automation and contain no production data.",
+      "ticket": "RISK-204",
+      "expires": "2027-10-31",
+      "targets": [
+        "LAB-*"
+      ],
+      "baselines": [
+        "MemberServer"
+      ],
+      "compensatingControls": [
+        "No production data is permitted.",
+        "The lab network is isolated."
+      ]
+    }
+  ]
+}

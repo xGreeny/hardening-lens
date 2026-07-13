@@ -1,0 +1,1714 @@
+{
+  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/result.schema.json",
+  "schemaVersion": "1.0",
+  "scan": {
+    "id": "e747bf2b-e9de-4e5a-bffe-514e51b86fe8",
+    "collectedAt": "2026-06-12T09:38:02.1200000Z",
+    "moduleVersion": "1.0.0",
+    "redacted": false,
+    "readOnly": true,
+    "elevated": true,
+    "partialCollection": false,
+    "exceptionRegisterUsed": true,
+    "selectedControlCount": 53
+  },
+  "system": {
+    "ComputerName": "SRV-DEMO-01",
+    "Domain": "LAB.EXAMPLE.INVALID",
+    "DomainJoined": true,
+    "DetectedRole": "MemberServer",
+    "ProductType": 3,
+    "OSCaption": "Microsoft Windows Server 2025 Standard",
+    "OSVersion": "10.0.26100",
+    "BuildNumber": "26100",
+    "OSArchitecture": "64-bit",
+    "Manufacturer": "Demo Hypervisor",
+    "Model": "Generation 2 Virtual Machine",
+    "PowerShellVersion": "7.6.3",
+    "PowerShellEdition": "Core",
+    "CurrentUser": "LAB\\audit.runner",
+    "IsElevated": true
+  },
+  "baseline": {
+    "name": "MemberServer",
+    "displayName": "Windows Member Server",
+    "version": "1.0.0",
+    "description": "Posture profile for domain-joined or centrally managed Windows member servers.",
+    "source": "BuiltIn",
+    "sourceBasis": [
+      "Microsoft Security Compliance Toolkit and current Microsoft Windows security guidance",
+      "Operational security telemetry and recoverability practices"
+    ],
+    "supportedRoles": [
+      "MemberServer"
+    ],
+    "controlCount": 53,
+    "notes": [
+      "Application roles can require documented exceptions. The profile does not infer application-specific firewall, service, or authentication requirements."
+    ]
+  },
+  "summary": {
+    "Total": 53,
+    "Applicable": 53,
+    "Pass": 41,
+    "Fail": 6,
+    "Warning": 3,
+    "Excepted": 1,
+    "Unknown": 1,
+    "Error": 1,
+    "NotApplicable": 0,
+    "HardeningScore": 79.2,
+    "EvidenceCoverage": 96.2,
+    "HighestOpenSeverity": "High",
+    "ScoringModel": "Severity-weighted pass percentage. Exceptions, unknowns, warnings, and errors receive no pass credit; not-applicable and informational controls are excluded."
+  },
+  "results": [
+    {
+      "controlId": "HL-ACC-001",
+      "title": "Built-in Guest account is disabled",
+      "category": "Identity",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Disabled",
+      "actual": "Disabled",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "LocalGuestAccount",
+        "Resolved": true
+      },
+      "rationale": "An enabled guest account provides an unnecessary logon path with weak accountability.",
+      "remediation": "Disable the built-in Guest account through Group Policy, Intune, or local security policy and verify that no application depends on it.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "account",
+        "local-security"
+      ],
+      "probe": "LocalGuestAccount",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-UAC-001",
+      "title": "User Account Control is enabled",
+      "category": "Privilege Management",
+      "severity": "Critical",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": 1,
+      "actual": 1,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "RegistryValue",
+        "Resolved": true,
+        "Path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+        "Name": "EnableLUA",
+        "Value": 1
+      },
+      "rationale": "Disabling UAC removes an important privilege boundary and weakens multiple Windows security features.",
+      "remediation": "Set \"User Account Control: Run all administrators in Admin Approval Mode\" to Enabled and restart the device.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/application-security/application-control/user-account-control/settings-and-configuration"
+      ],
+      "tags": [
+        "uac",
+        "privilege"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-UAC-002",
+      "title": "Administrator elevation prompts require consent",
+      "category": "Privilege Management",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "actual": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "RegistryValue",
+        "Resolved": true,
+        "Path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+        "Name": "ConsentPromptBehaviorAdmin",
+        "Value": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "rationale": "Silent elevation makes malicious or accidental privileged execution harder to detect and contain.",
+      "remediation": "Configure the administrator elevation prompt to \"Prompt for consent for non-Windows binaries\" or a stricter credential prompt.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/application-security/application-control/user-account-control/settings-and-configuration"
+      ],
+      "tags": [
+        "uac",
+        "privilege"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-UAC-003",
+      "title": "Built-in Administrator uses Admin Approval Mode",
+      "category": "Privilege Management",
+      "severity": "Medium",
+      "status": "Fail",
+      "originalStatus": null,
+      "expected": 1,
+      "actual": 0,
+      "message": "The built-in Administrator account is not running in Admin Approval Mode.",
+      "evidence": {
+        "Path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+        "Name": "FilterAdministratorToken",
+        "Value": 0,
+        "Kind": "DWord"
+      },
+      "rationale": "The built-in Administrator otherwise runs with a full token without UAC consent.",
+      "remediation": "Set \"User Account Control: Admin Approval Mode for the Built-in Administrator account\" to Enabled.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/application-security/application-control/user-account-control/settings-and-configuration"
+      ],
+      "tags": [
+        "uac",
+        "privilege"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-LSA-001",
+      "title": "LSA protection is enabled",
+      "category": "Credential Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": [
+        1,
+        2
+      ],
+      "actual": [
+        1,
+        2
+      ],
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "RegistryValue",
+        "Resolved": true,
+        "Path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+        "Name": "RunAsPPL",
+        "Value": [
+          1,
+          2
+        ]
+      },
+      "rationale": "LSA protection raises the bar for credential theft and blocks untrusted code from loading into LSASS.",
+      "remediation": "Enable \"Configure LSASS to run as a protected process\" in policy. Test authentication and security software compatibility before broad enforcement.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/security/credentials-protection-and-management/configuring-additional-lsa-protection"
+      ],
+      "tags": [
+        "lsa",
+        "credentials"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-CRED-001",
+      "title": "WDigest credential caching is disabled",
+      "category": "Credential Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": 0,
+      "actual": 0,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "RegistryValue",
+        "Resolved": true,
+        "Path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest",
+        "Name": "UseLogonCredential",
+        "Value": 0
+      },
+      "rationale": "Enabling WDigest credential caching can expose plaintext credentials to memory-access attacks.",
+      "remediation": "Set UseLogonCredential to 0 under the WDigest security provider policy. A missing value is treated as the secure modern default.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "wdigest",
+        "credentials"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-CRED-002",
+      "title": "Credential Guard is running",
+      "category": "Credential Protection",
+      "severity": "High",
+      "status": "Unknown",
+      "originalStatus": null,
+      "expected": "Credential Guard running",
+      "actual": null,
+      "message": "The Device Guard WMI provider did not return Credential Guard state.",
+      "evidence": {
+        "Namespace": "root\\Microsoft\\Windows\\DeviceGuard",
+        "ProviderAvailable": false
+      },
+      "rationale": "Credential Guard uses virtualization-based security to isolate secrets from the normal operating system.",
+      "remediation": "Enable virtualization-based security and Credential Guard with the deployment mode appropriate for the device. Validate VPN, Wi-Fi, delegation, and legacy authentication dependencies first.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/identity-protection/credential-guard/configure"
+      ],
+      "tags": [
+        "credential-guard",
+        "vbs"
+      ],
+      "probe": "CredentialGuard",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-LAPS-001",
+      "title": "Windows LAPS password backup is configured",
+      "category": "Credential Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Microsoft Entra ID or Active Directory",
+      "actual": "Microsoft Entra ID or Active Directory",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "LapsBackup",
+        "Resolved": true
+      },
+      "rationale": "Unique, rotated local administrator passwords reduce lateral movement and shared-password risk.",
+      "remediation": "Configure Windows LAPS BackupDirectory through Intune CSP or Group Policy and validate permissions to retrieve passwords.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/laps/laps-management-policy-settings"
+      ],
+      "tags": [
+        "laps",
+        "local-admin"
+      ],
+      "probe": "LapsBackup",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-LAPS-002",
+      "title": "Windows LAPS password age is 30 days or less",
+      "category": "Credential Protection",
+      "severity": "Medium",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "<= 30 days",
+      "actual": "<= 30 days",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "LapsPasswordAge",
+        "Resolved": true
+      },
+      "rationale": "Regular rotation limits the useful lifetime of a disclosed local administrator password.",
+      "remediation": "Configure PasswordAgeDays to 30 or fewer days, balancing rotation with operational recovery requirements.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/laps/laps-management-policy-settings"
+      ],
+      "tags": [
+        "laps",
+        "rotation"
+      ],
+      "probe": "LapsPasswordAge",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-LAPS-003",
+      "title": "Windows LAPS AD password encryption is enabled",
+      "category": "Credential Protection",
+      "severity": "High",
+      "status": "Fail",
+      "originalStatus": null,
+      "expected": "Enabled",
+      "actual": "Disabled",
+      "message": "Windows LAPS is backed up to Active Directory, but password encryption is disabled.",
+      "evidence": {
+        "PolicySource": "GroupPolicy",
+        "BackupDirectory": 2,
+        "ADPasswordEncryptionEnabled": 0,
+        "PasswordAgeDays": 30
+      },
+      "rationale": "AD password encryption narrows exposure of stored LAPS secrets and enables stronger authorization controls.",
+      "remediation": "Enable ADPasswordEncryptionEnabled for Active Directory-backed Windows LAPS after confirming the domain functional level and authorized decryptors.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/laps/laps-management-policy-settings"
+      ],
+      "tags": [
+        "laps",
+        "active-directory"
+      ],
+      "probe": "LapsAdEncryption",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-ANON-001",
+      "title": "Anonymous SAM enumeration is restricted",
+      "category": "Identity",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": 1,
+      "actual": 1,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "RegistryValue",
+        "Resolved": true,
+        "Path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+        "Name": "RestrictAnonymousSAM",
+        "Value": 1
+      },
+      "rationale": "Anonymous enumeration can disclose account information useful for reconnaissance.",
+      "remediation": "Set \"Network access: Do not allow anonymous enumeration of SAM accounts\" to Enabled.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "anonymous",
+        "sam"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-ANON-002",
+      "title": "Anonymous access is restricted",
+      "category": "Identity",
+      "severity": "Medium",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": 1,
+      "actual": 1,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "RegistryValue",
+        "Resolved": true,
+        "Path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+        "Name": "RestrictAnonymous",
+        "Value": 1
+      },
+      "rationale": "Restricting anonymous access reduces unauthenticated information disclosure and legacy null-session behavior.",
+      "remediation": "Set \"Network access: Do not allow anonymous enumeration of SAM accounts and shares\" to Enabled where compatible.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "anonymous",
+        "network"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-FW-001",
+      "title": "Windows Firewall is enabled for every profile",
+      "category": "Network Protection",
+      "severity": "Critical",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Enabled with default inbound Block",
+      "actual": "Enabled with default inbound Block",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "FirewallProfiles",
+        "Resolved": true
+      },
+      "rationale": "Host firewalls limit lateral movement and provide protection when network controls are absent or bypassed.",
+      "remediation": "Enable Windows Firewall for all profiles and deploy explicit allow rules for required management and application traffic.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/network-security/windows-firewall/best-practices-configuring"
+      ],
+      "tags": [
+        "firewall"
+      ],
+      "probe": "FirewallProfiles",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-FW-002",
+      "title": "Default inbound firewall action is Block",
+      "category": "Network Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Enabled with default inbound Block",
+      "actual": "Enabled with default inbound Block",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "FirewallProfiles",
+        "Resolved": true
+      },
+      "rationale": "A default-deny inbound posture limits unplanned exposure when no explicit rule exists.",
+      "remediation": "Set the default inbound action to Block for Domain, Private, and Public profiles, then maintain explicit allow rules.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/network-security/windows-firewall/best-practices-configuring"
+      ],
+      "tags": [
+        "firewall",
+        "default-deny"
+      ],
+      "probe": "FirewallProfiles",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-SMB-001",
+      "title": "SMBv1 server component is disabled",
+      "category": "Network Protection",
+      "severity": "Critical",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Disabled or absent",
+      "actual": "Disabled or absent",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "WindowsOptionalFeature",
+        "Resolved": true
+      },
+      "rationale": "SMBv1 is obsolete and lacks modern security protections.",
+      "remediation": "Remove or disable the SMB 1.0/CIFS server component after identifying legacy dependencies.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3"
+      ],
+      "tags": [
+        "smb",
+        "legacy"
+      ],
+      "probe": "WindowsOptionalFeature",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-SMB-002",
+      "title": "SMBv1 client component is disabled",
+      "category": "Network Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Disabled or absent",
+      "actual": "Disabled or absent",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "WindowsOptionalFeature",
+        "Resolved": true
+      },
+      "rationale": "An SMBv1 client can be coerced into using an obsolete protocol against malicious or legacy servers.",
+      "remediation": "Remove or disable the SMB 1.0/CIFS client component after identifying legacy dependencies.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3"
+      ],
+      "tags": [
+        "smb",
+        "legacy"
+      ],
+      "probe": "WindowsOptionalFeature",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-SMB-003",
+      "title": "SMB server signing is required",
+      "category": "Network Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": true,
+      "actual": true,
+      "message": "SMB server signing is required.",
+      "evidence": {
+        "Side": "Server",
+        "Property": "RequireSecuritySignature",
+        "Value": true
+      },
+      "rationale": "Required signing helps protect SMB traffic from tampering and relay attacks.",
+      "remediation": "Require SMB server signing through Group Policy or the SMB server configuration. Validate legacy clients before rollout.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/storage/file-server/smb-signing"
+      ],
+      "tags": [
+        "smb",
+        "signing"
+      ],
+      "probe": "SmbServer",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-SMB-004",
+      "title": "SMB client signing is required",
+      "category": "Network Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": true,
+      "actual": true,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "SmbClient",
+        "Resolved": true
+      },
+      "rationale": "Required client signing helps prevent downgrade and relay scenarios when connecting to file services.",
+      "remediation": "Require SMB client signing through Group Policy or SMB client configuration. Validate legacy appliances first.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/storage/file-server/smb-signing"
+      ],
+      "tags": [
+        "smb",
+        "signing"
+      ],
+      "probe": "SmbClient",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-SMB-005",
+      "title": "Insecure SMB guest authentication is disabled",
+      "category": "Network Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": false,
+      "actual": false,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "SmbClient",
+        "Resolved": true
+      },
+      "rationale": "Guest SMB authentication removes identity assurance and does not support normal signing and encryption guarantees.",
+      "remediation": "Disable insecure guest logons and provide authenticated access to file services.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/storage/file-server/smb-signing"
+      ],
+      "tags": [
+        "smb",
+        "guest"
+      ],
+      "probe": "SmbClient",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-RDP-001",
+      "title": "Remote Desktop requires Network Level Authentication",
+      "category": "Remote Administration",
+      "severity": "High",
+      "status": "Fail",
+      "originalStatus": null,
+      "expected": 1,
+      "actual": 0,
+      "message": "Remote Desktop does not require Network Level Authentication.",
+      "evidence": {
+        "Path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp",
+        "Name": "UserAuthentication",
+        "Value": 0
+      },
+      "rationale": "NLA reduces pre-authentication attack surface and resource consumption.",
+      "remediation": "Enable \"Require user authentication for remote connections by using Network Level Authentication.\"",
+      "references": [
+        "https://learn.microsoft.com/windows-server/remote/remote-desktop-services/clients/remote-desktop-allow-access"
+      ],
+      "tags": [
+        "rdp",
+        "nla"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-WINRM-001",
+      "title": "WinRM Basic authentication is disabled",
+      "category": "Remote Administration",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": false,
+      "actual": false,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "WinRM",
+        "Resolved": true
+      },
+      "rationale": "Basic authentication relies on transport protection and is unnecessary in most domain-managed environments.",
+      "remediation": "Disable Basic authentication for WinRM client and service. Use Kerberos, certificate authentication, or another approved mechanism.",
+      "references": [
+        "https://learn.microsoft.com/windows/win32/winrm/installation-and-configuration-for-windows-remote-management"
+      ],
+      "tags": [
+        "winrm",
+        "authentication"
+      ],
+      "probe": "WinRM",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-WINRM-002",
+      "title": "WinRM unencrypted traffic is disabled",
+      "category": "Remote Administration",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": false,
+      "actual": false,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "WinRM",
+        "Resolved": true
+      },
+      "rationale": "Allowing unencrypted WinRM traffic can expose management data and credentials.",
+      "remediation": "Disable unencrypted WinRM traffic and use HTTPS or message-level protection provided by supported authentication protocols.",
+      "references": [
+        "https://learn.microsoft.com/windows/win32/winrm/installation-and-configuration-for-windows-remote-management"
+      ],
+      "tags": [
+        "winrm",
+        "encryption"
+      ],
+      "probe": "WinRM",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-NET-001",
+      "title": "LLMNR is disabled",
+      "category": "Network Protection",
+      "severity": "Medium",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": 0,
+      "actual": 0,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "RegistryValue",
+        "Resolved": true,
+        "Path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient",
+        "Name": "EnableMulticast",
+        "Value": 0
+      },
+      "rationale": "LLMNR can enable name-resolution poisoning and credential relay when DNS resolution fails.",
+      "remediation": "Enable \"Turn off multicast name resolution\" after validating name-resolution dependencies.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "llmnr",
+        "name-resolution"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-SVC-001",
+      "title": "Remote Registry service is disabled",
+      "category": "Remote Administration",
+      "severity": "Medium",
+      "status": "Fail",
+      "originalStatus": null,
+      "expected": "Disabled and stopped",
+      "actual": "Automatic, Running",
+      "message": "Remote Registry is configured for automatic startup and is currently running.",
+      "evidence": {
+        "Name": "RemoteRegistry",
+        "DisplayName": "Remote Registry",
+        "StartMode": "Auto",
+        "State": "Running"
+      },
+      "rationale": "Remote Registry expands the remote administration surface and is unnecessary for many systems.",
+      "remediation": "Disable the Remote Registry service unless a documented management dependency exists.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "service",
+        "remote-registry"
+      ],
+      "probe": "Service",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-NTLM-001",
+      "title": "LAN Manager authentication level refuses LM and NTLMv1",
+      "category": "Credential Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": 5,
+      "actual": 5,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "RegistryValue",
+        "Resolved": true,
+        "Path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+        "Name": "LmCompatibilityLevel",
+        "Value": 5
+      },
+      "rationale": "LM and NTLMv1 provide materially weaker authentication than NTLMv2 or Kerberos.",
+      "remediation": "Set \"Network security: LAN Manager authentication level\" to \"Send NTLMv2 response only. Refuse LM & NTLM\" after auditing legacy dependencies.",
+      "references": [
+        "https://learn.microsoft.com/previous-versions/windows/it-pro/windows-10/security/threat-protection/security-policy-settings/network-security-lan-manager-authentication-level"
+      ],
+      "tags": [
+        "ntlm",
+        "legacy-auth"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-DEF-001",
+      "title": "Microsoft Defender real-time protection is enabled",
+      "category": "Endpoint Protection",
+      "severity": "Critical",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": true,
+      "actual": true,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "DefenderStatus",
+        "Resolved": true,
+        "Property": "RealTimeProtectionEnabled",
+        "Value": true
+      },
+      "rationale": "Real-time protection inspects activity as files and processes are accessed.",
+      "remediation": "Enable real-time protection or document an approved third-party endpoint protection exception.",
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "real-time"
+      ],
+      "probe": "DefenderStatus",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-DEF-002",
+      "title": "Cloud-delivered protection is enabled",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": [
+        1,
+        2
+      ],
+      "actual": [
+        1,
+        2
+      ],
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "DefenderPreference",
+        "Resolved": true,
+        "Property": "MAPSReporting",
+        "Value": [
+          1,
+          2
+        ]
+      },
+      "rationale": "Cloud-delivered protection improves detection of new and rapidly changing threats.",
+      "remediation": "Enable cloud-delivered protection at the organization-approved membership level.",
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "cloud"
+      ],
+      "probe": "DefenderPreference",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-DEF-003",
+      "title": "Behavior monitoring is enabled",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": true,
+      "actual": true,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "DefenderStatus",
+        "Resolved": true,
+        "Property": "BehaviorMonitorEnabled",
+        "Value": true
+      },
+      "rationale": "Behavior monitoring detects suspicious runtime activity that static signatures can miss.",
+      "remediation": "Enable behavior monitoring in Microsoft Defender Antivirus policy.",
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "behavior"
+      ],
+      "probe": "DefenderStatus",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-DEF-004",
+      "title": "Downloaded files and attachments are scanned",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": true,
+      "actual": true,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "DefenderStatus",
+        "Resolved": true,
+        "Property": "IoavProtectionEnabled",
+        "Value": true
+      },
+      "rationale": "Scanning downloaded files and attachments reduces exposure from common delivery channels.",
+      "remediation": "Enable IOAV protection in Microsoft Defender Antivirus policy.",
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "ioav"
+      ],
+      "probe": "DefenderStatus",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-DEF-005",
+      "title": "Automatic sample submission is enabled",
+      "category": "Endpoint Protection",
+      "severity": "Medium",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": [
+        1,
+        3
+      ],
+      "actual": [
+        1,
+        3
+      ],
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "DefenderPreference",
+        "Resolved": true,
+        "Property": "SubmitSamplesConsent",
+        "Value": [
+          1,
+          3
+        ]
+      },
+      "rationale": "Sample submission improves cloud analysis and response time for unknown files.",
+      "remediation": "Configure sample submission according to organizational privacy requirements; avoid Never Send unless formally accepted.",
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "samples"
+      ],
+      "probe": "DefenderPreference",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-DEF-006",
+      "title": "Potentially unwanted application protection is enabled",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": 1,
+      "actual": 1,
+      "message": "Potentially unwanted application protection is enabled in Block mode.",
+      "evidence": {
+        "Property": "PUAProtection",
+        "Value": 1,
+        "Mode": "Block"
+      },
+      "rationale": "PUA blocking reduces adware, bundlers, and software that weakens device security.",
+      "remediation": "Set potentially unwanted application protection to Block.",
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "pua"
+      ],
+      "probe": "DefenderPreference",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-DEF-007",
+      "title": "Microsoft Defender tamper protection is enabled",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": true,
+      "actual": true,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "DefenderStatus",
+        "Resolved": true,
+        "Property": "IsTamperProtected",
+        "Value": true
+      },
+      "rationale": "Tamper protection helps prevent unauthorized changes to core endpoint protection settings.",
+      "remediation": "Enable tamper protection through the Microsoft Defender portal or supported management channel.",
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "tamper-protection"
+      ],
+      "probe": "DefenderStatus",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-DEF-008",
+      "title": "Defender signatures are recent",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "<= 3 days",
+      "actual": "<= 3 days",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "DefenderSignatureAge",
+        "Resolved": true
+      },
+      "rationale": "Stale signatures reduce detection coverage, particularly when cloud protection is unavailable.",
+      "remediation": "Restore update connectivity and investigate update channel, proxy, or platform health issues.",
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "signatures"
+      ],
+      "probe": "DefenderSignatureAge",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-DEF-009",
+      "title": "Defender network protection is enabled",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "status": "Warning",
+      "originalStatus": null,
+      "expected": 1,
+      "actual": 2,
+      "message": "Defender network protection is configured in Audit mode rather than Block mode.",
+      "evidence": {
+        "Property": "EnableNetworkProtection",
+        "Value": 2,
+        "Mode": "Audit"
+      },
+      "rationale": "Network protection blocks connections to malicious or low-reputation destinations from supported processes.",
+      "remediation": "Deploy network protection in audit mode first, review impact, then enable block mode.",
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "network-protection"
+      ],
+      "probe": "DefenderPreference",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-ASR-001",
+      "title": "Core Attack Surface Reduction rules are enforced",
+      "category": "Attack Surface Reduction",
+      "severity": "High",
+      "status": "Warning",
+      "originalStatus": null,
+      "expected": "5 required rules in approved enforcement modes",
+      "actual": "6 pass, 1 audit-only, 0 fail",
+      "message": "One required ASR rule remains in Audit mode.",
+      "evidence": [
+        {
+          "Name": "Block Office applications from creating child processes",
+          "Action": 2,
+          "ActionName": "Audit",
+          "Result": "Warning"
+        }
+      ],
+      "rationale": "ASR rules disrupt common malware behaviors such as credential theft, malicious Office child processes, and ransomware activity.",
+      "remediation": "Pilot non-standard rules in Audit mode, tune legitimate impact, and move approved rules to Block or Warn. Avoid broad exclusions.",
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/attack-surface-reduction-rules-reference",
+        "https://learn.microsoft.com/defender-endpoint/attack-surface-reduction-rules-overview"
+      ],
+      "tags": [
+        "asr",
+        "defender"
+      ],
+      "probe": "AsrRules",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-PS-001",
+      "title": "Windows PowerShell 2.0 is disabled",
+      "category": "Scripting Security",
+      "severity": "High",
+      "status": "Warning",
+      "originalStatus": null,
+      "expected": "Disabled or absent",
+      "actual": "Disable pending",
+      "message": "Windows PowerShell 2.0 is pending disablement and requires a restart.",
+      "evidence": [
+        {
+          "FeatureName": "MicrosoftWindowsPowerShellV2Root",
+          "Present": true,
+          "State": "DisablePending",
+          "Evaluated": true
+        },
+        {
+          "FeatureName": "MicrosoftWindowsPowerShellV2",
+          "Present": true,
+          "State": "Disabled",
+          "Evaluated": true
+        }
+      ],
+      "rationale": "PowerShell 2.0 lacks modern logging and security capabilities and can be abused for downgrade attacks.",
+      "remediation": "Remove the Windows PowerShell 2.0 optional feature after validating legacy script compatibility.",
+      "references": [
+        "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-7.5"
+      ],
+      "tags": [
+        "powershell",
+        "legacy"
+      ],
+      "probe": "WindowsOptionalFeature",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-PSLOG-001",
+      "title": "PowerShell Script Block Logging is enabled",
+      "category": "Security Logging",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": 1,
+      "actual": 1,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "RegistryValue",
+        "Resolved": true,
+        "Path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",
+        "Name": "EnableScriptBlockLogging",
+        "Value": 1
+      },
+      "rationale": "Script Block Logging records de-obfuscated PowerShell content and provides high-value investigation telemetry.",
+      "remediation": "Enable \"Turn on PowerShell Script Block Logging.\" Protect and forward the PowerShell Operational log.",
+      "references": [
+        "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-7.5"
+      ],
+      "tags": [
+        "powershell",
+        "logging"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-PSLOG-002",
+      "title": "PowerShell Module Logging is enabled",
+      "category": "Security Logging",
+      "severity": "Medium",
+      "status": "Fail",
+      "originalStatus": null,
+      "expected": "Enabled with at least one module pattern",
+      "actual": "Disabled or not configured",
+      "message": "PowerShell Module Logging is not enabled through machine policy.",
+      "evidence": {
+        "Enabled": null,
+        "ModulePatterns": [],
+        "PolicyPath": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ModuleLogging"
+      },
+      "rationale": "Module logging adds pipeline and command visibility that complements Script Block Logging.",
+      "remediation": "Enable PowerShell Module Logging and configure approved module patterns, commonly \"*\" for broad visibility after sizing log collection.",
+      "references": [
+        "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-7.5"
+      ],
+      "tags": [
+        "powershell",
+        "logging"
+      ],
+      "probe": "PowerShellModuleLogging",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-PSLOG-003",
+      "title": "Process creation events include command lines",
+      "category": "Security Logging",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": 1,
+      "actual": 1,
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "RegistryValue",
+        "Resolved": true,
+        "Path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Audit",
+        "Name": "ProcessCreationIncludeCmdLine_Enabled",
+        "Value": 1
+      },
+      "rationale": "Command-line context substantially improves investigation and detection quality for process creation events.",
+      "remediation": "Enable \"Include command line in process creation events.\" Restrict Security log access because arguments can contain sensitive data.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing"
+      ],
+      "tags": [
+        "process-creation",
+        "logging"
+      ],
+      "probe": "RegistryValue",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-AUD-001",
+      "title": "Credential Validation auditing captures success and failure",
+      "category": "Advanced Auditing",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Success and Failure",
+      "actual": "Success and Failure",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "AuditPolicy",
+        "Resolved": true,
+        "SubcategoryName": "Credential Validation",
+        "SubcategoryGuid": "0cce923f-69ae-11d9-bed3-505054503030",
+        "RequiredFlags": [
+          "Success",
+          "Failure"
+        ]
+      },
+      "rationale": "Credential validation events provide visibility into authentication attempts and failures.",
+      "remediation": "Configure Advanced Audit Policy: Account Logon > Credential Validation to Success and Failure.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "authentication"
+      ],
+      "probe": "AuditPolicy",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-AUD-002",
+      "title": "Security Group Management auditing captures success",
+      "category": "Advanced Auditing",
+      "severity": "Medium",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Success",
+      "actual": "Success",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "AuditPolicy",
+        "Resolved": true,
+        "SubcategoryName": "Security Group Management",
+        "SubcategoryGuid": "0cce9237-69ae-11d9-bed3-505054503030",
+        "RequiredFlags": [
+          "Success"
+        ]
+      },
+      "rationale": "Changes to privileged and access-control groups are high-value identity events.",
+      "remediation": "Configure Advanced Audit Policy: Account Management > Security Group Management to include Success.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "groups"
+      ],
+      "probe": "AuditPolicy",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-AUD-003",
+      "title": "User Account Management auditing captures success and failure",
+      "category": "Advanced Auditing",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Success and Failure",
+      "actual": "Success and Failure",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "AuditPolicy",
+        "Resolved": true,
+        "SubcategoryName": "User Account Management",
+        "SubcategoryGuid": "0cce9235-69ae-11d9-bed3-505054503030",
+        "RequiredFlags": [
+          "Success",
+          "Failure"
+        ]
+      },
+      "rationale": "User account creation, deletion, enablement, and password changes require reliable audit visibility.",
+      "remediation": "Configure Advanced Audit Policy: Account Management > User Account Management to Success and Failure.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "accounts"
+      ],
+      "probe": "AuditPolicy",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-AUD-004",
+      "title": "Process Creation auditing captures success",
+      "category": "Advanced Auditing",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Success",
+      "actual": "Success",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "AuditPolicy",
+        "Resolved": true,
+        "SubcategoryName": "Process Creation",
+        "SubcategoryGuid": "0cce922b-69ae-11d9-bed3-505054503030",
+        "RequiredFlags": [
+          "Success"
+        ]
+      },
+      "rationale": "Process creation telemetry is foundational for Windows detection engineering and incident response.",
+      "remediation": "Configure Advanced Audit Policy: Detailed Tracking > Process Creation to include Success.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "process"
+      ],
+      "probe": "AuditPolicy",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-AUD-005",
+      "title": "Logon auditing captures success and failure",
+      "category": "Advanced Auditing",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Success and Failure",
+      "actual": "Success and Failure",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "AuditPolicy",
+        "Resolved": true,
+        "SubcategoryName": "Logon",
+        "SubcategoryGuid": "0cce9215-69ae-11d9-bed3-505054503030",
+        "RequiredFlags": [
+          "Success",
+          "Failure"
+        ]
+      },
+      "rationale": "Successful and failed logon events support authentication monitoring, investigation, and anomaly detection.",
+      "remediation": "Configure Advanced Audit Policy: Logon/Logoff > Logon to Success and Failure.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "logon"
+      ],
+      "probe": "AuditPolicy",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-AUD-006",
+      "title": "Special Logon auditing captures success",
+      "category": "Advanced Auditing",
+      "severity": "Medium",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Success",
+      "actual": "Success",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "AuditPolicy",
+        "Resolved": true,
+        "SubcategoryName": "Special Logon",
+        "SubcategoryGuid": "0cce921b-69ae-11d9-bed3-505054503030",
+        "RequiredFlags": [
+          "Success"
+        ]
+      },
+      "rationale": "Special logon events identify sessions receiving administrator-equivalent privileges.",
+      "remediation": "Configure Advanced Audit Policy: Logon/Logoff > Special Logon to include Success.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "privilege"
+      ],
+      "probe": "AuditPolicy",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-AUD-007",
+      "title": "Audit Policy Change auditing captures success",
+      "category": "Advanced Auditing",
+      "severity": "High",
+      "status": "Error",
+      "originalStatus": null,
+      "expected": "Success",
+      "actual": null,
+      "message": "AuditQuerySystemPolicy returned access denied while reading Audit Policy Change.",
+      "evidence": {
+        "SubcategoryName": "Audit Policy Change",
+        "SubcategoryGuid": "0cce922f-69ae-11d9-bed3-505054503030",
+        "Win32Error": 5
+      },
+      "rationale": "Changes to audit policy can reduce visibility and should themselves be observable.",
+      "remediation": "Configure Advanced Audit Policy: Policy Change > Audit Policy Change to include Success.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "policy-change"
+      ],
+      "probe": "AuditPolicy",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-LOG-001",
+      "title": "Security event log has sufficient capacity",
+      "category": "Security Logging",
+      "severity": "Medium",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "At least 1073741824 bytes",
+      "actual": "At least 1073741824 bytes",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "EventLog",
+        "Resolved": true,
+        "LogName": "Security",
+        "MaximumSizeBytes": 1073741824,
+        "IsEnabled": true
+      },
+      "rationale": "Undersized logs can overwrite evidence before it is collected or investigated.",
+      "remediation": "Increase the Security log maximum size and forward relevant events to centralized storage.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/ad-ds/plan/appendix-l--events-to-monitor"
+      ],
+      "tags": [
+        "event-log",
+        "security"
+      ],
+      "probe": "EventLog",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-LOG-002",
+      "title": "System event log has sufficient capacity",
+      "category": "Security Logging",
+      "severity": "Low",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "At least 268435456 bytes",
+      "actual": "At least 268435456 bytes",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "EventLog",
+        "Resolved": true,
+        "LogName": "System",
+        "MaximumSizeBytes": 268435456,
+        "IsEnabled": true
+      },
+      "rationale": "Adequate retention supports troubleshooting and incident reconstruction.",
+      "remediation": "Increase the System log maximum size based on event volume and forwarding latency.",
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/ad-ds/plan/appendix-l--events-to-monitor"
+      ],
+      "tags": [
+        "event-log",
+        "system"
+      ],
+      "probe": "EventLog",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-LOG-003",
+      "title": "PowerShell Operational log has sufficient capacity",
+      "category": "Security Logging",
+      "severity": "Medium",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "At least 134217728 bytes",
+      "actual": "At least 134217728 bytes",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "EventLog",
+        "Resolved": true,
+        "LogName": "Microsoft-Windows-PowerShell/Operational",
+        "MaximumSizeBytes": 134217728,
+        "IsEnabled": true
+      },
+      "rationale": "PowerShell telemetry can be high volume and valuable evidence can be lost if the log is too small.",
+      "remediation": "Enable the PowerShell Operational log and increase its maximum size based on script activity and forwarding latency.",
+      "references": [
+        "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-7.5"
+      ],
+      "tags": [
+        "event-log",
+        "powershell"
+      ],
+      "probe": "EventLog",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-BIT-001",
+      "title": "Operating system volume is protected by BitLocker",
+      "category": "Data Protection",
+      "severity": "High",
+      "status": "Fail",
+      "originalStatus": null,
+      "expected": "Protection On and FullyEncrypted",
+      "actual": "Off, FullyDecrypted",
+      "message": "The operating system volume is not protected by BitLocker.",
+      "evidence": {
+        "MountPoint": "C:",
+        "VolumeStatus": "FullyDecrypted",
+        "ProtectionStatus": "Off",
+        "EncryptionMethod": "None",
+        "KeyProtectorTypes": []
+      },
+      "rationale": "Full-volume encryption protects data at rest when storage media or devices are lost or removed.",
+      "remediation": "Enable BitLocker using an approved protector and escrow recovery information in the organization-approved directory.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/data-protection/bitlocker/"
+      ],
+      "tags": [
+        "bitlocker",
+        "encryption"
+      ],
+      "probe": "BitLocker",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-BOOT-001",
+      "title": "Secure Boot is enabled",
+      "category": "Platform Security",
+      "severity": "Medium",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Enabled",
+      "actual": "Enabled",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "SecureBoot",
+        "Resolved": true
+      },
+      "rationale": "Secure Boot helps prevent untrusted boot components from loading before Windows.",
+      "remediation": "Enable UEFI Secure Boot after validating firmware, operating system, and virtualization support.",
+      "references": [
+        "https://learn.microsoft.com/windows-hardware/design/device-experiences/oem-secure-boot"
+      ],
+      "tags": [
+        "secure-boot",
+        "firmware"
+      ],
+      "probe": "SecureBoot",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-AUTORUN-001",
+      "title": "AutoRun and AutoPlay are disabled",
+      "category": "Attack Surface Reduction",
+      "severity": "Medium",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "NoDriveTypeAutoRun=255 and NoAutorun=1",
+      "actual": "NoDriveTypeAutoRun=255 and NoAutorun=1",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "AutoRun",
+        "Resolved": true
+      },
+      "rationale": "Automatic execution from removable media increases malware delivery risk.",
+      "remediation": "Disable AutoPlay for all drives and disable AutoRun commands through Group Policy or Intune.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "autorun",
+        "removable-media"
+      ],
+      "probe": "AutoRun",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    },
+    {
+      "controlId": "HL-RA-001",
+      "title": "Solicited Remote Assistance is disabled",
+      "category": "Remote Administration",
+      "severity": "Low",
+      "status": "Excepted",
+      "originalStatus": "Fail",
+      "expected": 0,
+      "actual": 1,
+      "message": "Solicited Remote Assistance is enabled for the approved support workflow.",
+      "evidence": {
+        "Path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Remote Assistance",
+        "Name": "fAllowToGetHelp",
+        "Value": 1,
+        "Kind": "DWord"
+      },
+      "rationale": "Remote Assistance adds an interactive remote-access path that should be explicitly justified.",
+      "remediation": "Disable \"Configure Solicited Remote Assistance\" unless the support model requires it; use a documented exception when enabled.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "remote-assistance"
+      ],
+      "probe": "RegistryValue",
+      "exception": {
+        "id": "EXC-DEMO-REMOTE-ASSISTANCE",
+        "owner": "Workplace Engineering",
+        "reason": "The approved support workflow requires solicited Remote Assistance on this managed server group.",
+        "ticket": "SEC-1842",
+        "expires": "2027-06-30",
+        "approvedBy": "Security Engineering",
+        "compensatingControls": [
+          "Access is restricted to the support group.",
+          "Session activity is logged and reviewed."
+        ]
+      },
+      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+name: Bug report
+description: Report incorrect evaluation, report generation, or module behavior.
+title: "bug: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Remove host, domain, user, tenant, and customer identifiers before submitting evidence.
+  - type: input
+    id: version
+    attributes:
+      label: Hardening Lens version
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: edition
+    attributes:
+      label: PowerShell edition
+      options:
+        - Windows PowerShell 5.1
+        - PowerShell 7.x
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows edition and build
+      placeholder: Windows Server 2025, build 26100
+    validations:
+      required: true
+  - type: input
+    id: control
+    attributes:
+      label: Control ID
+      placeholder: HL-SMB-003 or not control-specific
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observed behavior
+      description: Include the status, actual value, and redacted evidence.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      render: powershell
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data review
+      options:
+        - label: I removed production identifiers and secrets.
+          required: true

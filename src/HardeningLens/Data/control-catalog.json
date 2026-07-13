@@ -1,0 +1,1372 @@
+{
+  "$schema": "../Schema/control-catalog.schema.json",
+  "schemaVersion": "1.0",
+  "catalogVersion": "1.0.0",
+  "generatedOn": "2026-07-12",
+  "description": "Curated read-only Windows security posture controls for Hardening Lens. Controls are Microsoft-aligned operational checks, not a verbatim vendor baseline or certification.",
+  "controls": [
+    {
+      "id": "HL-ACC-001",
+      "title": "Built-in Guest account is disabled",
+      "category": "Identity",
+      "severity": "High",
+      "probe": "LocalGuestAccount",
+      "description": "Checks the local account identified by the well-known RID 501 rather than relying on a localized account name.",
+      "rationale": "An enabled guest account provides an unnecessary logon path with weak accountability.",
+      "remediation": "Disable the built-in Guest account through Group Policy, Intune, or local security policy and verify that no application depends on it.",
+      "parameters": {},
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "account",
+        "local-security"
+      ]
+    },
+    {
+      "id": "HL-UAC-001",
+      "title": "User Account Control is enabled",
+      "category": "Privilege Management",
+      "severity": "Critical",
+      "probe": "RegistryValue",
+      "description": "Verifies that all administrators run in Admin Approval Mode.",
+      "rationale": "Disabling UAC removes an important privilege boundary and weakens multiple Windows security features.",
+      "remediation": "Set \"User Account Control: Run all administrators in Admin Approval Mode\" to Enabled and restart the device.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+        "name": "EnableLUA",
+        "operator": "Equals",
+        "expected": 1
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/application-security/application-control/user-account-control/settings-and-configuration"
+      ],
+      "tags": [
+        "uac",
+        "privilege"
+      ]
+    },
+    {
+      "id": "HL-UAC-002",
+      "title": "Administrator elevation prompts require consent",
+      "category": "Privilege Management",
+      "severity": "High",
+      "probe": "RegistryValue",
+      "description": "Checks that administrator elevation is not configured to occur silently.",
+      "rationale": "Silent elevation makes malicious or accidental privileged execution harder to detect and contain.",
+      "remediation": "Configure the administrator elevation prompt to \"Prompt for consent for non-Windows binaries\" or a stricter credential prompt.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+        "name": "ConsentPromptBehaviorAdmin",
+        "operator": "In",
+        "expected": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/application-security/application-control/user-account-control/settings-and-configuration"
+      ],
+      "tags": [
+        "uac",
+        "privilege"
+      ]
+    },
+    {
+      "id": "HL-UAC-003",
+      "title": "Built-in Administrator uses Admin Approval Mode",
+      "category": "Privilege Management",
+      "severity": "Medium",
+      "probe": "RegistryValue",
+      "description": "Checks Admin Approval Mode for the built-in Administrator account.",
+      "rationale": "The built-in Administrator otherwise runs with a full token without UAC consent.",
+      "remediation": "Set \"User Account Control: Admin Approval Mode for the Built-in Administrator account\" to Enabled.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+        "name": "FilterAdministratorToken",
+        "operator": "Equals",
+        "expected": 1
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/application-security/application-control/user-account-control/settings-and-configuration"
+      ],
+      "tags": [
+        "uac",
+        "privilege"
+      ]
+    },
+    {
+      "id": "HL-LSA-001",
+      "title": "LSA protection is enabled",
+      "category": "Credential Protection",
+      "severity": "High",
+      "probe": "RegistryValue",
+      "description": "Checks whether LSASS is configured to run as a protected process.",
+      "rationale": "LSA protection raises the bar for credential theft and blocks untrusted code from loading into LSASS.",
+      "remediation": "Enable \"Configure LSASS to run as a protected process\" in policy. Test authentication and security software compatibility before broad enforcement.",
+      "parameters": {
+        "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+        "name": "RunAsPPL",
+        "operator": "In",
+        "expected": [
+          1,
+          2
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/security/credentials-protection-and-management/configuring-additional-lsa-protection"
+      ],
+      "tags": [
+        "lsa",
+        "credentials"
+      ]
+    },
+    {
+      "id": "HL-CRED-001",
+      "title": "WDigest credential caching is disabled",
+      "category": "Credential Protection",
+      "severity": "High",
+      "probe": "RegistryValue",
+      "description": "Checks that WDigest does not retain reusable plaintext credentials in LSASS.",
+      "rationale": "Enabling WDigest credential caching can expose plaintext credentials to memory-access attacks.",
+      "remediation": "Set UseLogonCredential to 0 under the WDigest security provider policy. A missing value is treated as the secure modern default.",
+      "parameters": {
+        "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest",
+        "name": "UseLogonCredential",
+        "operator": "Equals",
+        "expected": 0,
+        "missingIsPass": true
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "wdigest",
+        "credentials"
+      ]
+    },
+    {
+      "id": "HL-CRED-002",
+      "title": "Credential Guard is running",
+      "category": "Credential Protection",
+      "severity": "High",
+      "probe": "CredentialGuard",
+      "description": "Queries the Windows Device Guard provider and verifies that Credential Guard is active, not merely configured.",
+      "rationale": "Credential Guard uses virtualization-based security to isolate secrets from the normal operating system.",
+      "remediation": "Enable virtualization-based security and Credential Guard with the deployment mode appropriate for the device. Validate VPN, Wi-Fi, delegation, and legacy authentication dependencies first.",
+      "parameters": {},
+      "references": [
+        "https://learn.microsoft.com/windows/security/identity-protection/credential-guard/configure"
+      ],
+      "tags": [
+        "credential-guard",
+        "vbs"
+      ]
+    },
+    {
+      "id": "HL-LAPS-001",
+      "title": "Windows LAPS password backup is configured",
+      "category": "Credential Protection",
+      "severity": "High",
+      "probe": "LapsBackup",
+      "description": "Evaluates the active Windows LAPS policy root and verifies that password backup targets Microsoft Entra ID or Active Directory.",
+      "rationale": "Unique, rotated local administrator passwords reduce lateral movement and shared-password risk.",
+      "remediation": "Configure Windows LAPS BackupDirectory through Intune CSP or Group Policy and validate permissions to retrieve passwords.",
+      "parameters": {},
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/laps/laps-management-policy-settings"
+      ],
+      "tags": [
+        "laps",
+        "local-admin"
+      ]
+    },
+    {
+      "id": "HL-LAPS-002",
+      "title": "Windows LAPS password age is 30 days or less",
+      "category": "Credential Protection",
+      "severity": "Medium",
+      "probe": "LapsPasswordAge",
+      "description": "Evaluates the effective PasswordAgeDays value from the active Windows LAPS policy root.",
+      "rationale": "Regular rotation limits the useful lifetime of a disclosed local administrator password.",
+      "remediation": "Configure PasswordAgeDays to 30 or fewer days, balancing rotation with operational recovery requirements.",
+      "parameters": {
+        "maximumDays": 30
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/laps/laps-management-policy-settings"
+      ],
+      "tags": [
+        "laps",
+        "rotation"
+      ]
+    },
+    {
+      "id": "HL-LAPS-003",
+      "title": "Windows LAPS AD password encryption is enabled",
+      "category": "Credential Protection",
+      "severity": "High",
+      "probe": "LapsAdEncryption",
+      "description": "When LAPS backs up to Active Directory, verifies that password encryption is enabled. Entra-backed devices are marked not applicable.",
+      "rationale": "AD password encryption narrows exposure of stored LAPS secrets and enables stronger authorization controls.",
+      "remediation": "Enable ADPasswordEncryptionEnabled for Active Directory-backed Windows LAPS after confirming the domain functional level and authorized decryptors.",
+      "parameters": {},
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/laps/laps-management-policy-settings"
+      ],
+      "tags": [
+        "laps",
+        "active-directory"
+      ]
+    },
+    {
+      "id": "HL-ANON-001",
+      "title": "Anonymous SAM enumeration is restricted",
+      "category": "Identity",
+      "severity": "High",
+      "probe": "RegistryValue",
+      "description": "Checks the RestrictAnonymousSAM security option.",
+      "rationale": "Anonymous enumeration can disclose account information useful for reconnaissance.",
+      "remediation": "Set \"Network access: Do not allow anonymous enumeration of SAM accounts\" to Enabled.",
+      "parameters": {
+        "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+        "name": "RestrictAnonymousSAM",
+        "operator": "Equals",
+        "expected": 1
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "anonymous",
+        "sam"
+      ]
+    },
+    {
+      "id": "HL-ANON-002",
+      "title": "Anonymous access is restricted",
+      "category": "Identity",
+      "severity": "Medium",
+      "probe": "RegistryValue",
+      "description": "Checks the RestrictAnonymous security option.",
+      "rationale": "Restricting anonymous access reduces unauthenticated information disclosure and legacy null-session behavior.",
+      "remediation": "Set \"Network access: Do not allow anonymous enumeration of SAM accounts and shares\" to Enabled where compatible.",
+      "parameters": {
+        "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+        "name": "RestrictAnonymous",
+        "operator": "GreaterOrEqual",
+        "expected": 1
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "anonymous",
+        "network"
+      ]
+    },
+    {
+      "id": "HL-FW-001",
+      "title": "Windows Firewall is enabled for every profile",
+      "category": "Network Protection",
+      "severity": "Critical",
+      "probe": "FirewallProfiles",
+      "description": "Checks Domain, Private, and Public firewall profile state.",
+      "rationale": "Host firewalls limit lateral movement and provide protection when network controls are absent or bypassed.",
+      "remediation": "Enable Windows Firewall for all profiles and deploy explicit allow rules for required management and application traffic.",
+      "parameters": {
+        "requireEnabled": true,
+        "requireDefaultInboundBlock": false
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/network-security/windows-firewall/best-practices-configuring"
+      ],
+      "tags": [
+        "firewall"
+      ]
+    },
+    {
+      "id": "HL-FW-002",
+      "title": "Default inbound firewall action is Block",
+      "category": "Network Protection",
+      "severity": "High",
+      "probe": "FirewallProfiles",
+      "description": "Checks the default inbound action for every firewall profile.",
+      "rationale": "A default-deny inbound posture limits unplanned exposure when no explicit rule exists.",
+      "remediation": "Set the default inbound action to Block for Domain, Private, and Public profiles, then maintain explicit allow rules.",
+      "parameters": {
+        "requireEnabled": true,
+        "requireDefaultInboundBlock": true
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/network-security/windows-firewall/best-practices-configuring"
+      ],
+      "tags": [
+        "firewall",
+        "default-deny"
+      ]
+    },
+    {
+      "id": "HL-SMB-001",
+      "title": "SMBv1 server component is disabled",
+      "category": "Network Protection",
+      "severity": "Critical",
+      "probe": "WindowsOptionalFeature",
+      "description": "Checks all known SMBv1 server feature names.",
+      "rationale": "SMBv1 is obsolete and lacks modern security protections.",
+      "remediation": "Remove or disable the SMB 1.0/CIFS server component after identifying legacy dependencies.",
+      "parameters": {
+        "features": [
+          "SMB1Protocol-Server",
+          "SMB1Protocol"
+        ],
+        "expectedState": "Disabled",
+        "evaluationMode": "FirstPresent"
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3"
+      ],
+      "tags": [
+        "smb",
+        "legacy"
+      ]
+    },
+    {
+      "id": "HL-SMB-002",
+      "title": "SMBv1 client component is disabled",
+      "category": "Network Protection",
+      "severity": "High",
+      "probe": "WindowsOptionalFeature",
+      "description": "Checks all known SMBv1 client feature names.",
+      "rationale": "An SMBv1 client can be coerced into using an obsolete protocol against malicious or legacy servers.",
+      "remediation": "Remove or disable the SMB 1.0/CIFS client component after identifying legacy dependencies.",
+      "parameters": {
+        "features": [
+          "SMB1Protocol-Client",
+          "SMB1Protocol"
+        ],
+        "expectedState": "Disabled",
+        "evaluationMode": "FirstPresent"
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/storage/file-server/troubleshoot/detect-enable-and-disable-smbv1-v2-v3"
+      ],
+      "tags": [
+        "smb",
+        "legacy"
+      ]
+    },
+    {
+      "id": "HL-SMB-003",
+      "title": "SMB server signing is required",
+      "category": "Network Protection",
+      "severity": "High",
+      "probe": "SmbServer",
+      "description": "Checks RequireSecuritySignature on the local SMB server.",
+      "rationale": "Required signing helps protect SMB traffic from tampering and relay attacks.",
+      "remediation": "Require SMB server signing through Group Policy or the SMB server configuration. Validate legacy clients before rollout.",
+      "parameters": {
+        "property": "RequireSecuritySignature",
+        "expected": true
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/storage/file-server/smb-signing"
+      ],
+      "tags": [
+        "smb",
+        "signing"
+      ]
+    },
+    {
+      "id": "HL-SMB-004",
+      "title": "SMB client signing is required",
+      "category": "Network Protection",
+      "severity": "High",
+      "probe": "SmbClient",
+      "description": "Checks RequireSecuritySignature on the local SMB client.",
+      "rationale": "Required client signing helps prevent downgrade and relay scenarios when connecting to file services.",
+      "remediation": "Require SMB client signing through Group Policy or SMB client configuration. Validate legacy appliances first.",
+      "parameters": {
+        "property": "RequireSecuritySignature",
+        "expected": true
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/storage/file-server/smb-signing"
+      ],
+      "tags": [
+        "smb",
+        "signing"
+      ]
+    },
+    {
+      "id": "HL-SMB-005",
+      "title": "Insecure SMB guest authentication is disabled",
+      "category": "Network Protection",
+      "severity": "High",
+      "probe": "SmbClient",
+      "description": "Checks EnableInsecureGuestLogons on the SMB client.",
+      "rationale": "Guest SMB authentication removes identity assurance and does not support normal signing and encryption guarantees.",
+      "remediation": "Disable insecure guest logons and provide authenticated access to file services.",
+      "parameters": {
+        "property": "EnableInsecureGuestLogons",
+        "expected": false
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/storage/file-server/smb-signing"
+      ],
+      "tags": [
+        "smb",
+        "guest"
+      ]
+    },
+    {
+      "id": "HL-RDP-001",
+      "title": "Remote Desktop requires Network Level Authentication",
+      "category": "Remote Administration",
+      "severity": "High",
+      "probe": "RegistryValue",
+      "description": "Checks that RDP requires authentication before creating a full interactive session.",
+      "rationale": "NLA reduces pre-authentication attack surface and resource consumption.",
+      "remediation": "Enable \"Require user authentication for remote connections by using Network Level Authentication.\"",
+      "parameters": {
+        "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp",
+        "name": "UserAuthentication",
+        "operator": "Equals",
+        "expected": 1
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/remote/remote-desktop-services/clients/remote-desktop-allow-access"
+      ],
+      "tags": [
+        "rdp",
+        "nla"
+      ]
+    },
+    {
+      "id": "HL-WINRM-001",
+      "title": "WinRM Basic authentication is disabled",
+      "category": "Remote Administration",
+      "severity": "High",
+      "probe": "WinRM",
+      "description": "Checks Basic authentication on both WinRM client and service configuration.",
+      "rationale": "Basic authentication relies on transport protection and is unnecessary in most domain-managed environments.",
+      "remediation": "Disable Basic authentication for WinRM client and service. Use Kerberos, certificate authentication, or another approved mechanism.",
+      "parameters": {
+        "property": "Basic",
+        "targets": [
+          "Client",
+          "Service"
+        ],
+        "expected": false
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/win32/winrm/installation-and-configuration-for-windows-remote-management"
+      ],
+      "tags": [
+        "winrm",
+        "authentication"
+      ]
+    },
+    {
+      "id": "HL-WINRM-002",
+      "title": "WinRM unencrypted traffic is disabled",
+      "category": "Remote Administration",
+      "severity": "High",
+      "probe": "WinRM",
+      "description": "Checks AllowUnencrypted on both WinRM client and service configuration.",
+      "rationale": "Allowing unencrypted WinRM traffic can expose management data and credentials.",
+      "remediation": "Disable unencrypted WinRM traffic and use HTTPS or message-level protection provided by supported authentication protocols.",
+      "parameters": {
+        "property": "AllowUnencrypted",
+        "targets": [
+          "Client",
+          "Service"
+        ],
+        "expected": false
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/win32/winrm/installation-and-configuration-for-windows-remote-management"
+      ],
+      "tags": [
+        "winrm",
+        "encryption"
+      ]
+    },
+    {
+      "id": "HL-NET-001",
+      "title": "LLMNR is disabled",
+      "category": "Network Protection",
+      "severity": "Medium",
+      "probe": "RegistryValue",
+      "description": "Checks the policy that disables multicast name resolution.",
+      "rationale": "LLMNR can enable name-resolution poisoning and credential relay when DNS resolution fails.",
+      "remediation": "Enable \"Turn off multicast name resolution\" after validating name-resolution dependencies.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient",
+        "name": "EnableMulticast",
+        "operator": "Equals",
+        "expected": 0
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "llmnr",
+        "name-resolution"
+      ]
+    },
+    {
+      "id": "HL-SVC-001",
+      "title": "Remote Registry service is disabled",
+      "category": "Remote Administration",
+      "severity": "Medium",
+      "probe": "Service",
+      "description": "Checks that the Remote Registry service is disabled and not running.",
+      "rationale": "Remote Registry expands the remote administration surface and is unnecessary for many systems.",
+      "remediation": "Disable the Remote Registry service unless a documented management dependency exists.",
+      "parameters": {
+        "name": "RemoteRegistry",
+        "startupType": "Disabled",
+        "requireStopped": true
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "service",
+        "remote-registry"
+      ]
+    },
+    {
+      "id": "HL-NTLM-001",
+      "title": "LAN Manager authentication level refuses LM and NTLMv1",
+      "category": "Credential Protection",
+      "severity": "High",
+      "probe": "RegistryValue",
+      "description": "Checks that only NTLMv2 responses are sent and LM/NTLM are refused.",
+      "rationale": "LM and NTLMv1 provide materially weaker authentication than NTLMv2 or Kerberos.",
+      "remediation": "Set \"Network security: LAN Manager authentication level\" to \"Send NTLMv2 response only. Refuse LM & NTLM\" after auditing legacy dependencies.",
+      "parameters": {
+        "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+        "name": "LmCompatibilityLevel",
+        "operator": "GreaterOrEqual",
+        "expected": 5
+      },
+      "references": [
+        "https://learn.microsoft.com/previous-versions/windows/it-pro/windows-10/security/threat-protection/security-policy-settings/network-security-lan-manager-authentication-level"
+      ],
+      "tags": [
+        "ntlm",
+        "legacy-auth"
+      ]
+    },
+    {
+      "id": "HL-DC-001",
+      "title": "LDAP server signing is required",
+      "category": "Domain Controller",
+      "severity": "Critical",
+      "probe": "RegistryValue",
+      "description": "Checks the LDAPServerIntegrity policy on a domain controller.",
+      "rationale": "Required LDAP signing helps prevent modification and relay of unsigned LDAP traffic.",
+      "remediation": "Set \"Domain controller: LDAP server signing requirements\" to Require signing after auditing unsigned binds.",
+      "parameters": {
+        "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\NTDS\\Parameters",
+        "name": "LDAPServerIntegrity",
+        "operator": "Equals",
+        "expected": 2
+      },
+      "references": [
+        "https://learn.microsoft.com/troubleshoot/windows-server/active-directory/enable-ldap-signing-in-windows-server"
+      ],
+      "tags": [
+        "ldap",
+        "domain-controller"
+      ]
+    },
+    {
+      "id": "HL-DC-002",
+      "title": "LDAP channel binding is enforced",
+      "category": "Domain Controller",
+      "severity": "High",
+      "probe": "RegistryValue",
+      "description": "Checks the LdapEnforceChannelBinding policy.",
+      "rationale": "LDAP channel binding strengthens protection against credential relay over TLS.",
+      "remediation": "Audit compatibility, then set LdapEnforceChannelBinding to 2 (Always) through policy on domain controllers.",
+      "parameters": {
+        "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\NTDS\\Parameters",
+        "name": "LdapEnforceChannelBinding",
+        "operator": "Equals",
+        "expected": 2
+      },
+      "references": [
+        "https://learn.microsoft.com/troubleshoot/windows-server/active-directory/enable-ldap-signing-in-windows-server"
+      ],
+      "tags": [
+        "ldap",
+        "channel-binding"
+      ]
+    },
+    {
+      "id": "HL-DC-003",
+      "title": "LM password hashes are not stored",
+      "category": "Domain Controller",
+      "severity": "High",
+      "probe": "RegistryValue",
+      "description": "Checks the NoLMHash security option.",
+      "rationale": "LM hashes are cryptographically weak and should not be generated for future password changes.",
+      "remediation": "Enable \"Network security: Do not store LAN Manager hash value on next password change.\" Existing hashes disappear when passwords are changed.",
+      "parameters": {
+        "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+        "name": "NoLMHash",
+        "operator": "Equals",
+        "expected": 1,
+        "missingIsPassOnBuildAtLeast": 26100
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "lm-hash",
+        "domain-controller"
+      ]
+    },
+    {
+      "id": "HL-DC-004",
+      "title": "Windows LAPS backs up DSRM passwords",
+      "category": "Domain Controller",
+      "severity": "High",
+      "probe": "LapsDsrmBackup",
+      "description": "For AD-backed Windows LAPS on domain controllers, verifies that DSRM password backup is enabled.",
+      "rationale": "Managed and rotated DSRM passwords improve recoverability without retaining shared static secrets.",
+      "remediation": "Enable ADBackupDSRMPassword in Windows LAPS Group Policy and validate authorized recovery procedures.",
+      "parameters": {},
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/laps/laps-management-policy-settings"
+      ],
+      "tags": [
+        "laps",
+        "dsrm",
+        "domain-controller"
+      ]
+    },
+    {
+      "id": "HL-DEF-001",
+      "title": "Microsoft Defender real-time protection is enabled",
+      "category": "Endpoint Protection",
+      "severity": "Critical",
+      "probe": "DefenderStatus",
+      "description": "Checks the live Defender real-time protection state.",
+      "rationale": "Real-time protection inspects activity as files and processes are accessed.",
+      "remediation": "Enable real-time protection or document an approved third-party endpoint protection exception.",
+      "parameters": {
+        "property": "RealTimeProtectionEnabled",
+        "operator": "Equals",
+        "expected": true
+      },
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "real-time"
+      ]
+    },
+    {
+      "id": "HL-DEF-002",
+      "title": "Cloud-delivered protection is enabled",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "probe": "DefenderPreference",
+      "description": "Checks Defender MAPS reporting configuration.",
+      "rationale": "Cloud-delivered protection improves detection of new and rapidly changing threats.",
+      "remediation": "Enable cloud-delivered protection at the organization-approved membership level.",
+      "parameters": {
+        "property": "MAPSReporting",
+        "operator": "In",
+        "expected": [
+          1,
+          2
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "cloud"
+      ]
+    },
+    {
+      "id": "HL-DEF-003",
+      "title": "Behavior monitoring is enabled",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "probe": "DefenderStatus",
+      "description": "Checks the live Defender behavior monitoring state.",
+      "rationale": "Behavior monitoring detects suspicious runtime activity that static signatures can miss.",
+      "remediation": "Enable behavior monitoring in Microsoft Defender Antivirus policy.",
+      "parameters": {
+        "property": "BehaviorMonitorEnabled",
+        "operator": "Equals",
+        "expected": true
+      },
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "behavior"
+      ]
+    },
+    {
+      "id": "HL-DEF-004",
+      "title": "Downloaded files and attachments are scanned",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "probe": "DefenderStatus",
+      "description": "Checks IOAV protection state.",
+      "rationale": "Scanning downloaded files and attachments reduces exposure from common delivery channels.",
+      "remediation": "Enable IOAV protection in Microsoft Defender Antivirus policy.",
+      "parameters": {
+        "property": "IoavProtectionEnabled",
+        "operator": "Equals",
+        "expected": true
+      },
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "ioav"
+      ]
+    },
+    {
+      "id": "HL-DEF-005",
+      "title": "Automatic sample submission is enabled",
+      "category": "Endpoint Protection",
+      "severity": "Medium",
+      "probe": "DefenderPreference",
+      "description": "Checks that Defender is allowed to submit safe or all samples automatically.",
+      "rationale": "Sample submission improves cloud analysis and response time for unknown files.",
+      "remediation": "Configure sample submission according to organizational privacy requirements; avoid Never Send unless formally accepted.",
+      "parameters": {
+        "property": "SubmitSamplesConsent",
+        "operator": "In",
+        "expected": [
+          1,
+          3
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "samples"
+      ]
+    },
+    {
+      "id": "HL-DEF-006",
+      "title": "Potentially unwanted application protection is enabled",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "probe": "DefenderPreference",
+      "description": "Checks that PUA protection is configured to block.",
+      "rationale": "PUA blocking reduces adware, bundlers, and software that weakens device security.",
+      "remediation": "Set potentially unwanted application protection to Block.",
+      "parameters": {
+        "property": "PUAProtection",
+        "operator": "Equals",
+        "expected": 1,
+        "warningValues": [
+          2
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "pua"
+      ]
+    },
+    {
+      "id": "HL-DEF-007",
+      "title": "Microsoft Defender tamper protection is enabled",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "probe": "DefenderStatus",
+      "description": "Checks the Defender-reported tamper protection state.",
+      "rationale": "Tamper protection helps prevent unauthorized changes to core endpoint protection settings.",
+      "remediation": "Enable tamper protection through the Microsoft Defender portal or supported management channel.",
+      "parameters": {
+        "property": "IsTamperProtected",
+        "operator": "Equals",
+        "expected": true
+      },
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "tamper-protection"
+      ]
+    },
+    {
+      "id": "HL-DEF-008",
+      "title": "Defender signatures are recent",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "probe": "DefenderSignatureAge",
+      "description": "Calculates the age of the active antivirus signature update.",
+      "rationale": "Stale signatures reduce detection coverage, particularly when cloud protection is unavailable.",
+      "remediation": "Restore update connectivity and investigate update channel, proxy, or platform health issues.",
+      "parameters": {
+        "maximumAgeDays": 3
+      },
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "signatures"
+      ]
+    },
+    {
+      "id": "HL-DEF-009",
+      "title": "Defender network protection is enabled",
+      "category": "Endpoint Protection",
+      "severity": "High",
+      "probe": "DefenderPreference",
+      "description": "Checks the Defender network protection mode.",
+      "rationale": "Network protection blocks connections to malicious or low-reputation destinations from supported processes.",
+      "remediation": "Deploy network protection in audit mode first, review impact, then enable block mode.",
+      "parameters": {
+        "property": "EnableNetworkProtection",
+        "operator": "Equals",
+        "expected": 1,
+        "warningValues": [
+          2
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/microsoft-defender-antivirus-windows"
+      ],
+      "tags": [
+        "defender",
+        "network-protection"
+      ]
+    },
+    {
+      "id": "HL-ASR-001",
+      "title": "Core Attack Surface Reduction rules are enforced",
+      "category": "Attack Surface Reduction",
+      "severity": "High",
+      "probe": "AsrRules",
+      "description": "Evaluates a curated set of ASR rules and reports missing, disabled, audit-only, warn, and block states per rule.",
+      "rationale": "ASR rules disrupt common malware behaviors such as credential theft, malicious Office child processes, and ransomware activity.",
+      "remediation": "Pilot non-standard rules in Audit mode, tune legitimate impact, and move approved rules to Block or Warn. Avoid broad exclusions.",
+      "parameters": {
+        "requiredRules": [
+          {
+            "id": "56a863a9-875e-4185-98a7-b882c64b5ce5",
+            "name": "Block abuse of exploited vulnerable signed drivers",
+            "allowedActions": [
+              1,
+              6
+            ]
+          },
+          {
+            "id": "9e6c4e1f-7d60-472f-ba1a-a39ef669e4b2",
+            "name": "Block credential stealing from LSASS",
+            "allowedActions": [
+              1
+            ]
+          },
+          {
+            "id": "d4f940ab-401b-4efc-aadc-ad5f3c50688a",
+            "name": "Block Office applications from creating child processes",
+            "allowedActions": [
+              1,
+              6
+            ]
+          },
+          {
+            "id": "75668c1f-73b5-4cf0-bb93-3ecf5cb7cc84",
+            "name": "Block Office applications from injecting code into other processes",
+            "allowedActions": [
+              1
+            ]
+          },
+          {
+            "id": "5beb7efe-fd9a-4556-801d-275e5ffc04cc",
+            "name": "Block execution of potentially obfuscated scripts",
+            "allowedActions": [
+              1,
+              6
+            ]
+          },
+          {
+            "id": "d3e037e1-3eb8-44c8-a917-57927947596d",
+            "name": "Block JavaScript or VBScript from launching downloaded executable content",
+            "allowedActions": [
+              1,
+              6
+            ]
+          },
+          {
+            "id": "c1db55ab-c21a-4637-bb3f-a12568109d35",
+            "name": "Use advanced protection against ransomware",
+            "allowedActions": [
+              1,
+              6
+            ]
+          }
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/defender-endpoint/attack-surface-reduction-rules-reference",
+        "https://learn.microsoft.com/defender-endpoint/attack-surface-reduction-rules-overview"
+      ],
+      "tags": [
+        "asr",
+        "defender"
+      ]
+    },
+    {
+      "id": "HL-PS-001",
+      "title": "Windows PowerShell 2.0 is disabled",
+      "category": "Scripting Security",
+      "severity": "High",
+      "probe": "WindowsOptionalFeature",
+      "description": "Checks known Windows PowerShell 2.0 optional feature names.",
+      "rationale": "PowerShell 2.0 lacks modern logging and security capabilities and can be abused for downgrade attacks.",
+      "remediation": "Remove the Windows PowerShell 2.0 optional feature after validating legacy script compatibility.",
+      "parameters": {
+        "features": [
+          "MicrosoftWindowsPowerShellV2Root",
+          "MicrosoftWindowsPowerShellV2"
+        ],
+        "expectedState": "Disabled",
+        "evaluationMode": "AllDisabled"
+      },
+      "references": [
+        "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-7.5"
+      ],
+      "tags": [
+        "powershell",
+        "legacy"
+      ]
+    },
+    {
+      "id": "HL-PSLOG-001",
+      "title": "PowerShell Script Block Logging is enabled",
+      "category": "Security Logging",
+      "severity": "High",
+      "probe": "RegistryValue",
+      "description": "Checks policy-backed Script Block Logging.",
+      "rationale": "Script Block Logging records de-obfuscated PowerShell content and provides high-value investigation telemetry.",
+      "remediation": "Enable \"Turn on PowerShell Script Block Logging.\" Protect and forward the PowerShell Operational log.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ScriptBlockLogging",
+        "name": "EnableScriptBlockLogging",
+        "operator": "Equals",
+        "expected": 1
+      },
+      "references": [
+        "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-7.5"
+      ],
+      "tags": [
+        "powershell",
+        "logging"
+      ]
+    },
+    {
+      "id": "HL-PSLOG-002",
+      "title": "PowerShell Module Logging is enabled",
+      "category": "Security Logging",
+      "severity": "Medium",
+      "probe": "PowerShellModuleLogging",
+      "description": "Checks module logging and verifies that at least one module pattern is configured.",
+      "rationale": "Module logging adds pipeline and command visibility that complements Script Block Logging.",
+      "remediation": "Enable PowerShell Module Logging and configure approved module patterns, commonly \"*\" for broad visibility after sizing log collection.",
+      "parameters": {},
+      "references": [
+        "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-7.5"
+      ],
+      "tags": [
+        "powershell",
+        "logging"
+      ]
+    },
+    {
+      "id": "HL-PSLOG-003",
+      "title": "Process creation events include command lines",
+      "category": "Security Logging",
+      "severity": "High",
+      "probe": "RegistryValue",
+      "description": "Checks whether event 4688 includes process command-line data.",
+      "rationale": "Command-line context substantially improves investigation and detection quality for process creation events.",
+      "remediation": "Enable \"Include command line in process creation events.\" Restrict Security log access because arguments can contain sensitive data.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Audit",
+        "name": "ProcessCreationIncludeCmdLine_Enabled",
+        "operator": "Equals",
+        "expected": 1
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing"
+      ],
+      "tags": [
+        "process-creation",
+        "logging"
+      ]
+    },
+    {
+      "id": "HL-AUD-001",
+      "title": "Credential Validation auditing captures success and failure",
+      "category": "Advanced Auditing",
+      "severity": "High",
+      "probe": "AuditPolicy",
+      "description": "Reads the effective system audit policy through the native AuditQuerySystemPolicy API.",
+      "rationale": "Credential validation events provide visibility into authentication attempts and failures.",
+      "remediation": "Configure Advanced Audit Policy: Account Logon > Credential Validation to Success and Failure.",
+      "parameters": {
+        "subcategoryGuid": "0cce923f-69ae-11d9-bed3-505054503030",
+        "subcategoryName": "Credential Validation",
+        "requiredFlags": [
+          "Success",
+          "Failure"
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "authentication"
+      ]
+    },
+    {
+      "id": "HL-AUD-002",
+      "title": "Security Group Management auditing captures success",
+      "category": "Advanced Auditing",
+      "severity": "Medium",
+      "probe": "AuditPolicy",
+      "description": "Reads effective auditing for changes to security groups.",
+      "rationale": "Changes to privileged and access-control groups are high-value identity events.",
+      "remediation": "Configure Advanced Audit Policy: Account Management > Security Group Management to include Success.",
+      "parameters": {
+        "subcategoryGuid": "0cce9237-69ae-11d9-bed3-505054503030",
+        "subcategoryName": "Security Group Management",
+        "requiredFlags": [
+          "Success"
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "groups"
+      ]
+    },
+    {
+      "id": "HL-AUD-003",
+      "title": "User Account Management auditing captures success and failure",
+      "category": "Advanced Auditing",
+      "severity": "High",
+      "probe": "AuditPolicy",
+      "description": "Reads effective auditing for user account lifecycle and modification events.",
+      "rationale": "User account creation, deletion, enablement, and password changes require reliable audit visibility.",
+      "remediation": "Configure Advanced Audit Policy: Account Management > User Account Management to Success and Failure.",
+      "parameters": {
+        "subcategoryGuid": "0cce9235-69ae-11d9-bed3-505054503030",
+        "subcategoryName": "User Account Management",
+        "requiredFlags": [
+          "Success",
+          "Failure"
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "accounts"
+      ]
+    },
+    {
+      "id": "HL-AUD-004",
+      "title": "Process Creation auditing captures success",
+      "category": "Advanced Auditing",
+      "severity": "High",
+      "probe": "AuditPolicy",
+      "description": "Reads effective auditing for process creation.",
+      "rationale": "Process creation telemetry is foundational for Windows detection engineering and incident response.",
+      "remediation": "Configure Advanced Audit Policy: Detailed Tracking > Process Creation to include Success.",
+      "parameters": {
+        "subcategoryGuid": "0cce922b-69ae-11d9-bed3-505054503030",
+        "subcategoryName": "Process Creation",
+        "requiredFlags": [
+          "Success"
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "process"
+      ]
+    },
+    {
+      "id": "HL-AUD-005",
+      "title": "Logon auditing captures success and failure",
+      "category": "Advanced Auditing",
+      "severity": "High",
+      "probe": "AuditPolicy",
+      "description": "Reads effective auditing for interactive and network logons.",
+      "rationale": "Successful and failed logon events support authentication monitoring, investigation, and anomaly detection.",
+      "remediation": "Configure Advanced Audit Policy: Logon/Logoff > Logon to Success and Failure.",
+      "parameters": {
+        "subcategoryGuid": "0cce9215-69ae-11d9-bed3-505054503030",
+        "subcategoryName": "Logon",
+        "requiredFlags": [
+          "Success",
+          "Failure"
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "logon"
+      ]
+    },
+    {
+      "id": "HL-AUD-006",
+      "title": "Special Logon auditing captures success",
+      "category": "Advanced Auditing",
+      "severity": "Medium",
+      "probe": "AuditPolicy",
+      "description": "Reads effective auditing for logons assigned sensitive privileges.",
+      "rationale": "Special logon events identify sessions receiving administrator-equivalent privileges.",
+      "remediation": "Configure Advanced Audit Policy: Logon/Logoff > Special Logon to include Success.",
+      "parameters": {
+        "subcategoryGuid": "0cce921b-69ae-11d9-bed3-505054503030",
+        "subcategoryName": "Special Logon",
+        "requiredFlags": [
+          "Success"
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "privilege"
+      ]
+    },
+    {
+      "id": "HL-AUD-007",
+      "title": "Audit Policy Change auditing captures success",
+      "category": "Advanced Auditing",
+      "severity": "High",
+      "probe": "AuditPolicy",
+      "description": "Reads effective auditing for security audit policy changes.",
+      "rationale": "Changes to audit policy can reduce visibility and should themselves be observable.",
+      "remediation": "Configure Advanced Audit Policy: Policy Change > Audit Policy Change to include Success.",
+      "parameters": {
+        "subcategoryGuid": "0cce922f-69ae-11d9-bed3-505054503030",
+        "subcategoryName": "Audit Policy Change",
+        "requiredFlags": [
+          "Success"
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing",
+        "https://learn.microsoft.com/windows/win32/api/ntsecapi/nf-ntsecapi-auditquerysystempolicy"
+      ],
+      "tags": [
+        "audit",
+        "policy-change"
+      ]
+    },
+    {
+      "id": "HL-LOG-001",
+      "title": "Security event log has sufficient capacity",
+      "category": "Security Logging",
+      "severity": "Medium",
+      "probe": "EventLog",
+      "description": "Checks the configured maximum Security log size.",
+      "rationale": "Undersized logs can overwrite evidence before it is collected or investigated.",
+      "remediation": "Increase the Security log maximum size and forward relevant events to centralized storage.",
+      "parameters": {
+        "logName": "Security",
+        "minimumSizeBytes": 536870912
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/ad-ds/plan/appendix-l--events-to-monitor"
+      ],
+      "tags": [
+        "event-log",
+        "security"
+      ]
+    },
+    {
+      "id": "HL-LOG-002",
+      "title": "System event log has sufficient capacity",
+      "category": "Security Logging",
+      "severity": "Low",
+      "probe": "EventLog",
+      "description": "Checks the configured maximum System log size.",
+      "rationale": "Adequate retention supports troubleshooting and incident reconstruction.",
+      "remediation": "Increase the System log maximum size based on event volume and forwarding latency.",
+      "parameters": {
+        "logName": "System",
+        "minimumSizeBytes": 134217728
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/identity/ad-ds/plan/appendix-l--events-to-monitor"
+      ],
+      "tags": [
+        "event-log",
+        "system"
+      ]
+    },
+    {
+      "id": "HL-LOG-003",
+      "title": "PowerShell Operational log has sufficient capacity",
+      "category": "Security Logging",
+      "severity": "Medium",
+      "probe": "EventLog",
+      "description": "Checks the Microsoft-Windows-PowerShell/Operational log size and enabled state.",
+      "rationale": "PowerShell telemetry can be high volume and valuable evidence can be lost if the log is too small.",
+      "remediation": "Enable the PowerShell Operational log and increase its maximum size based on script activity and forwarding latency.",
+      "parameters": {
+        "logName": "Microsoft-Windows-PowerShell/Operational",
+        "minimumSizeBytes": 67108864,
+        "requireEnabled": true
+      },
+      "references": [
+        "https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows?view=powershell-7.5"
+      ],
+      "tags": [
+        "event-log",
+        "powershell"
+      ]
+    },
+    {
+      "id": "HL-BIT-001",
+      "title": "Operating system volume is protected by BitLocker",
+      "category": "Data Protection",
+      "severity": "High",
+      "probe": "BitLocker",
+      "description": "Checks BitLocker protection and encryption state for the operating system volume.",
+      "rationale": "Full-volume encryption protects data at rest when storage media or devices are lost or removed.",
+      "remediation": "Enable BitLocker using an approved protector and escrow recovery information in the organization-approved directory.",
+      "parameters": {
+        "mountPoint": "SystemDrive"
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/data-protection/bitlocker/"
+      ],
+      "tags": [
+        "bitlocker",
+        "encryption"
+      ]
+    },
+    {
+      "id": "HL-BOOT-001",
+      "title": "Secure Boot is enabled",
+      "category": "Platform Security",
+      "severity": "Medium",
+      "probe": "SecureBoot",
+      "description": "Queries the firmware Secure Boot state.",
+      "rationale": "Secure Boot helps prevent untrusted boot components from loading before Windows.",
+      "remediation": "Enable UEFI Secure Boot after validating firmware, operating system, and virtualization support.",
+      "parameters": {},
+      "references": [
+        "https://learn.microsoft.com/windows-hardware/design/device-experiences/oem-secure-boot"
+      ],
+      "tags": [
+        "secure-boot",
+        "firmware"
+      ]
+    },
+    {
+      "id": "HL-SMART-001",
+      "title": "Microsoft Defender SmartScreen is enforced",
+      "category": "Endpoint Protection",
+      "severity": "Medium",
+      "probe": "RegistryValue",
+      "description": "Checks the machine policy that enables SmartScreen.",
+      "rationale": "SmartScreen helps block malicious and low-reputation downloads and sites.",
+      "remediation": "Enable Microsoft Defender SmartScreen through Windows security baseline or Intune policy.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+        "name": "EnableSmartScreen",
+        "operator": "Equals",
+        "expected": 1
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/"
+      ],
+      "tags": [
+        "smartscreen",
+        "reputation"
+      ]
+    },
+    {
+      "id": "HL-AUTORUN-001",
+      "title": "AutoRun and AutoPlay are disabled",
+      "category": "Attack Surface Reduction",
+      "severity": "Medium",
+      "probe": "AutoRun",
+      "description": "Checks machine policy values that disable AutoRun commands and AutoPlay behavior.",
+      "rationale": "Automatic execution from removable media increases malware delivery risk.",
+      "remediation": "Disable AutoPlay for all drives and disable AutoRun commands through Group Policy or Intune.",
+      "parameters": {},
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "autorun",
+        "removable-media"
+      ]
+    },
+    {
+      "id": "HL-RA-001",
+      "title": "Solicited Remote Assistance is disabled",
+      "category": "Remote Administration",
+      "severity": "Low",
+      "probe": "RegistryValue",
+      "description": "Checks whether users can request Remote Assistance.",
+      "rationale": "Remote Assistance adds an interactive remote-access path that should be explicitly justified.",
+      "remediation": "Disable \"Configure Solicited Remote Assistance\" unless the support model requires it; use a documented exception when enabled.",
+      "parameters": {
+        "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Remote Assistance",
+        "name": "fAllowToGetHelp",
+        "operator": "Equals",
+        "expected": 0
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines"
+      ],
+      "tags": [
+        "remote-assistance"
+      ]
+    }
+  ]
+}

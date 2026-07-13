@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420" role="img" aria-labelledby="title desc">
+  <title id="title">Hardening Lens</title>
+  <desc id="desc">Read-only Windows security posture, evidence, exceptions, and drift.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06110c"/>
+      <stop offset="0.55" stop-color="#0a1a12"/>
+      <stop offset="1" stop-color="#123825"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#56e69e" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#56e69e" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="22"/></filter>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#56e69e" stroke-opacity="0.055" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1400" height="420" rx="24" fill="url(#bg)"/>
+  <rect width="1400" height="420" rx="24" fill="url(#grid)"/>
+  <circle cx="1115" cy="92" r="260" fill="url(#glow)" filter="url(#soft)"/>
+  <g fill="none" stroke="#56e69e">
+    <circle cx="1130" cy="205" r="105" stroke-width="11" stroke-opacity="0.92"/>
+    <circle cx="1130" cy="205" r="83" stroke-width="1.5" stroke-opacity="0.55" stroke-dasharray="5 10"/>
+    <path d="M1208 278l77 77" stroke-width="16" stroke-linecap="round"/>
+    <path d="M1068 205h124M1130 143v124" stroke-opacity="0.18"/>
+  </g>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <text x="78" y="76" fill="#56e69e" font-size="18" font-weight="700" letter-spacing="4">XGREENY / WINDOWS SECURITY ENGINEERING</text>
+    <text x="78" y="165" fill="#eff9f3" font-size="67" font-weight="800" letter-spacing="2">HARDENING LENS</text>
+    <text x="81" y="211" fill="#a7c2b3" font-size="24">read-only posture  ·  evidence  ·  exceptions  ·  drift</text>
+    <g font-size="18">
+      <rect x="80" y="255" width="770" height="88" rx="12" fill="#07100b" stroke="#244434"/>
+      <text x="105" y="288" fill="#56e69e">PS&gt;</text>
+      <text x="152" y="288" fill="#d8e9df">Invoke-HardeningLens -Baseline MemberServer</text>
+      <text x="105" y="320" fill="#829b8e">[PASS 40] [FAIL 7] [WARN 3] [EXCEPTED 1] [COVERAGE 96.2%]</text>
+    </g>
+    <text x="1091" y="210" text-anchor="middle" fill="#eaf7ef" font-size="18" font-weight="700">EVIDENCE</text>
+    <text x="1091" y="233" text-anchor="middle" fill="#7ea791" font-size="13">NOT ASSUMPTIONS</text>
+  </g>
+  <rect x="0.5" y="0.5" width="1399" height="419" rx="23.5" fill="none" stroke="#2b5c43"/>
+</svg>

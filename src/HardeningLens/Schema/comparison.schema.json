@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/comparison.schema.json",
+  "title": "Hardening Lens drift comparison",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "comparedAt",
+    "computerName",
+    "baseline",
+    "referenceScan",
+    "differenceScan",
+    "summary",
+    "changes"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "comparedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "computerName": {
+      "type": "string"
+    },
+    "baseline": {
+      "type": "string"
+    },
+    "referenceScan": {
+      "$ref": "#/$defs/scanRef"
+    },
+    "differenceScan": {
+      "$ref": "#/$defs/scanRef"
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "ScoreDelta",
+        "NewFindings",
+        "Resolved",
+        "Changed",
+        "AddedControls",
+        "RemovedControls",
+        "Unchanged"
+      ],
+      "properties": {
+        "ScoreDelta": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "NewFindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Resolved": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Changed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "AddedControls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "RemovedControls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Unchanged": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ControlId",
+          "Title",
+          "Severity",
+          "Category",
+          "ChangeType",
+          "BeforeStatus",
+          "AfterStatus",
+          "BeforeActual",
+          "AfterActual"
+        ],
+        "properties": {
+          "ControlId": {
+            "type": "string"
+          },
+          "Title": {
+            "type": "string"
+          },
+          "Severity": {
+            "enum": [
+              "Critical",
+              "High",
+              "Medium",
+              "Low",
+              "Informational"
+            ]
+          },
+          "Category": {
+            "type": "string"
+          },
+          "ChangeType": {
+            "enum": [
+              "Unchanged",
+              "NewFinding",
+              "Resolved",
+              "Changed",
+              "AddedControl",
+              "RemovedControl"
+            ]
+          },
+          "BeforeStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "AfterStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "BeforeActual": {},
+          "AfterActual": {}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "scanRef": {
+      "type": "object",
+      "required": [
+        "Id",
+        "CollectedAt",
+        "Score"
+      ],
+      "properties": {
+        "Id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "CollectedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "Score": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

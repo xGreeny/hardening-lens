@@ -1,0 +1,191 @@
+{
+  "$schema": "../../Schema/baseline.schema.json",
+  "schemaVersion": "1.0",
+  "name": "AVDSessionHost",
+  "displayName": "Azure Virtual Desktop Session Host",
+  "version": "1.0.0",
+  "description": "Posture profile for pooled or personal Azure Virtual Desktop session hosts, balancing endpoint controls with multi-session operations.",
+  "sourceBasis": [
+    "Microsoft Security Compliance Toolkit and current Microsoft Windows security guidance",
+    "Operational security telemetry and recoverability practices"
+  ],
+  "supportedRoles": [
+    "Workstation",
+    "MemberServer",
+    "AVDSessionHost"
+  ],
+  "controls": [
+    {
+      "id": "HL-ACC-001"
+    },
+    {
+      "id": "HL-UAC-001"
+    },
+    {
+      "id": "HL-UAC-002"
+    },
+    {
+      "id": "HL-UAC-003"
+    },
+    {
+      "id": "HL-LSA-001"
+    },
+    {
+      "id": "HL-CRED-001"
+    },
+    {
+      "id": "HL-CRED-002"
+    },
+    {
+      "id": "HL-LAPS-001"
+    },
+    {
+      "id": "HL-LAPS-002"
+    },
+    {
+      "id": "HL-LAPS-003"
+    },
+    {
+      "id": "HL-ANON-001"
+    },
+    {
+      "id": "HL-ANON-002"
+    },
+    {
+      "id": "HL-FW-001"
+    },
+    {
+      "id": "HL-FW-002"
+    },
+    {
+      "id": "HL-SMB-001"
+    },
+    {
+      "id": "HL-SMB-002"
+    },
+    {
+      "id": "HL-SMB-003"
+    },
+    {
+      "id": "HL-SMB-004"
+    },
+    {
+      "id": "HL-SMB-005"
+    },
+    {
+      "id": "HL-RDP-001"
+    },
+    {
+      "id": "HL-WINRM-001"
+    },
+    {
+      "id": "HL-WINRM-002"
+    },
+    {
+      "id": "HL-NET-001"
+    },
+    {
+      "id": "HL-SVC-001"
+    },
+    {
+      "id": "HL-NTLM-001"
+    },
+    {
+      "id": "HL-DEF-001"
+    },
+    {
+      "id": "HL-DEF-002"
+    },
+    {
+      "id": "HL-DEF-003"
+    },
+    {
+      "id": "HL-DEF-004"
+    },
+    {
+      "id": "HL-DEF-005"
+    },
+    {
+      "id": "HL-DEF-006"
+    },
+    {
+      "id": "HL-DEF-007"
+    },
+    {
+      "id": "HL-DEF-008"
+    },
+    {
+      "id": "HL-DEF-009"
+    },
+    {
+      "id": "HL-ASR-001"
+    },
+    {
+      "id": "HL-PS-001"
+    },
+    {
+      "id": "HL-PSLOG-001"
+    },
+    {
+      "id": "HL-PSLOG-002"
+    },
+    {
+      "id": "HL-PSLOG-003"
+    },
+    {
+      "id": "HL-AUD-001"
+    },
+    {
+      "id": "HL-AUD-002"
+    },
+    {
+      "id": "HL-AUD-003"
+    },
+    {
+      "id": "HL-AUD-004"
+    },
+    {
+      "id": "HL-AUD-005"
+    },
+    {
+      "id": "HL-AUD-006"
+    },
+    {
+      "id": "HL-AUD-007"
+    },
+    {
+      "id": "HL-LOG-001",
+      "parameters": {
+        "minimumSizeBytes": 536870912
+      }
+    },
+    {
+      "id": "HL-LOG-002",
+      "parameters": {
+        "minimumSizeBytes": 134217728
+      }
+    },
+    {
+      "id": "HL-LOG-003",
+      "parameters": {
+        "minimumSizeBytes": 134217728
+      }
+    },
+    {
+      "id": "HL-BOOT-001"
+    },
+    {
+      "id": "HL-SMART-001"
+    },
+    {
+      "id": "HL-AUTORUN-001"
+    },
+    {
+      "id": "HL-RA-001",
+      "severity": "Medium"
+    }
+  ],
+  "notes": [
+    "Validate application compatibility, profile container behavior, image lifecycle, and pilot-host telemetry before enforcing changes across a host pool."
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "../src/HardeningLens/Schema/baseline.schema.json",
+  "schemaVersion": "1.0",
+  "name": "NorthstarMemberServer",
+  "displayName": "Northstar Member Server",
+  "version": "1.0.0",
+  "description": "Organization-specific member-server profile with larger Security log retention, a documented lab encryption scope, and reviewed service severity.",
+  "extends": "MemberServer",
+  "excludedControls": [
+    "HL-BIT-001"
+  ],
+  "controls": [
+    {
+      "id": "HL-LOG-001",
+      "parameters": {
+        "minimumSizeBytes": 2147483648
+      }
+    },
+    {
+      "id": "HL-SVC-001",
+      "severity": "Low"
+    }
+  ],
+  "sourceBasis": [
+    "Hardening Lens MemberServer baseline",
+    "Northstar infrastructure security standard"
+  ],
+  "notes": [
+    "This profile demonstrates inheritance, parameter overrides, severity overrides, and explicit control exclusion."
+  ]
+}

@@ -1,0 +1,58 @@
+name: Control proposal
+description: Propose a new evidence-driven Windows hardening control.
+title: "control: "
+labels: [control, enhancement, triage]
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Control title
+      placeholder: LDAP server signing requirements are enforced
+    validations:
+      required: true
+  - type: dropdown
+    id: roles
+    attributes:
+      label: Applicable baseline roles
+      multiple: true
+      options:
+        - Workstation
+        - MemberServer
+        - DomainController
+        - AVDSessionHost
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Proposed severity
+      options: [Critical, High, Medium, Low, Informational]
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Effective configuration source
+      description: Registry, CIM, Windows API, cmdlet, event log, or another read-only source.
+    validations:
+      required: true
+  - type: textarea
+    id: states
+    attributes:
+      label: Evaluation states
+      description: Define pass, fail, warning, unknown, error, and not-applicable behavior where relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Security and operational rationale
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: Microsoft references
+      description: Include current first-party learn.microsoft.com URLs.
+    validations:
+      required: true

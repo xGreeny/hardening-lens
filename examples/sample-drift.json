@@ -1,0 +1,641 @@
+{
+  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/comparison.schema.json",
+  "schemaVersion": "1.0",
+  "comparedAt": "2026-07-12T10:06:04.0000000Z",
+  "computerName": "SRV-DEMO-01",
+  "baseline": "MemberServer",
+  "referenceScan": {
+    "Id": "e747bf2b-e9de-4e5a-bffe-514e51b86fe8",
+    "CollectedAt": "2026-06-12T09:38:02.1200000Z",
+    "Score": 79.2
+  },
+  "differenceScan": {
+    "Id": "8fc7045c-a95e-4f23-bdb7-2bb858322c52",
+    "CollectedAt": "2026-07-12T09:42:18.4210000Z",
+    "Score": 77.1
+  },
+  "summary": {
+    "ScoreDelta": -2.1,
+    "NewFindings": 2,
+    "Resolved": 1,
+    "Changed": 1,
+    "AddedControls": 0,
+    "RemovedControls": 0,
+    "Unchanged": 49
+  },
+  "changes": [
+    {
+      "ControlId": "HL-ACC-001",
+      "Title": "Built-in Guest account is disabled",
+      "Severity": "High",
+      "Category": "Identity",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Disabled",
+      "AfterActual": "Disabled"
+    },
+    {
+      "ControlId": "HL-ANON-001",
+      "Title": "Anonymous SAM enumeration is restricted",
+      "Severity": "High",
+      "Category": "Identity",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": 1,
+      "AfterActual": 1
+    },
+    {
+      "ControlId": "HL-ANON-002",
+      "Title": "Anonymous access is restricted",
+      "Severity": "Medium",
+      "Category": "Identity",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": 1,
+      "AfterActual": 1
+    },
+    {
+      "ControlId": "HL-ASR-001",
+      "Title": "Core Attack Surface Reduction rules are enforced",
+      "Severity": "High",
+      "Category": "Attack Surface Reduction",
+      "ChangeType": "Changed",
+      "BeforeStatus": "Warning",
+      "AfterStatus": "Fail",
+      "BeforeActual": "6 pass, 1 audit-only, 0 fail",
+      "AfterActual": "5 pass, 1 audit-only, 1 fail"
+    },
+    {
+      "ControlId": "HL-AUD-001",
+      "Title": "Credential Validation auditing captures success and failure",
+      "Severity": "High",
+      "Category": "Advanced Auditing",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Success and Failure",
+      "AfterActual": "Success and Failure"
+    },
+    {
+      "ControlId": "HL-AUD-002",
+      "Title": "Security Group Management auditing captures success",
+      "Severity": "Medium",
+      "Category": "Advanced Auditing",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Success",
+      "AfterActual": "Success"
+    },
+    {
+      "ControlId": "HL-AUD-003",
+      "Title": "User Account Management auditing captures success and failure",
+      "Severity": "High",
+      "Category": "Advanced Auditing",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Success and Failure",
+      "AfterActual": "Success and Failure"
+    },
+    {
+      "ControlId": "HL-AUD-004",
+      "Title": "Process Creation auditing captures success",
+      "Severity": "High",
+      "Category": "Advanced Auditing",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Success",
+      "AfterActual": "Success"
+    },
+    {
+      "ControlId": "HL-AUD-005",
+      "Title": "Logon auditing captures success and failure",
+      "Severity": "High",
+      "Category": "Advanced Auditing",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Success and Failure",
+      "AfterActual": "Success and Failure"
+    },
+    {
+      "ControlId": "HL-AUD-006",
+      "Title": "Special Logon auditing captures success",
+      "Severity": "Medium",
+      "Category": "Advanced Auditing",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Success",
+      "AfterActual": "Success"
+    },
+    {
+      "ControlId": "HL-AUD-007",
+      "Title": "Audit Policy Change auditing captures success",
+      "Severity": "High",
+      "Category": "Advanced Auditing",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Error",
+      "AfterStatus": "Error",
+      "BeforeActual": null,
+      "AfterActual": null
+    },
+    {
+      "ControlId": "HL-AUTORUN-001",
+      "Title": "AutoRun and AutoPlay are disabled",
+      "Severity": "Medium",
+      "Category": "Attack Surface Reduction",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "NoDriveTypeAutoRun=255 and NoAutorun=1",
+      "AfterActual": "NoDriveTypeAutoRun=255 and NoAutorun=1"
+    },
+    {
+      "ControlId": "HL-BIT-001",
+      "Title": "Operating system volume is protected by BitLocker",
+      "Severity": "High",
+      "Category": "Data Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Fail",
+      "AfterStatus": "Fail",
+      "BeforeActual": "Off, FullyDecrypted",
+      "AfterActual": "Off, FullyDecrypted"
+    },
+    {
+      "ControlId": "HL-BOOT-001",
+      "Title": "Secure Boot is enabled",
+      "Severity": "Medium",
+      "Category": "Platform Security",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Enabled",
+      "AfterActual": "Enabled"
+    },
+    {
+      "ControlId": "HL-CRED-001",
+      "Title": "WDigest credential caching is disabled",
+      "Severity": "High",
+      "Category": "Credential Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": 0,
+      "AfterActual": 0
+    },
+    {
+      "ControlId": "HL-CRED-002",
+      "Title": "Credential Guard is running",
+      "Severity": "High",
+      "Category": "Credential Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Unknown",
+      "AfterStatus": "Unknown",
+      "BeforeActual": null,
+      "AfterActual": null
+    },
+    {
+      "ControlId": "HL-DEF-001",
+      "Title": "Microsoft Defender real-time protection is enabled",
+      "Severity": "Critical",
+      "Category": "Endpoint Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": true,
+      "AfterActual": true
+    },
+    {
+      "ControlId": "HL-DEF-002",
+      "Title": "Cloud-delivered protection is enabled",
+      "Severity": "High",
+      "Category": "Endpoint Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": [
+        1,
+        2
+      ],
+      "AfterActual": [
+        1,
+        2
+      ]
+    },
+    {
+      "ControlId": "HL-DEF-003",
+      "Title": "Behavior monitoring is enabled",
+      "Severity": "High",
+      "Category": "Endpoint Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": true,
+      "AfterActual": true
+    },
+    {
+      "ControlId": "HL-DEF-004",
+      "Title": "Downloaded files and attachments are scanned",
+      "Severity": "High",
+      "Category": "Endpoint Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": true,
+      "AfterActual": true
+    },
+    {
+      "ControlId": "HL-DEF-005",
+      "Title": "Automatic sample submission is enabled",
+      "Severity": "Medium",
+      "Category": "Endpoint Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": [
+        1,
+        3
+      ],
+      "AfterActual": [
+        1,
+        3
+      ]
+    },
+    {
+      "ControlId": "HL-DEF-006",
+      "Title": "Potentially unwanted application protection is enabled",
+      "Severity": "High",
+      "Category": "Endpoint Protection",
+      "ChangeType": "NewFinding",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Warning",
+      "BeforeActual": 1,
+      "AfterActual": 2
+    },
+    {
+      "ControlId": "HL-DEF-007",
+      "Title": "Microsoft Defender tamper protection is enabled",
+      "Severity": "High",
+      "Category": "Endpoint Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": true,
+      "AfterActual": true
+    },
+    {
+      "ControlId": "HL-DEF-008",
+      "Title": "Defender signatures are recent",
+      "Severity": "High",
+      "Category": "Endpoint Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "<= 3 days",
+      "AfterActual": "<= 3 days"
+    },
+    {
+      "ControlId": "HL-DEF-009",
+      "Title": "Defender network protection is enabled",
+      "Severity": "High",
+      "Category": "Endpoint Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Warning",
+      "AfterStatus": "Warning",
+      "BeforeActual": 2,
+      "AfterActual": 2
+    },
+    {
+      "ControlId": "HL-FW-001",
+      "Title": "Windows Firewall is enabled for every profile",
+      "Severity": "Critical",
+      "Category": "Network Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Enabled with default inbound Block",
+      "AfterActual": "Enabled with default inbound Block"
+    },
+    {
+      "ControlId": "HL-FW-002",
+      "Title": "Default inbound firewall action is Block",
+      "Severity": "High",
+      "Category": "Network Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Enabled with default inbound Block",
+      "AfterActual": "Enabled with default inbound Block"
+    },
+    {
+      "ControlId": "HL-LAPS-001",
+      "Title": "Windows LAPS password backup is configured",
+      "Severity": "High",
+      "Category": "Credential Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Microsoft Entra ID or Active Directory",
+      "AfterActual": "Microsoft Entra ID or Active Directory"
+    },
+    {
+      "ControlId": "HL-LAPS-002",
+      "Title": "Windows LAPS password age is 30 days or less",
+      "Severity": "Medium",
+      "Category": "Credential Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "<= 30 days",
+      "AfterActual": "<= 30 days"
+    },
+    {
+      "ControlId": "HL-LAPS-003",
+      "Title": "Windows LAPS AD password encryption is enabled",
+      "Severity": "High",
+      "Category": "Credential Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Fail",
+      "AfterStatus": "Fail",
+      "BeforeActual": "Disabled",
+      "AfterActual": "Disabled"
+    },
+    {
+      "ControlId": "HL-LOG-001",
+      "Title": "Security event log has sufficient capacity",
+      "Severity": "Medium",
+      "Category": "Security Logging",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "At least 1073741824 bytes",
+      "AfterActual": "At least 1073741824 bytes"
+    },
+    {
+      "ControlId": "HL-LOG-002",
+      "Title": "System event log has sufficient capacity",
+      "Severity": "Low",
+      "Category": "Security Logging",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "At least 268435456 bytes",
+      "AfterActual": "At least 268435456 bytes"
+    },
+    {
+      "ControlId": "HL-LOG-003",
+      "Title": "PowerShell Operational log has sufficient capacity",
+      "Severity": "Medium",
+      "Category": "Security Logging",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "At least 134217728 bytes",
+      "AfterActual": "At least 134217728 bytes"
+    },
+    {
+      "ControlId": "HL-LSA-001",
+      "Title": "LSA protection is enabled",
+      "Severity": "High",
+      "Category": "Credential Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": [
+        1,
+        2
+      ],
+      "AfterActual": [
+        1,
+        2
+      ]
+    },
+    {
+      "ControlId": "HL-NET-001",
+      "Title": "LLMNR is disabled",
+      "Severity": "Medium",
+      "Category": "Network Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": 0,
+      "AfterActual": 0
+    },
+    {
+      "ControlId": "HL-NTLM-001",
+      "Title": "LAN Manager authentication level refuses LM and NTLMv1",
+      "Severity": "High",
+      "Category": "Credential Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": 5,
+      "AfterActual": 5
+    },
+    {
+      "ControlId": "HL-PS-001",
+      "Title": "Windows PowerShell 2.0 is disabled",
+      "Severity": "High",
+      "Category": "Scripting Security",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Warning",
+      "AfterStatus": "Warning",
+      "BeforeActual": "Disable pending",
+      "AfterActual": "Disable pending"
+    },
+    {
+      "ControlId": "HL-PSLOG-001",
+      "Title": "PowerShell Script Block Logging is enabled",
+      "Severity": "High",
+      "Category": "Security Logging",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": 1,
+      "AfterActual": 1
+    },
+    {
+      "ControlId": "HL-PSLOG-002",
+      "Title": "PowerShell Module Logging is enabled",
+      "Severity": "Medium",
+      "Category": "Security Logging",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Fail",
+      "AfterStatus": "Fail",
+      "BeforeActual": "Disabled or not configured",
+      "AfterActual": "Disabled or not configured"
+    },
+    {
+      "ControlId": "HL-PSLOG-003",
+      "Title": "Process creation events include command lines",
+      "Severity": "High",
+      "Category": "Security Logging",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": 1,
+      "AfterActual": 1
+    },
+    {
+      "ControlId": "HL-RA-001",
+      "Title": "Solicited Remote Assistance is disabled",
+      "Severity": "Low",
+      "Category": "Remote Administration",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Excepted",
+      "AfterStatus": "Excepted",
+      "BeforeActual": 1,
+      "AfterActual": 1
+    },
+    {
+      "ControlId": "HL-RDP-001",
+      "Title": "Remote Desktop requires Network Level Authentication",
+      "Severity": "High",
+      "Category": "Remote Administration",
+      "ChangeType": "Resolved",
+      "BeforeStatus": "Fail",
+      "AfterStatus": "Pass",
+      "BeforeActual": 0,
+      "AfterActual": 1
+    },
+    {
+      "ControlId": "HL-SMB-001",
+      "Title": "SMBv1 server component is disabled",
+      "Severity": "Critical",
+      "Category": "Network Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Disabled or absent",
+      "AfterActual": "Disabled or absent"
+    },
+    {
+      "ControlId": "HL-SMB-002",
+      "Title": "SMBv1 client component is disabled",
+      "Severity": "High",
+      "Category": "Network Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Disabled or absent",
+      "AfterActual": "Disabled or absent"
+    },
+    {
+      "ControlId": "HL-SMB-003",
+      "Title": "SMB server signing is required",
+      "Severity": "High",
+      "Category": "Network Protection",
+      "ChangeType": "NewFinding",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Fail",
+      "BeforeActual": true,
+      "AfterActual": false
+    },
+    {
+      "ControlId": "HL-SMB-004",
+      "Title": "SMB client signing is required",
+      "Severity": "High",
+      "Category": "Network Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": true,
+      "AfterActual": true
+    },
+    {
+      "ControlId": "HL-SMB-005",
+      "Title": "Insecure SMB guest authentication is disabled",
+      "Severity": "High",
+      "Category": "Network Protection",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": false,
+      "AfterActual": false
+    },
+    {
+      "ControlId": "HL-SVC-001",
+      "Title": "Remote Registry service is disabled",
+      "Severity": "Medium",
+      "Category": "Remote Administration",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Fail",
+      "AfterStatus": "Fail",
+      "BeforeActual": "Automatic, Running",
+      "AfterActual": "Automatic, Running"
+    },
+    {
+      "ControlId": "HL-UAC-001",
+      "Title": "User Account Control is enabled",
+      "Severity": "Critical",
+      "Category": "Privilege Management",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": 1,
+      "AfterActual": 1
+    },
+    {
+      "ControlId": "HL-UAC-002",
+      "Title": "Administrator elevation prompts require consent",
+      "Severity": "High",
+      "Category": "Privilege Management",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "AfterActual": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "ControlId": "HL-UAC-003",
+      "Title": "Built-in Administrator uses Admin Approval Mode",
+      "Severity": "Medium",
+      "Category": "Privilege Management",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Fail",
+      "AfterStatus": "Fail",
+      "BeforeActual": 0,
+      "AfterActual": 0
+    },
+    {
+      "ControlId": "HL-WINRM-001",
+      "Title": "WinRM Basic authentication is disabled",
+      "Severity": "High",
+      "Category": "Remote Administration",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": false,
+      "AfterActual": false
+    },
+    {
+      "ControlId": "HL-WINRM-002",
+      "Title": "WinRM unencrypted traffic is disabled",
+      "Severity": "High",
+      "Category": "Remote Administration",
+      "ChangeType": "Unchanged",
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": false,
+      "AfterActual": false
+    }
+  ]
+}

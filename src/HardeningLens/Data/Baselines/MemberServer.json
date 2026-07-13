@@ -1,0 +1,232 @@
+{
+  "$schema": "../../Schema/baseline.schema.json",
+  "schemaVersion": "1.0",
+  "name": "MemberServer",
+  "displayName": "Windows Member Server",
+  "version": "1.0.0",
+  "description": "Posture profile for domain-joined or centrally managed Windows member servers.",
+  "sourceBasis": [
+    "Microsoft Security Compliance Toolkit and current Microsoft Windows security guidance",
+    "Operational security telemetry and recoverability practices"
+  ],
+  "supportedRoles": [
+    "MemberServer"
+  ],
+  "controls": [
+    {
+      "id": "HL-ACC-001"
+    },
+    {
+      "id": "HL-UAC-001"
+    },
+    {
+      "id": "HL-UAC-002"
+    },
+    {
+      "id": "HL-UAC-003"
+    },
+    {
+      "id": "HL-LSA-001"
+    },
+    {
+      "id": "HL-CRED-001"
+    },
+    {
+      "id": "HL-CRED-002"
+    },
+    {
+      "id": "HL-LAPS-001"
+    },
+    {
+      "id": "HL-LAPS-002"
+    },
+    {
+      "id": "HL-LAPS-003"
+    },
+    {
+      "id": "HL-ANON-001"
+    },
+    {
+      "id": "HL-ANON-002"
+    },
+    {
+      "id": "HL-FW-001"
+    },
+    {
+      "id": "HL-FW-002"
+    },
+    {
+      "id": "HL-SMB-001"
+    },
+    {
+      "id": "HL-SMB-002"
+    },
+    {
+      "id": "HL-SMB-003"
+    },
+    {
+      "id": "HL-SMB-004"
+    },
+    {
+      "id": "HL-SMB-005"
+    },
+    {
+      "id": "HL-RDP-001"
+    },
+    {
+      "id": "HL-WINRM-001"
+    },
+    {
+      "id": "HL-WINRM-002"
+    },
+    {
+      "id": "HL-NET-001"
+    },
+    {
+      "id": "HL-SVC-001"
+    },
+    {
+      "id": "HL-NTLM-001"
+    },
+    {
+      "id": "HL-DEF-001"
+    },
+    {
+      "id": "HL-DEF-002"
+    },
+    {
+      "id": "HL-DEF-003"
+    },
+    {
+      "id": "HL-DEF-004"
+    },
+    {
+      "id": "HL-DEF-005"
+    },
+    {
+      "id": "HL-DEF-006"
+    },
+    {
+      "id": "HL-DEF-007"
+    },
+    {
+      "id": "HL-DEF-008"
+    },
+    {
+      "id": "HL-DEF-009"
+    },
+    {
+      "id": "HL-ASR-001",
+      "parameters": {
+        "requiredRules": [
+          {
+            "id": "56a863a9-875e-4185-98a7-b882c64b5ce5",
+            "name": "Block abuse of exploited vulnerable signed drivers",
+            "allowedActions": [
+              1,
+              6
+            ]
+          },
+          {
+            "id": "9e6c4e1f-7d60-472f-ba1a-a39ef669e4b2",
+            "name": "Block credential stealing from LSASS",
+            "allowedActions": [
+              1
+            ]
+          },
+          {
+            "id": "d1e49aac-8f56-4280-b9ba-993a6d77406c",
+            "name": "Block process creations originating from PSExec and WMI commands",
+            "allowedActions": [
+              1,
+              2,
+              6
+            ]
+          },
+          {
+            "id": "5beb7efe-fd9a-4556-801d-275e5ffc04cc",
+            "name": "Block execution of potentially obfuscated scripts",
+            "allowedActions": [
+              1,
+              6
+            ]
+          },
+          {
+            "id": "c1db55ab-c21a-4637-bb3f-a12568109d35",
+            "name": "Use advanced protection against ransomware",
+            "allowedActions": [
+              1,
+              6
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "HL-PS-001"
+    },
+    {
+      "id": "HL-PSLOG-001"
+    },
+    {
+      "id": "HL-PSLOG-002"
+    },
+    {
+      "id": "HL-PSLOG-003"
+    },
+    {
+      "id": "HL-AUD-001"
+    },
+    {
+      "id": "HL-AUD-002"
+    },
+    {
+      "id": "HL-AUD-003"
+    },
+    {
+      "id": "HL-AUD-004"
+    },
+    {
+      "id": "HL-AUD-005"
+    },
+    {
+      "id": "HL-AUD-006"
+    },
+    {
+      "id": "HL-AUD-007"
+    },
+    {
+      "id": "HL-LOG-001",
+      "parameters": {
+        "minimumSizeBytes": 1073741824
+      }
+    },
+    {
+      "id": "HL-LOG-002",
+      "parameters": {
+        "minimumSizeBytes": 268435456
+      }
+    },
+    {
+      "id": "HL-LOG-003",
+      "parameters": {
+        "minimumSizeBytes": 134217728
+      }
+    },
+    {
+      "id": "HL-BIT-001"
+    },
+    {
+      "id": "HL-BOOT-001"
+    },
+    {
+      "id": "HL-AUTORUN-001"
+    },
+    {
+      "id": "HL-RA-001"
+    }
+  ],
+  "notes": [
+    "Application roles can require documented exceptions. The profile does not infer application-specific firewall, service, or authentication requirements."
+  ]
+}

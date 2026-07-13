@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install validation dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Install PowerShell test modules
+        shell: powershell
+        run: |
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -SkipPublisherCheck
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -SkipPublisherCheck
+      - name: Verify release version
+        shell: powershell
+        run: |
+          $manifest = Test-ModuleManifest .\src\HardeningLens\HardeningLens.psd1
+          $tagVersion = '${{ github.ref_name }}'.TrimStart('v')
+          if ($manifest.Version.ToString() -ne $tagVersion) {
+            throw "Tag version $tagVersion does not match module version $($manifest.Version)."
+          }
+      - name: Validate repository
+        run: |
+          python tools/generate_control_reference.py --check
+          python tools/validate_repository.py
+      - name: Test and package
+        shell: powershell
+        run: .\build.ps1 -Task All
+      - name: Publish GitHub release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          gh release create '${{ github.ref_name }}' `
+            "artifacts/HardeningLens-$version.zip" `
+            "artifacts/HardeningLens-$version.zip.sha256" `
+            --title "Hardening Lens $version" `
+            --generate-notes `
+            --verify-tag

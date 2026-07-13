@@ -1,0 +1,23 @@
+# Build and test output
+artifacts/
+dist/
+out/
+fleet-results/
+TestResults.xml
+coverage.xml
+
+# PowerShell and editor state
+*.clixml
+*.tmp
+*.log
+.vscode/
+.idea/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local assessment data
+*.local.json
+private-results/

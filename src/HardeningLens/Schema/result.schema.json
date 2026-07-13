@@ -1,0 +1,400 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/result.schema.json",
+  "title": "Hardening Lens scan result",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "scan",
+    "system",
+    "baseline",
+    "summary",
+    "results"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "scan": {
+      "type": "object",
+      "required": [
+        "id",
+        "collectedAt",
+        "moduleVersion",
+        "redacted",
+        "readOnly",
+        "elevated",
+        "partialCollection",
+        "exceptionRegisterUsed",
+        "selectedControlCount"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "collectedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "moduleVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "redacted": {
+          "type": "boolean"
+        },
+        "readOnly": {
+          "const": true
+        },
+        "elevated": {
+          "type": "boolean"
+        },
+        "partialCollection": {
+          "type": "boolean"
+        },
+        "exceptionRegisterUsed": {
+          "type": "boolean"
+        },
+        "selectedControlCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "system": {
+      "type": "object",
+      "required": [
+        "ComputerName",
+        "Domain",
+        "DomainJoined",
+        "DetectedRole",
+        "ProductType",
+        "OSCaption",
+        "OSVersion",
+        "BuildNumber",
+        "OSArchitecture",
+        "Manufacturer",
+        "Model",
+        "PowerShellVersion",
+        "PowerShellEdition",
+        "CurrentUser",
+        "IsElevated"
+      ],
+      "properties": {
+        "ComputerName": {
+          "type": "string"
+        },
+        "Domain": {
+          "type": "string"
+        },
+        "DomainJoined": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "DetectedRole": {
+          "enum": [
+            "Workstation",
+            "MemberServer",
+            "DomainController",
+            "Unknown"
+          ]
+        },
+        "ProductType": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "OSCaption": {
+          "type": "string"
+        },
+        "OSVersion": {
+          "type": "string"
+        },
+        "BuildNumber": {
+          "type": "string"
+        },
+        "OSArchitecture": {
+          "type": "string"
+        },
+        "Manufacturer": {
+          "type": "string"
+        },
+        "Model": {
+          "type": "string"
+        },
+        "PowerShellVersion": {
+          "type": "string"
+        },
+        "PowerShellEdition": {
+          "type": "string"
+        },
+        "CurrentUser": {
+          "type": "string"
+        },
+        "IsElevated": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "baseline": {
+      "type": "object",
+      "required": [
+        "name",
+        "displayName",
+        "version",
+        "description",
+        "source",
+        "sourceBasis",
+        "supportedRoles",
+        "controlCount",
+        "notes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "BuiltIn",
+            "Custom"
+          ]
+        },
+        "sourceBasis": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "supportedRoles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "controlCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "Total",
+        "Applicable",
+        "Pass",
+        "Fail",
+        "Warning",
+        "Excepted",
+        "Unknown",
+        "Error",
+        "NotApplicable",
+        "HardeningScore",
+        "EvidenceCoverage",
+        "HighestOpenSeverity",
+        "ScoringModel"
+      ],
+      "properties": {
+        "Total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Applicable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Pass": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Fail": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Warning": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Excepted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Unknown": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Error": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "NotApplicable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "HardeningScore": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "EvidenceCoverage": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "HighestOpenSeverity": {
+          "enum": [
+            "None",
+            "Critical",
+            "High",
+            "Medium",
+            "Low",
+            "Informational"
+          ]
+        },
+        "ScoringModel": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/result"
+      }
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "controlId",
+        "title",
+        "category",
+        "severity",
+        "status",
+        "originalStatus",
+        "expected",
+        "actual",
+        "message",
+        "evidence",
+        "rationale",
+        "remediation",
+        "references",
+        "tags",
+        "probe",
+        "exception",
+        "collectedAt"
+      ],
+      "properties": {
+        "controlId": {
+          "type": "string",
+          "pattern": "^HL-[A-Z]+-[0-9]{3}$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "Critical",
+            "High",
+            "Medium",
+            "Low",
+            "Informational"
+          ]
+        },
+        "status": {
+          "enum": [
+            "Pass",
+            "Fail",
+            "Warning",
+            "Excepted",
+            "Unknown",
+            "Error",
+            "NotApplicable"
+          ]
+        },
+        "originalStatus": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected": {},
+        "actual": {},
+        "message": {
+          "type": "string"
+        },
+        "evidence": {},
+        "rationale": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "probe": {
+          "type": "string"
+        },
+        "exception": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "collectedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

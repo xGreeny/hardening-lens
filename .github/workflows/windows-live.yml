@@ -1,0 +1,52 @@
+name: Windows Live Smoke Test
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-live-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  live-smoke:
+    name: Safe live collection / Windows
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Pester
+        shell: powershell
+        run: |
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -SkipPublisherCheck
+      - name: Run tagged live smoke tests
+        shell: powershell
+        env:
+          HARDENINGLENS_LIVE_TESTS: "1"
+        run: |
+          Import-Module Pester -MinimumVersion 5.6.1 -Force
+          $configuration = New-PesterConfiguration
+          $configuration.Run.Path = '.\tests\Integration'
+          $configuration.Run.PassThru = $true
+          $configuration.Filter.Tag = @('WindowsLive')
+          $configuration.Output.Verbosity = 'Detailed'
+          $configuration.TestResult.Enabled = $true
+          $configuration.TestResult.OutputPath = '.\WindowsLiveResults.xml'
+          $configuration.TestResult.OutputFormat = 'NUnitXml'
+          $result = Invoke-Pester -Configuration $configuration
+          if ($result.FailedCount -gt 0 -or $result.SkippedCount -gt 0) {
+            throw "Windows live smoke test did not complete cleanly: $($result.FailedCount) failed, $($result.SkippedCount) skipped."
+          }
+      - name: Upload smoke-test result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-live-results
+          path: WindowsLiveResults.xml
+          if-no-files-found: ignore

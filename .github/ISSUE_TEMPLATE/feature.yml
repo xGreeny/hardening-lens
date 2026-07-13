@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose a reporting, baseline, exception, drift, or operations improvement.
+title: "feature: "
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Operational problem
+      description: Describe the workflow or decision that is difficult today.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Security and compatibility constraints
+      description: Include PowerShell edition, Windows role, privilege, data handling, and backward-compatibility concerns.
