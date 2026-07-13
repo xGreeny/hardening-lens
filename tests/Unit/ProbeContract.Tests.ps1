@@ -5,6 +5,14 @@ BeforeAll {
 
 Describe 'ASR probe normalization' {
     InModuleScope HardeningLens {
+        BeforeAll {
+            if ($null -eq (Get-Command -Name Get-MpPreference -ErrorAction SilentlyContinue)) {
+                Set-Item -Path Function:Get-MpPreference -Value {
+                    throw 'The test stub must be replaced by a Pester mock.'
+                }
+            }
+        }
+
         BeforeEach {
             Mock Get-Command {
                 [pscustomobject]@{ Name = 'Get-MpPreference' }
