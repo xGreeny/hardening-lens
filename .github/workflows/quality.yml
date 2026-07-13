@@ -17,14 +17,16 @@ jobs:
   repository-contract:
     name: Repository contract
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: pip
+          cache-dependency-path: requirements-dev.txt
       - name: Install schema validator
-        run: python -m pip install -r requirements-dev.txt
+        run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
       - name: Validate generated documentation
         run: python tools/generate_control_reference.py --check
       - name: Validate schemas and repository invariants
@@ -33,20 +35,35 @@ jobs:
   powershell-core:
     name: PowerShell 7 / Linux
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install test modules
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force
-          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force
+
+          $pester = Get-Module -ListAvailable -Name Pester |
+            Where-Object { $_.Version -ge [version]'5.6.1' } |
+            Sort-Object Version -Descending |
+            Select-Object -First 1
+          if ($null -eq $pester) {
+            Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+          }
+
+          $analyzer = Get-Module -ListAvailable -Name PSScriptAnalyzer |
+            Sort-Object Version -Descending |
+            Select-Object -First 1
+          if ($null -eq $analyzer) {
+            Install-Module PSScriptAnalyzer -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+          }
       - name: Validate and test
         shell: pwsh
         run: ./build.ps1 -Task Test
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-pwsh
           path: |
@@ -57,21 +74,36 @@ jobs:
   windows-powershell:
     name: Windows PowerShell 5.1
     runs-on: windows-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install test modules
         shell: powershell
         run: |
+          $ErrorActionPreference = 'Stop'
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -SkipPublisherCheck
-          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -SkipPublisherCheck
+
+          $pester = Get-Module -ListAvailable -Name Pester |
+            Where-Object { $_.Version -ge [version]'5.6.1' } |
+            Sort-Object Version -Descending |
+            Select-Object -First 1
+          if ($null -eq $pester) {
+            Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop
+          }
+
+          $analyzer = Get-Module -ListAvailable -Name PSScriptAnalyzer |
+            Sort-Object Version -Descending |
+            Select-Object -First 1
+          if ($null -eq $analyzer) {
+            Install-Module PSScriptAnalyzer -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop
+          }
       - name: Validate and test
         shell: powershell
         run: .\build.ps1 -Task Test
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-windows-powershell
           path: |
