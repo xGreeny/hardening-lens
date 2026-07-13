@@ -16,7 +16,7 @@ function Get-HardeningLensBaseline {
     )
 
     if ($PSCmdlet.ParameterSetName -eq 'List' -or ($PSCmdlet.ParameterSetName -eq 'Named' -and [string]::IsNullOrWhiteSpace($Name))) {
-        $items = foreach ($baselineName in Get-HLBuiltinBaselineNames) {
+        $items = foreach ($baselineName in Get-HLBuiltinBaselineName) {
             $baseline = Resolve-HLBaseline -Name $baselineName
             [pscustomobject][ordered]@{
                 Name           = [string]$baseline.name

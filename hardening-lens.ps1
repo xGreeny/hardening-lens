@@ -54,7 +54,7 @@ try {
     }
 
     if ($PassThru) {
-        Write-Output -NoEnumerate $scan
+        $PSCmdlet.WriteObject($scan, $false)
     }
 
     if ($FailOnSeverity -eq 'None') { exit 0 }

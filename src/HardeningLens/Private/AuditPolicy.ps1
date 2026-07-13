@@ -100,7 +100,7 @@ function Invoke-HLAuditPolicyProbe {
     if ($actualFlags.Count -eq 0) { $actualFlags.Add('No Auditing') }
 
     $expected = @($parameters.requiredFlags) -join ' and '
-    $actual = @($actualFlags) -join ' and '
+    $actual = $actualFlags.ToArray() -join ' and '
     $evidence = [pscustomobject][ordered]@{
         SubcategoryName = [string]$parameters.subcategoryName
         SubcategoryGuid = [string]$parameters.subcategoryGuid
@@ -110,8 +110,8 @@ function Invoke-HLAuditPolicyProbe {
     }
 
     if ($missing.Count -eq 0) {
-        return New-HLProbeResult -Status Pass -Expected $expected -Actual $actual -Message 'The effective advanced audit policy contains every required flag.' -Evidence $evidence
+        return Get-HLProbeResult -Status Pass -Expected $expected -Actual $actual -Message 'The effective advanced audit policy contains every required flag.' -Evidence $evidence
     }
 
-    return New-HLProbeResult -Status Fail -Expected $expected -Actual $actual -Message ('Missing required audit flags: {0}.' -f (@($missing) -join ', ')) -Evidence $evidence
+    return Get-HLProbeResult -Status Fail -Expected $expected -Actual $actual -Message ('Missing required audit flags: {0}.' -f ($missing.ToArray() -join ', ')) -Evidence $evidence
 }

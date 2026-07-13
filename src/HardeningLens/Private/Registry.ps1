@@ -66,7 +66,7 @@ function Get-HLRegistryValue {
     }
 }
 
-function Get-HLRegistryKeyValues {
+function Get-HLRegistryKeyValueMap {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
@@ -125,11 +125,11 @@ function Invoke-HLRegistryValueProbe {
         }
 
         if ($missingIsPass) {
-            return New-HLProbeResult -Status Pass -Expected $expected -Actual '<not configured; secure operating-system default>' -Message 'The value is not explicitly configured and the secure operating-system default applies.' -Evidence $registry
+            return Get-HLProbeResult -Status Pass -Expected $expected -Actual '<not configured; secure operating-system default>' -Message 'The value is not explicitly configured and the secure operating-system default applies.' -Evidence $registry
         }
-        return New-HLProbeResult -Status Fail -Expected $expected -Actual '<not configured>' -Message "Registry value '$($parameters.name)' is not explicitly configured." -Evidence $registry
+        return Get-HLProbeResult -Status Fail -Expected $expected -Actual '<not configured>' -Message "Registry value '$($parameters.name)' is not explicitly configured." -Evidence $registry
     }
 
     $warningValues = if (Test-HLProperty -InputObject $parameters -Name 'warningValues') { @($parameters.warningValues) } else { $null }
-    return New-HLValueProbeResult -Actual $registry.Value -Expected $expected -Operator $operator -WarningValues $warningValues -Evidence $registry
+    return Get-HLValueProbeResult -Actual $registry.Value -Expected $expected -Operator $operator -WarningValues $warningValues -Evidence $registry
 }

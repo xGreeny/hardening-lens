@@ -97,7 +97,7 @@ function Invoke-Validation {
     }
 }
 
-function Invoke-Tests {
+function Invoke-TestSuite {
     $pester = Get-Module -ListAvailable -Name Pester | Sort-Object Version -Descending | Select-Object -First 1
     if ($null -eq $pester -or $pester.Version -lt [version]'5.6.1') {
         throw 'Pester 5.6.1 or later is required. Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser'
@@ -112,7 +112,7 @@ function Invoke-Tests {
 
     $configuration = New-PesterConfiguration
     $configuration.Run.Path = Join-Path -Path $root -ChildPath 'tests'
-    $configuration.Run.ExcludeTag = @('WindowsLive')
+    $configuration.Filter.ExcludeTag = @('WindowsLive')
     $configuration.Run.PassThru = $true
     $configuration.Output.Verbosity = 'Detailed'
     $configuration.TestResult.Enabled = $true
@@ -165,8 +165,8 @@ function Invoke-Package {
 switch ($Task) {
     'Clean' { Invoke-Clean }
     'Validate' { Invoke-Validation }
-    'Test' { Invoke-Validation; Invoke-Tests }
+    'Test' { Invoke-Validation; Invoke-TestSuite }
     'Build' { $null = Invoke-Build }
     'Package' { Invoke-Package }
-    'All' { Invoke-Clean; Invoke-Validation; Invoke-Tests; Invoke-Package }
+    'All' { Invoke-Clean; Invoke-Validation; Invoke-TestSuite; Invoke-Package }
 }

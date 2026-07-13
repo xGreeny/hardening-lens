@@ -39,7 +39,7 @@ function Get-HLStatusClass {
     }
 }
 
-function New-HLHtmlReport {
+function ConvertTo-HLHtmlReport {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

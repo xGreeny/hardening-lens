@@ -59,7 +59,7 @@ function Export-HardeningLensReport {
             switch ($outputFormat) {
                 'Html' {
                     $outputPath = Join-Path -Path $resolvedOutput -ChildPath ($FileNamePrefix + '.html')
-                    Write-HLUtf8File -Path $outputPath -Content (New-HLHtmlReport -ScanResult $scanResult)
+                    Write-HLUtf8File -Path $outputPath -Content (ConvertTo-HLHtmlReport -ScanResult $scanResult)
                 }
                 'Json' {
                     $outputPath = Join-Path -Path $resolvedOutput -ChildPath ($FileNamePrefix + '.json')
@@ -76,6 +76,6 @@ function Export-HardeningLensReport {
             $written.Add([pscustomobject][ordered]@{ Format = $outputFormat; Path = $file.FullName; Bytes = $file.Length })
         }
 
-        return @($written)
+        return $written.ToArray()
     }
 }

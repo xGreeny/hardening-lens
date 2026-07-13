@@ -1,15 +1,24 @@
-BeforeAll {
-    $script:RepositoryRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
-    Import-Module -Name (Join-Path -Path $script:RepositoryRoot -ChildPath 'src/HardeningLens/HardeningLens.psd1') -Force
-    $script:Sample = Get-Content -LiteralPath (Join-Path -Path $script:RepositoryRoot -ChildPath 'examples/sample-result.json') -Raw | ConvertFrom-Json
+BeforeDiscovery {
+    $repositoryRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
+    $modulePath = Join-Path -Path $repositoryRoot -ChildPath 'src/HardeningLens/HardeningLens.psd1'
+    Import-Module -Name $modulePath -Force
 }
 
 Describe 'Targeted result redaction' {
-    InModuleScope HardeningLens -Parameters @{ SampleResult = $script:Sample } {
-        param($SampleResult)
+    InModuleScope HardeningLens {
+        BeforeAll {
+            $moduleBase = (Get-Module -Name HardeningLens -ErrorAction Stop).ModuleBase
+            $repositoryRoot = Split-Path -Path (Split-Path -Path $moduleBase -Parent) -Parent
+            $samplePath = Join-Path -Path $repositoryRoot -ChildPath 'examples/sample-result.json'
+            $script:RedactionFixture = Get-Content -LiteralPath $samplePath -Raw | ConvertFrom-Json
+        }
+
+        AfterAll {
+            Remove-Variable -Name RedactionFixture -Scope Script -ErrorAction SilentlyContinue
+        }
 
         It 'replaces the longest overlapping identifiers first' {
-            $redacted = Protect-HLResult -ScanResult $SampleResult
+            $redacted = Protect-HLResult -ScanResult $script:RedactionFixture
             $serialized = $redacted | ConvertTo-Json -Depth 40
 
             $redacted.scan.redacted | Should -BeTrue

@@ -34,6 +34,7 @@ function Invoke-HardeningLens {
     Invoke-HardeningLens -BaselinePath .\custom-baseline.json -ControlId HL-SMB-003,HL-SMB-004 -Redact
     #>
     [CmdletBinding(DefaultParameterSetName = 'Named')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '', Justification = 'Hardening Lens is the singular product name.')]
     param(
         [Parameter(ParameterSetName = 'Named')]
         [ValidateSet('Auto', 'Workstation', 'MemberServer', 'DomainController', 'AVDSessionHost')]
@@ -173,8 +174,8 @@ function Invoke-HardeningLens {
             controlCount  = @($controls).Count
             notes         = @($resolvedBaseline.notes)
         }
-        summary = Get-HLSummary -Results @($results)
-        results = @($results)
+        summary = Get-HLSummary -Results $results.ToArray()
+        results = $results.ToArray()
     }
 
     if ($Redact) {
@@ -185,5 +186,5 @@ function Invoke-HardeningLens {
         Write-HLConsoleSummary -ScanResult $scanResult
     }
 
-    Write-Output -NoEnumerate $scanResult
+    $PSCmdlet.WriteObject($scanResult, $false)
 }
