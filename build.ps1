@@ -112,7 +112,7 @@ function Invoke-TestSuite {
 
     $configuration = New-PesterConfiguration
     $configuration.Run.Path = Join-Path -Path $root -ChildPath 'tests'
-    $configuration.Run.ExcludeTag = @('WindowsLive')
+    $configuration.Filter.ExcludeTag = @('WindowsLive')
     $configuration.Run.PassThru = $true
     $configuration.Output.Verbosity = 'Detailed'
     $configuration.TestResult.Enabled = $true
