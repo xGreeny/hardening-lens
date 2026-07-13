@@ -45,7 +45,7 @@ jobs:
           }
       - name: Upload smoke-test result
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-live-results
           path: WindowsLiveResults.xml
