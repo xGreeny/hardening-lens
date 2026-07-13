@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          show-progress: false
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
@@ -38,6 +40,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+        with:
+          show-progress: false
       - name: Install test modules
         shell: pwsh
         run: |
@@ -60,13 +64,22 @@ jobs:
           }
       - name: Validate and test
         shell: pwsh
-        run: ./build.ps1 -Task Test
+        run: |
+          $logPath = Join-Path $PWD 'build-pwsh.log'
+          try {
+            & ./build.ps1 -Task Test *>&1 | Tee-Object -FilePath $logPath
+          }
+          catch {
+            $_ | Format-List * -Force | Out-String | Tee-Object -FilePath $logPath -Append | Write-Host
+            throw
+          }
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: test-results-pwsh
           path: |
+            build-pwsh.log
             TestResults.xml
             artifacts/coverage.xml
           if-no-files-found: ignore
@@ -77,6 +90,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
+        with:
+          show-progress: false
       - name: Install test modules
         shell: powershell
         run: |
@@ -100,13 +115,22 @@ jobs:
           }
       - name: Validate and test
         shell: powershell
-        run: .\build.ps1 -Task Test
+        run: |
+          $logPath = Join-Path $PWD 'build-windows-powershell.log'
+          try {
+            & .\build.ps1 -Task Test *>&1 | Tee-Object -FilePath $logPath
+          }
+          catch {
+            $_ | Format-List * -Force | Out-String | Tee-Object -FilePath $logPath -Append | Write-Host
+            throw
+          }
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: test-results-windows-powershell
           path: |
+            build-windows-powershell.log
             TestResults.xml
             artifacts/coverage.xml
           if-no-files-found: ignore
