@@ -1,13 +1,9 @@
 BeforeDiscovery {
-    $script:RepositoryRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
-    $script:ModulePath = Join-Path -Path $script:RepositoryRoot -ChildPath 'src/HardeningLens/HardeningLens.psd1'
-    $samplePath = Join-Path -Path $script:RepositoryRoot -ChildPath 'examples/sample-result.json'
+    $repositoryRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
+    $modulePath = Join-Path -Path $repositoryRoot -ChildPath 'src/HardeningLens/HardeningLens.psd1'
+    $samplePath = Join-Path -Path $repositoryRoot -ChildPath 'examples/sample-result.json'
     $script:SampleResult = Get-Content -LiteralPath $samplePath -Raw | ConvertFrom-Json
-    Import-Module -Name $script:ModulePath -Force
-}
-
-BeforeAll {
-    Import-Module -Name $script:ModulePath -Force
+    Import-Module -Name $modulePath -Force
 }
 
 Describe 'Targeted result redaction' {
