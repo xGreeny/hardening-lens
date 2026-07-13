@@ -18,13 +18,21 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Pester
         shell: powershell
         run: |
+          $ErrorActionPreference = 'Stop'
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -SkipPublisherCheck
+
+          $pester = Get-Module -ListAvailable -Name Pester |
+            Where-Object { $_.Version -ge [version]'5.6.1' } |
+            Sort-Object Version -Descending |
+            Select-Object -First 1
+          if ($null -eq $pester) {
+            Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop
+          }
       - name: Run tagged live smoke tests
         shell: powershell
         env:
@@ -45,7 +53,7 @@ jobs:
           }
       - name: Upload smoke-test result
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-live-results
           path: WindowsLiveResults.xml
