@@ -6,7 +6,7 @@ function Invoke-HLLocalGuestAccountProbe {
         $accounts = @(Get-CimInstance -ClassName Win32_UserAccount -Filter 'LocalAccount=True' -ErrorAction Stop)
         $guest = $accounts | Where-Object { [string]$_.SID -match '-501$' } | Select-Object -First 1
         if ($null -eq $guest) {
-            return New-HLProbeResult -Status Unknown -Expected 'Disabled' -Actual 'Built-in Guest account not located' -Message 'The RID 501 local account could not be located.'
+            return Get-HLProbeResult -Status Unknown -Expected 'Disabled' -Actual 'Built-in Guest account not located' -Message 'The RID 501 local account could not be located.'
         }
 
         $evidence = [pscustomobject][ordered]@{
@@ -16,12 +16,12 @@ function Invoke-HLLocalGuestAccountProbe {
             Status   = [string]$guest.Status
         }
         if ([bool]$guest.Disabled) {
-            return New-HLProbeResult -Status Pass -Expected 'Disabled' -Actual 'Disabled' -Message 'The built-in Guest account is disabled.' -Evidence $evidence
+            return Get-HLProbeResult -Status Pass -Expected 'Disabled' -Actual 'Disabled' -Message 'The built-in Guest account is disabled.' -Evidence $evidence
         }
-        return New-HLProbeResult -Status Fail -Expected 'Disabled' -Actual 'Enabled' -Message 'The built-in Guest account is enabled.' -Evidence $evidence
+        return Get-HLProbeResult -Status Fail -Expected 'Disabled' -Actual 'Enabled' -Message 'The built-in Guest account is enabled.' -Evidence $evidence
     }
     catch {
-        return New-HLProbeResult -Status Error -Expected 'Disabled' -Actual $null -Message "Unable to query local accounts: $($_.Exception.Message)"
+        return Get-HLProbeResult -Status Error -Expected 'Disabled' -Actual $null -Message "Unable to query local accounts: $($_.Exception.Message)"
     }
 }
 
@@ -40,15 +40,15 @@ function Invoke-HLCredentialGuardProbe {
         }
 
         if (1 -in $running) {
-            return New-HLProbeResult -Status Pass -Expected 'Credential Guard running' -Actual 'Running' -Message 'Credential Guard is reported as running.' -Evidence $evidence
+            return Get-HLProbeResult -Status Pass -Expected 'Credential Guard running' -Actual 'Running' -Message 'Credential Guard is reported as running.' -Evidence $evidence
         }
         if (1 -in $configured) {
-            return New-HLProbeResult -Status Fail -Expected 'Credential Guard running' -Actual 'Configured but not running' -Message 'Credential Guard is configured but the security service is not running.' -Evidence $evidence
+            return Get-HLProbeResult -Status Fail -Expected 'Credential Guard running' -Actual 'Configured but not running' -Message 'Credential Guard is configured but the security service is not running.' -Evidence $evidence
         }
-        return New-HLProbeResult -Status Fail -Expected 'Credential Guard running' -Actual 'Not configured' -Message 'Credential Guard is not configured or running.' -Evidence $evidence
+        return Get-HLProbeResult -Status Fail -Expected 'Credential Guard running' -Actual 'Not configured' -Message 'Credential Guard is not configured or running.' -Evidence $evidence
     }
     catch {
-        return New-HLProbeResult -Status Unknown -Expected 'Credential Guard running' -Actual $null -Message "Unable to query the Device Guard provider: $($_.Exception.Message)"
+        return Get-HLProbeResult -Status Unknown -Expected 'Credential Guard running' -Actual $null -Message "Unable to query the Device Guard provider: $($_.Exception.Message)"
     }
 }
 
@@ -60,13 +60,13 @@ function Invoke-HLFirewallProfilesProbe {
     )
 
     if ($null -eq (Get-Command -Name Get-NetFirewallProfile -ErrorAction SilentlyContinue)) {
-        return New-HLProbeResult -Status Unknown -Expected 'Windows Firewall profile configuration' -Actual $null -Message 'Get-NetFirewallProfile is not available.'
+        return Get-HLProbeResult -Status Unknown -Expected 'Windows Firewall profile configuration' -Actual $null -Message 'Get-NetFirewallProfile is not available.'
     }
 
     try {
         $profiles = @(Get-NetFirewallProfile -PolicyStore ActiveStore -ErrorAction Stop | Where-Object { [string]$_.Name -in @('Domain', 'Private', 'Public') })
         if ($profiles.Count -lt 3) {
-            return New-HLProbeResult -Status Unknown -Expected 'Domain, Private, and Public profiles' -Actual (@($profiles.Name) -join ', ') -Message 'Not every expected firewall profile was returned.' -Evidence $profiles
+            return Get-HLProbeResult -Status Unknown -Expected 'Domain, Private, and Public profiles' -Actual (@($profiles.Name) -join ', ') -Message 'Not every expected firewall profile was returned.' -Evidence $profiles
         }
 
         $evidence = @($profiles | ForEach-Object {
@@ -82,17 +82,17 @@ function Invoke-HLFirewallProfilesProbe {
         $requireInboundBlock = (Test-HLProperty -InputObject $Control.parameters -Name 'requireDefaultInboundBlock') -and [bool]$Control.parameters.requireDefaultInboundBlock
 
         if ($disabled.Count -gt 0) {
-            return New-HLProbeResult -Status Fail -Expected 'All firewall profiles enabled' -Actual ('Disabled or unresolved: {0}' -f (@($disabled.Name) -join ', ')) -Message 'One or more Windows Firewall profiles are disabled.' -Evidence $evidence
+            return Get-HLProbeResult -Status Fail -Expected 'All firewall profiles enabled' -Actual ('Disabled or unresolved: {0}' -f (@($disabled.Name) -join ', ')) -Message 'One or more Windows Firewall profiles are disabled.' -Evidence $evidence
         }
         if ($requireInboundBlock -and $notBlocking.Count -gt 0) {
-            return New-HLProbeResult -Status Fail -Expected 'Default inbound action Block for all profiles' -Actual ('Not blocking: {0}' -f (@($notBlocking.Name) -join ', ')) -Message 'One or more firewall profiles do not use a default inbound Block action.' -Evidence $evidence
+            return Get-HLProbeResult -Status Fail -Expected 'Default inbound action Block for all profiles' -Actual ('Not blocking: {0}' -f (@($notBlocking.Name) -join ', ')) -Message 'One or more firewall profiles do not use a default inbound Block action.' -Evidence $evidence
         }
 
         $expected = if ($requireInboundBlock) { 'Enabled with default inbound Block' } else { 'Enabled' }
-        return New-HLProbeResult -Status Pass -Expected $expected -Actual 'All profiles compliant' -Message 'Every firewall profile matches the baseline.' -Evidence $evidence
+        return Get-HLProbeResult -Status Pass -Expected $expected -Actual 'All profiles compliant' -Message 'Every firewall profile matches the baseline.' -Evidence $evidence
     }
     catch {
-        return New-HLProbeResult -Status Error -Expected 'Windows Firewall profile configuration' -Actual $null -Message "Unable to query Windows Firewall profiles: $($_.Exception.Message)"
+        return Get-HLProbeResult -Status Error -Expected 'Windows Firewall profile configuration' -Actual $null -Message "Unable to query Windows Firewall profiles: $($_.Exception.Message)"
     }
 }
 
@@ -104,7 +104,7 @@ function Invoke-HLWindowsOptionalFeatureProbe {
     )
 
     if ($null -eq (Get-Command -Name Get-WindowsOptionalFeature -ErrorAction SilentlyContinue)) {
-        return New-HLProbeResult -Status Unknown -Expected 'Optional feature state' -Actual $null -Message 'Get-WindowsOptionalFeature is not available.'
+        return Get-HLProbeResult -Status Unknown -Expected 'Optional feature state' -Actual $null -Message 'Get-WindowsOptionalFeature is not available.'
     }
 
     $evaluationMode = if (Test-HLProperty -InputObject $Control.parameters -Name 'evaluationMode') { [string]$Control.parameters.evaluationMode } else { 'AllDisabled' }
@@ -148,12 +148,12 @@ function Invoke-HLWindowsOptionalFeatureProbe {
     }
 
     if ($queryErrors.Count -gt 0) {
-        return New-HLProbeResult -Status Error -Expected 'Disabled or absent' -Actual 'Optional feature state could not be resolved' -Message ('Unable to query one or more optional features: {0}' -f ($queryErrors.ToArray() -join ' | ')) -Evidence $evidence.ToArray()
+        return Get-HLProbeResult -Status Error -Expected 'Disabled or absent' -Actual 'Optional feature state could not be resolved' -Message ('Unable to query one or more optional features: {0}' -f ($queryErrors.ToArray() -join ' | ')) -Evidence $evidence.ToArray()
     }
 
     $present = @($evidence | Where-Object { $_.Present -eq $true })
     if ($present.Count -eq 0) {
-        return New-HLProbeResult -Status Pass -Expected 'Disabled or absent' -Actual 'Feature not present' -Message 'None of the configured feature names are present on this operating system.' -Evidence $evidence.ToArray()
+        return Get-HLProbeResult -Status Pass -Expected 'Disabled or absent' -Actual 'Feature not present' -Message 'None of the configured feature names are present on this operating system.' -Evidence $evidence.ToArray()
     }
 
     $evaluated = if ($evaluationMode -eq 'FirstPresent') { @($present | Select-Object -First 1) } else { $present }
@@ -163,14 +163,14 @@ function Invoke-HLWindowsOptionalFeatureProbe {
     $unexpected = @($evaluated | Where-Object { [string]$_.State -notin @('Disabled', 'DisabledWithPayloadRemoved', 'DisablePending', 'Enabled', 'EnablePending') })
 
     if ($unsafe.Count -gt 0) {
-        return New-HLProbeResult -Status Fail -Expected 'Disabled or absent' -Actual ((@($unsafe | ForEach-Object { "$($_.FeatureName)=$($_.State)" })) -join '; ') -Message 'At least one evaluated optional feature is enabled or pending enablement.' -Evidence $evidence.ToArray()
+        return Get-HLProbeResult -Status Fail -Expected 'Disabled or absent' -Actual ((@($unsafe | ForEach-Object { "$($_.FeatureName)=$($_.State)" })) -join '; ') -Message 'At least one evaluated optional feature is enabled or pending enablement.' -Evidence $evidence.ToArray()
     }
     if ($pending.Count -gt 0) {
-        return New-HLProbeResult -Status Warning -Expected 'Disabled' -Actual 'Disable pending' -Message 'The evaluated feature is pending disablement; complete the required restart.' -Evidence $evidence.ToArray()
+        return Get-HLProbeResult -Status Warning -Expected 'Disabled' -Actual 'Disable pending' -Message 'The evaluated feature is pending disablement; complete the required restart.' -Evidence $evidence.ToArray()
     }
     if ($unexpected.Count -gt 0) {
-        return New-HLProbeResult -Status Unknown -Expected 'Disabled or absent' -Actual ((@($unexpected | ForEach-Object { "$($_.FeatureName)=$($_.State)" })) -join '; ') -Message 'An optional feature returned an unrecognized state.' -Evidence $evidence.ToArray()
+        return Get-HLProbeResult -Status Unknown -Expected 'Disabled or absent' -Actual ((@($unexpected | ForEach-Object { "$($_.FeatureName)=$($_.State)" })) -join '; ') -Message 'An optional feature returned an unrecognized state.' -Evidence $evidence.ToArray()
     }
 
-    return New-HLProbeResult -Status Pass -Expected 'Disabled or absent' -Actual 'Disabled' -Message 'Every evaluated optional feature is disabled.' -Evidence $evidence.ToArray()
+    return Get-HLProbeResult -Status Pass -Expected 'Disabled or absent' -Actual 'Disabled' -Message 'Every evaluated optional feature is disabled.' -Evidence $evidence.ToArray()
 }

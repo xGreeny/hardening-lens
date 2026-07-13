@@ -60,16 +60,16 @@ function Compare-HardeningLensResult {
         throw "Cannot compare results from different baselines ('$referenceBaseline' and '$differenceBaseline'). Use -AllowCrossBaselineComparison only for an intentional cross-baseline comparison."
     }
 
-    $comparison = New-HLComparison -Reference $referenceResult -Difference $differenceResult
+    $comparison = Compare-HLScanResult -Reference $referenceResult -Difference $differenceResult
 
     if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
         $parent = Split-Path -Path $OutputPath -Parent
         if (-not [string]::IsNullOrWhiteSpace($parent) -and -not (Test-Path -LiteralPath $parent -PathType Container)) {
             [void](New-Item -Path $parent -ItemType Directory -Force)
         }
-        $content = if ($Format -eq 'Json') { ($comparison | ConvertTo-Json -Depth 30) + [Environment]::NewLine } else { (New-HLComparisonMarkdown -Comparison $comparison) + [Environment]::NewLine }
+        $content = if ($Format -eq 'Json') { ($comparison | ConvertTo-Json -Depth 30) + [Environment]::NewLine } else { (ConvertTo-HLComparisonMarkdown -Comparison $comparison) + [Environment]::NewLine }
         Write-HLUtf8File -Path ([IO.Path]::GetFullPath($OutputPath)) -Content $content
     }
 
-    Write-Output -NoEnumerate $comparison
+    $PSCmdlet.WriteObject($comparison, $false)
 }

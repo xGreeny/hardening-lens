@@ -110,8 +110,8 @@ function Invoke-HLAuditPolicyProbe {
     }
 
     if ($missing.Count -eq 0) {
-        return New-HLProbeResult -Status Pass -Expected $expected -Actual $actual -Message 'The effective advanced audit policy contains every required flag.' -Evidence $evidence
+        return Get-HLProbeResult -Status Pass -Expected $expected -Actual $actual -Message 'The effective advanced audit policy contains every required flag.' -Evidence $evidence
     }
 
-    return New-HLProbeResult -Status Fail -Expected $expected -Actual $actual -Message ('Missing required audit flags: {0}.' -f ($missing.ToArray() -join ', ')) -Evidence $evidence
+    return Get-HLProbeResult -Status Fail -Expected $expected -Actual $actual -Message ('Missing required audit flags: {0}.' -f ($missing.ToArray() -join ', ')) -Evidence $evidence
 }

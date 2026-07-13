@@ -45,7 +45,7 @@ function Test-HLValue {
     }
 }
 
-function New-HLValueProbeResult {
+function Get-HLValueProbeResult {
     [CmdletBinding()]
     param(
         [AllowNull()]
@@ -69,12 +69,12 @@ function New-HLValueProbeResult {
     )
 
     if (Test-HLValue -Actual $Actual -Expected $Expected -Operator $Operator) {
-        return New-HLProbeResult -Status Pass -Expected $Expected -Actual $Actual -Message $SuccessMessage -Evidence $Evidence
+        return Get-HLProbeResult -Status Pass -Expected $Expected -Actual $Actual -Message $SuccessMessage -Evidence $Evidence
     }
 
     if ($null -ne $WarningValues -and $Actual -in @($WarningValues)) {
-        return New-HLProbeResult -Status Warning -Expected $Expected -Actual $Actual -Message 'The control is in audit or warning mode and is not fully enforced.' -Evidence $Evidence
+        return Get-HLProbeResult -Status Warning -Expected $Expected -Actual $Actual -Message 'The control is in audit or warning mode and is not fully enforced.' -Evidence $Evidence
     }
 
-    return New-HLProbeResult -Status Fail -Expected $Expected -Actual $Actual -Message $FailureMessage -Evidence $Evidence
+    return Get-HLProbeResult -Status Fail -Expected $Expected -Actual $Actual -Message $FailureMessage -Evidence $Evidence
 }

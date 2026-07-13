@@ -20,12 +20,12 @@ Describe 'Value evaluation' {
         }
 
         It 'converts configured warning values to Warning rather than Pass' {
-            $result = New-HLValueProbeResult -Actual 2 -Expected 1 -Operator Equals -WarningValues @(2)
+            $result = Get-HLValueProbeResult -Actual 2 -Expected 1 -Operator Equals -WarningValues @(2)
             $result.Status | Should -Be 'Warning'
         }
 
         It 'preserves actual and expected values in failure results' {
-            $result = New-HLValueProbeResult -Actual $false -Expected $true -Operator Equals
+            $result = Get-HLValueProbeResult -Actual $false -Expected $true -Operator Equals
             $result.Status | Should -Be 'Fail'
             $result.Actual | Should -BeFalse
             $result.Expected | Should -BeTrue

@@ -138,7 +138,7 @@ function ConvertTo-HLDisplayString {
     return [string]$Value
 }
 
-function New-HLProbeResult {
+function Get-HLProbeResult {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
@@ -184,7 +184,7 @@ function Get-HLControlCatalog {
     return $catalog
 }
 
-function Get-HLBuiltinBaselineNames {
+function Get-HLBuiltinBaselineName {
     [CmdletBinding()]
     param()
 
@@ -273,7 +273,7 @@ function Resolve-HLBaseline {
         $custom = Get-Content -LiteralPath $resolvedPath -Raw -ErrorAction Stop | ConvertFrom-Json
 
         if ((Test-HLProperty -InputObject $custom -Name 'extends') -and -not [string]::IsNullOrWhiteSpace([string]$custom.extends)) {
-            if ([string]$custom.extends -notin (Get-HLBuiltinBaselineNames)) {
+            if ([string]$custom.extends -notin (Get-HLBuiltinBaselineName)) {
                 throw "Custom baseline extends unsupported built-in baseline '$($custom.extends)'."
             }
             $basePath = Get-HLBuiltinBaselinePath -Name ([string]$custom.extends)

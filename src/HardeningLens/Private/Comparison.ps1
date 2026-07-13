@@ -41,7 +41,7 @@ function Get-HLResultStateFingerprint {
     return ($state | ConvertTo-Json -Depth 30 -Compress)
 }
 
-function New-HLComparison {
+function Compare-HLScanResult {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
@@ -116,7 +116,7 @@ function New-HLComparison {
     }
 }
 
-function New-HLComparisonMarkdown {
+function ConvertTo-HLComparisonMarkdown {
     [CmdletBinding()]
     param([Parameter(Mandatory)][object]$Comparison)
 

@@ -6,21 +6,21 @@ function Invoke-HLDefenderStatusProbe {
     )
 
     if ($null -eq (Get-Command -Name Get-MpComputerStatus -ErrorAction SilentlyContinue)) {
-        return New-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message 'Get-MpComputerStatus is not available. Use an approved exception when another endpoint protection platform is authoritative.'
+        return Get-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message 'Get-MpComputerStatus is not available. Use an approved exception when another endpoint protection platform is authoritative.'
     }
 
     try {
         $status = Get-MpComputerStatus -ErrorAction Stop
         $property = [string]$Control.parameters.property
         if (-not (Test-HLProperty -InputObject $status -Name $property)) {
-            return New-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message "Defender status does not expose '$property'."
+            return Get-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message "Defender status does not expose '$property'."
         }
         $actual = $status.$property
         $evidence = [pscustomobject][ordered]@{ Property = $property; Value = $actual; AntivirusEnabled = if (Test-HLProperty -InputObject $status -Name 'AntivirusEnabled') { $status.AntivirusEnabled } else { $null } }
-        return New-HLValueProbeResult -Actual $actual -Expected $Control.parameters.expected -Operator ([string]$Control.parameters.operator) -Evidence $evidence
+        return Get-HLValueProbeResult -Actual $actual -Expected $Control.parameters.expected -Operator ([string]$Control.parameters.operator) -Evidence $evidence
     }
     catch {
-        return New-HLProbeResult -Status Error -Expected $Control.parameters.expected -Actual $null -Message "Unable to query Microsoft Defender status: $($_.Exception.Message)"
+        return Get-HLProbeResult -Status Error -Expected $Control.parameters.expected -Actual $null -Message "Unable to query Microsoft Defender status: $($_.Exception.Message)"
     }
 }
 
@@ -32,24 +32,24 @@ function Invoke-HLDefenderPreferenceProbe {
     )
 
     if ($null -eq (Get-Command -Name Get-MpPreference -ErrorAction SilentlyContinue)) {
-        return New-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message 'Get-MpPreference is not available. Use an approved exception when another endpoint protection platform is authoritative.'
+        return Get-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message 'Get-MpPreference is not available. Use an approved exception when another endpoint protection platform is authoritative.'
     }
 
     try {
         $preference = Get-MpPreference -ErrorAction Stop
         $property = [string]$Control.parameters.property
         if (-not (Test-HLProperty -InputObject $preference -Name $property)) {
-            return New-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message "Defender preference does not expose '$property'."
+            return Get-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message "Defender preference does not expose '$property'."
         }
         $actualRaw = $preference.$property
         $actualInt = ConvertTo-HLInteger -Value $actualRaw
         $actual = if ($null -ne $actualInt) { $actualInt } else { $actualRaw }
         $warningValues = if (Test-HLProperty -InputObject $Control.parameters -Name 'warningValues') { @($Control.parameters.warningValues) } else { $null }
         $evidence = [pscustomobject][ordered]@{ Property = $property; Value = $actual }
-        return New-HLValueProbeResult -Actual $actual -Expected $Control.parameters.expected -Operator ([string]$Control.parameters.operator) -WarningValues $warningValues -Evidence $evidence
+        return Get-HLValueProbeResult -Actual $actual -Expected $Control.parameters.expected -Operator ([string]$Control.parameters.operator) -WarningValues $warningValues -Evidence $evidence
     }
     catch {
-        return New-HLProbeResult -Status Error -Expected $Control.parameters.expected -Actual $null -Message "Unable to query Microsoft Defender preferences: $($_.Exception.Message)"
+        return Get-HLProbeResult -Status Error -Expected $Control.parameters.expected -Actual $null -Message "Unable to query Microsoft Defender preferences: $($_.Exception.Message)"
     }
 }
 
@@ -61,13 +61,13 @@ function Invoke-HLDefenderSignatureAgeProbe {
     )
 
     if ($null -eq (Get-Command -Name Get-MpComputerStatus -ErrorAction SilentlyContinue)) {
-        return New-HLProbeResult -Status Unknown -Expected ('<= {0} days' -f [int]$Control.parameters.maximumAgeDays) -Actual $null -Message 'Get-MpComputerStatus is not available.'
+        return Get-HLProbeResult -Status Unknown -Expected ('<= {0} days' -f [int]$Control.parameters.maximumAgeDays) -Actual $null -Message 'Get-MpComputerStatus is not available.'
     }
 
     try {
         $status = Get-MpComputerStatus -ErrorAction Stop
         if ($null -eq $status.AntivirusSignatureLastUpdated) {
-            return New-HLProbeResult -Status Unknown -Expected ('<= {0} days' -f [int]$Control.parameters.maximumAgeDays) -Actual $null -Message 'Defender did not return a signature update timestamp.'
+            return Get-HLProbeResult -Status Unknown -Expected ('<= {0} days' -f [int]$Control.parameters.maximumAgeDays) -Actual $null -Message 'Defender did not return a signature update timestamp.'
         }
         $updated = [datetime]$status.AntivirusSignatureLastUpdated
         $age = (Get-Date).ToUniversalTime() - $updated.ToUniversalTime()
@@ -75,12 +75,12 @@ function Invoke-HLDefenderSignatureAgeProbe {
         $maximum = [int]$Control.parameters.maximumAgeDays
         $evidence = [pscustomobject][ordered]@{ LastUpdated = $updated.ToString('o'); AgeDays = $ageDays; Version = [string]$status.AntivirusSignatureVersion }
         if ($ageDays -le $maximum) {
-            return New-HLProbeResult -Status Pass -Expected ("<= $maximum days") -Actual ("$ageDays days") -Message 'Defender signatures are within the baseline age.' -Evidence $evidence
+            return Get-HLProbeResult -Status Pass -Expected ("<= $maximum days") -Actual ("$ageDays days") -Message 'Defender signatures are within the baseline age.' -Evidence $evidence
         }
-        return New-HLProbeResult -Status Fail -Expected ("<= $maximum days") -Actual ("$ageDays days") -Message 'Defender signatures are older than the baseline permits.' -Evidence $evidence
+        return Get-HLProbeResult -Status Fail -Expected ("<= $maximum days") -Actual ("$ageDays days") -Message 'Defender signatures are older than the baseline permits.' -Evidence $evidence
     }
     catch {
-        return New-HLProbeResult -Status Error -Expected ('<= {0} days' -f [int]$Control.parameters.maximumAgeDays) -Actual $null -Message "Unable to determine Defender signature age: $($_.Exception.Message)"
+        return Get-HLProbeResult -Status Error -Expected ('<= {0} days' -f [int]$Control.parameters.maximumAgeDays) -Actual $null -Message "Unable to determine Defender signature age: $($_.Exception.Message)"
     }
 }
 
@@ -92,7 +92,7 @@ function Invoke-HLAsrRulesProbe {
     )
 
     if ($null -eq (Get-Command -Name Get-MpPreference -ErrorAction SilentlyContinue)) {
-        return New-HLProbeResult -Status Unknown -Expected 'Required ASR rules enforced' -Actual $null -Message 'Get-MpPreference is not available.'
+        return Get-HLProbeResult -Status Unknown -Expected 'Required ASR rules enforced' -Actual $null -Message 'Get-MpPreference is not available.'
     }
 
     try {
@@ -131,14 +131,14 @@ function Invoke-HLAsrRulesProbe {
         $expected = ('{0} required rules in approved enforcement modes' -f @($Control.parameters.requiredRules).Count)
         $actual = ('{0} pass, {1} audit-only, {2} fail' -f (@($evidence | Where-Object Result -eq 'Pass').Count), $warning, $failed)
         if ($failed -gt 0) {
-            return New-HLProbeResult -Status Fail -Expected $expected -Actual $actual -Message 'One or more required ASR rules are missing, disabled, or configured in an unapproved mode.' -Evidence $evidence.ToArray()
+            return Get-HLProbeResult -Status Fail -Expected $expected -Actual $actual -Message 'One or more required ASR rules are missing, disabled, or configured in an unapproved mode.' -Evidence $evidence.ToArray()
         }
         if ($warning -gt 0) {
-            return New-HLProbeResult -Status Warning -Expected $expected -Actual $actual -Message 'Every required ASR rule is present, but one or more rules remain in Audit mode.' -Evidence $evidence.ToArray()
+            return Get-HLProbeResult -Status Warning -Expected $expected -Actual $actual -Message 'Every required ASR rule is present, but one or more rules remain in Audit mode.' -Evidence $evidence.ToArray()
         }
-        return New-HLProbeResult -Status Pass -Expected $expected -Actual $actual -Message 'Every required ASR rule is configured in an approved enforcement mode.' -Evidence $evidence.ToArray()
+        return Get-HLProbeResult -Status Pass -Expected $expected -Actual $actual -Message 'Every required ASR rule is configured in an approved enforcement mode.' -Evidence $evidence.ToArray()
     }
     catch {
-        return New-HLProbeResult -Status Error -Expected 'Required ASR rules enforced' -Actual $null -Message "Unable to query ASR rules: $($_.Exception.Message)"
+        return Get-HLProbeResult -Status Error -Expected 'Required ASR rules enforced' -Actual $null -Message "Unable to query ASR rules: $($_.Exception.Message)"
     }
 }

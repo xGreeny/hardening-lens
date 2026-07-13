@@ -33,10 +33,10 @@ function Invoke-HLProbe {
             'BitLocker'               { return Invoke-HLBitLockerProbe -Control $Control }
             'SecureBoot'              { return Invoke-HLSecureBootProbe }
             'AutoRun'                 { return Invoke-HLAutoRunProbe }
-            default                   { return New-HLProbeResult -Status Error -Expected $null -Actual $null -Message "Unknown probe '$($Control.probe)' for control '$($Control.id)'." }
+            default                   { return Get-HLProbeResult -Status Error -Expected $null -Actual $null -Message "Unknown probe '$($Control.probe)' for control '$($Control.id)'." }
         }
     }
     catch {
-        return New-HLProbeResult -Status Error -Expected $null -Actual $null -Message "Probe '$($Control.probe)' failed: $($_.Exception.Message)"
+        return Get-HLProbeResult -Status Error -Expected $null -Actual $null -Message "Probe '$($Control.probe)' failed: $($_.Exception.Message)"
     }
 }
