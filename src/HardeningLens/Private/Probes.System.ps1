@@ -148,12 +148,12 @@ function Invoke-HLWindowsOptionalFeatureProbe {
     }
 
     if ($queryErrors.Count -gt 0) {
-        return New-HLProbeResult -Status Error -Expected 'Disabled or absent' -Actual 'Optional feature state could not be resolved' -Message ('Unable to query one or more optional features: {0}' -f (@($queryErrors) -join ' | ')) -Evidence @($evidence)
+        return New-HLProbeResult -Status Error -Expected 'Disabled or absent' -Actual 'Optional feature state could not be resolved' -Message ('Unable to query one or more optional features: {0}' -f ($queryErrors.ToArray() -join ' | ')) -Evidence $evidence.ToArray()
     }
 
     $present = @($evidence | Where-Object { $_.Present -eq $true })
     if ($present.Count -eq 0) {
-        return New-HLProbeResult -Status Pass -Expected 'Disabled or absent' -Actual 'Feature not present' -Message 'None of the configured feature names are present on this operating system.' -Evidence @($evidence)
+        return New-HLProbeResult -Status Pass -Expected 'Disabled or absent' -Actual 'Feature not present' -Message 'None of the configured feature names are present on this operating system.' -Evidence $evidence.ToArray()
     }
 
     $evaluated = if ($evaluationMode -eq 'FirstPresent') { @($present | Select-Object -First 1) } else { $present }
@@ -163,14 +163,14 @@ function Invoke-HLWindowsOptionalFeatureProbe {
     $unexpected = @($evaluated | Where-Object { [string]$_.State -notin @('Disabled', 'DisabledWithPayloadRemoved', 'DisablePending', 'Enabled', 'EnablePending') })
 
     if ($unsafe.Count -gt 0) {
-        return New-HLProbeResult -Status Fail -Expected 'Disabled or absent' -Actual ((@($unsafe | ForEach-Object { "$($_.FeatureName)=$($_.State)" })) -join '; ') -Message 'At least one evaluated optional feature is enabled or pending enablement.' -Evidence @($evidence)
+        return New-HLProbeResult -Status Fail -Expected 'Disabled or absent' -Actual ((@($unsafe | ForEach-Object { "$($_.FeatureName)=$($_.State)" })) -join '; ') -Message 'At least one evaluated optional feature is enabled or pending enablement.' -Evidence $evidence.ToArray()
     }
     if ($pending.Count -gt 0) {
-        return New-HLProbeResult -Status Warning -Expected 'Disabled' -Actual 'Disable pending' -Message 'The evaluated feature is pending disablement; complete the required restart.' -Evidence @($evidence)
+        return New-HLProbeResult -Status Warning -Expected 'Disabled' -Actual 'Disable pending' -Message 'The evaluated feature is pending disablement; complete the required restart.' -Evidence $evidence.ToArray()
     }
     if ($unexpected.Count -gt 0) {
-        return New-HLProbeResult -Status Unknown -Expected 'Disabled or absent' -Actual ((@($unexpected | ForEach-Object { "$($_.FeatureName)=$($_.State)" })) -join '; ') -Message 'An optional feature returned an unrecognized state.' -Evidence @($evidence)
+        return New-HLProbeResult -Status Unknown -Expected 'Disabled or absent' -Actual ((@($unexpected | ForEach-Object { "$($_.FeatureName)=$($_.State)" })) -join '; ') -Message 'An optional feature returned an unrecognized state.' -Evidence $evidence.ToArray()
     }
 
-    return New-HLProbeResult -Status Pass -Expected 'Disabled or absent' -Actual 'Disabled' -Message 'Every evaluated optional feature is disabled.' -Evidence @($evidence)
+    return New-HLProbeResult -Status Pass -Expected 'Disabled or absent' -Actual 'Disabled' -Message 'Every evaluated optional feature is disabled.' -Evidence $evidence.ToArray()
 }

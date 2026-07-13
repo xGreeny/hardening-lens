@@ -131,12 +131,12 @@ function Invoke-HLAsrRulesProbe {
         $expected = ('{0} required rules in approved enforcement modes' -f @($Control.parameters.requiredRules).Count)
         $actual = ('{0} pass, {1} audit-only, {2} fail' -f (@($evidence | Where-Object Result -eq 'Pass').Count), $warning, $failed)
         if ($failed -gt 0) {
-            return New-HLProbeResult -Status Fail -Expected $expected -Actual $actual -Message 'One or more required ASR rules are missing, disabled, or configured in an unapproved mode.' -Evidence @($evidence)
+            return New-HLProbeResult -Status Fail -Expected $expected -Actual $actual -Message 'One or more required ASR rules are missing, disabled, or configured in an unapproved mode.' -Evidence $evidence.ToArray()
         }
         if ($warning -gt 0) {
-            return New-HLProbeResult -Status Warning -Expected $expected -Actual $actual -Message 'Every required ASR rule is present, but one or more rules remain in Audit mode.' -Evidence @($evidence)
+            return New-HLProbeResult -Status Warning -Expected $expected -Actual $actual -Message 'Every required ASR rule is present, but one or more rules remain in Audit mode.' -Evidence $evidence.ToArray()
         }
-        return New-HLProbeResult -Status Pass -Expected $expected -Actual $actual -Message 'Every required ASR rule is configured in an approved enforcement mode.' -Evidence @($evidence)
+        return New-HLProbeResult -Status Pass -Expected $expected -Actual $actual -Message 'Every required ASR rule is configured in an approved enforcement mode.' -Evidence $evidence.ToArray()
     }
     catch {
         return New-HLProbeResult -Status Error -Expected 'Required ASR rules enforced' -Actual $null -Message "Unable to query ASR rules: $($_.Exception.Message)"

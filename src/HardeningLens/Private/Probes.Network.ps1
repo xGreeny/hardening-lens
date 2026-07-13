@@ -90,13 +90,13 @@ function Invoke-HLWinRMProbe {
     }
 
     if ($nonCompliant.Count -gt 0) {
-        return New-HLProbeResult -Status Fail -Expected $Control.parameters.expected -Actual ('Non-compliant: {0}' -f (@($nonCompliant) -join ', ')) -Message 'One or more WinRM client/service settings do not match the baseline.' -Evidence @($evidence)
+        return New-HLProbeResult -Status Fail -Expected $Control.parameters.expected -Actual ('Non-compliant: {0}' -f ($nonCompliant.ToArray() -join ', ')) -Message 'One or more WinRM client/service settings do not match the baseline.' -Evidence $evidence.ToArray()
     }
     if ($unresolved.Count -gt 0) {
-        return New-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual ('Unresolved: {0}' -f (@($unresolved) -join ', ')) -Message 'The effective WinRM configuration could not be resolved for every target.' -Evidence @($evidence)
+        return New-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual ('Unresolved: {0}' -f ($unresolved.ToArray() -join ', ')) -Message 'The effective WinRM configuration could not be resolved for every target.' -Evidence $evidence.ToArray()
     }
 
-    return New-HLProbeResult -Status Pass -Expected $Control.parameters.expected -Actual 'Compliant on Client and Service' -Message 'WinRM client and service settings match the baseline.' -Evidence @($evidence)
+    return New-HLProbeResult -Status Pass -Expected $Control.parameters.expected -Actual 'Compliant on Client and Service' -Message 'WinRM client and service settings match the baseline.' -Evidence $evidence.ToArray()
 }
 
 function Invoke-HLServiceProbe {

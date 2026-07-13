@@ -384,8 +384,8 @@ function Resolve-HLBaseline {
         $resolvedControls.Add((Resolve-HLControlDefinition -CatalogControl $catalogById[$id] -BaselineControl $baselineControl))
     }
 
-    $baseline.controls = @($resolvedControls)
-    $baseline | Add-Member -NotePropertyName controlCount -NotePropertyValue @($resolvedControls).Count -Force
+    $baseline.controls = $resolvedControls.ToArray()
+    $baseline | Add-Member -NotePropertyName controlCount -NotePropertyValue $resolvedControls.Count -Force
     return $baseline
 }
 
@@ -569,7 +569,7 @@ function ConvertTo-HLRedactedObject {
         foreach ($item in $InputObject) {
             $items.Add((ConvertTo-HLRedactedObject -InputObject $item -ReplacementMap $ReplacementMap))
         }
-        return @($items)
+        return $items.ToArray()
     }
 
     return $InputObject

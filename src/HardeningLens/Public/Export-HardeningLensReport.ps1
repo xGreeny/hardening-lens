@@ -76,6 +76,6 @@ function Export-HardeningLensReport {
             $written.Add([pscustomobject][ordered]@{ Format = $outputFormat; Path = $file.FullName; Bytes = $file.Length })
         }
 
-        return @($written)
+        return $written.ToArray()
     }
 }

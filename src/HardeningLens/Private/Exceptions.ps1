@@ -54,7 +54,7 @@ function Test-HLExceptionDocument {
     }
     if (-not (Test-HLProperty -InputObject $Document -Name 'exceptions')) {
         $errors.Add('The document must contain an exceptions array.')
-        return [pscustomobject][ordered]@{ IsValid = $false; Errors = @($errors); Warnings = @($warnings); ExceptionCount = 0 }
+        return [pscustomobject][ordered]@{ IsValid = $false; Errors = $errors.ToArray(); Warnings = $warnings.ToArray(); ExceptionCount = 0 }
     }
 
     $seen = @{}
@@ -169,8 +169,8 @@ function Test-HLExceptionDocument {
 
     return [pscustomobject][ordered]@{
         IsValid        = $errors.Count -eq 0
-        Errors         = @($errors)
-        Warnings       = @($warnings)
+        Errors         = $errors.ToArray()
+        Warnings       = $warnings.ToArray()
         ExceptionCount = @($Document.exceptions).Count
     }
 }

@@ -173,8 +173,8 @@ function Invoke-HardeningLens {
             controlCount  = @($controls).Count
             notes         = @($resolvedBaseline.notes)
         }
-        summary = Get-HLSummary -Results @($results)
-        results = @($results)
+        summary = Get-HLSummary -Results $results.ToArray()
+        results = $results.ToArray()
     }
 
     if ($Redact) {
