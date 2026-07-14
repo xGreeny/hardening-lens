@@ -1,0 +1,66 @@
+name: Harden Hardening Lens 1.1 application
+
+on:
+  push:
+    branches:
+      - release/v1.1.0
+    paths:
+      - .github/workflows/apply-v1.1-retry.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: release/v1.1.0
+          fetch-depth: 0
+          show-progress: false
+      - name: Harden release generator
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('tools/apply_v1_1.py')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(
+              'baseline_root_candidates = [MODULE / "Data" / "Baselines", MODULE / "Data" / "baselines"]',
+              'baseline_root_candidates = [MODULE / "Data" / "Baselines", MODULE / "Data" / "baselines", MODULE / "Baselines", MODULE / "baselines"]'
+          )
+          old = '''        match = re.search(r"(?ms)(FunctionsToExport\\s*=\\s*@\\()(.*?)(\\n\\s*\\))", text)
+                  if not match:
+                      raise RuntimeError("Could not locate FunctionsToExport in module manifest")
+                  body = match.group(2).rstrip()
+                  comma = "," if body and not body.rstrip().endswith(",") else ""
+                  replacement = match.group(1) + body + comma + f"\\n        '{function_name}'" + match.group(3)
+                  text = text[: match.start()] + replacement + text[match.end() :]'''
+          new = '''        match = re.search(r"(?ms)(FunctionsToExport\\s*=\\s*@\\()(.*?)(\\))", text)
+                  if not match:
+                      raise RuntimeError("Could not locate FunctionsToExport in module manifest")
+                  body = match.group(2).rstrip()
+                  comma = "," if body and not body.rstrip().endswith(",") else ""
+                  separator = "\\n        " if "\\n" in body or body else " "
+                  replacement = match.group(1) + body + comma + separator + f"'{function_name}'" + match.group(3)
+                  text = text[: match.start()] + replacement + text[match.end() :]'''
+          text = text.replace(old, new)
+          path.write_text(text, encoding='utf-8', newline='\n')
+      - name: Apply release changes
+        run: python3 tools/apply_v1_1.py
+      - name: Regenerate control reference
+        run: python3 tools/generate_control_reference.py
+      - name: Remove retry workflow and commit
+        shell: bash
+        run: |
+          rm -f .github/workflows/apply-v1.1-retry.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "feat: implement Hardening Lens 1.1.0"
+            git push origin HEAD:release/v1.1.0
+          fi
