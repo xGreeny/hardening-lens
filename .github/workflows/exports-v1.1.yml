@@ -1,0 +1,70 @@
+name: Verify Hardening Lens 1.1 module exports
+
+on:
+  push:
+    branches:
+      - release/v1.1.0
+    paths:
+      - .github/workflows/exports-v1.1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: release/v1.1.0
+          fetch-depth: 0
+          show-progress: false
+      - name: Ensure explicit module exports include 1.1 commands
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          path = Path('src/HardeningLens/HardeningLens.psm1')
+          text = path.read_text(encoding='utf-8-sig')
+          names = ['Test-HardeningLensResult', 'Test-HardeningLensPolicy', 'Invoke-HardeningLensFleet']
+          match = re.search(r'(?ms)(Export-ModuleMember\s+-Function\s+@\()(.*?)(\))', text)
+          if match:
+              body = match.group(2)
+              existing = re.findall(r"['\"]([^'\"]+)['\"]", body)
+              changed = False
+              for name in names:
+                  if name not in existing:
+                      existing.append(name); changed = True
+              if changed:
+                  replacement = match.group(1) + '\n' + ''.join(f"    '{name}',\n" for name in existing).rstrip(',\n') + '\n' + match.group(3)
+                  text = text[:match.start()] + replacement + text[match.end():]
+                  path.write_text(text, encoding='utf-8', newline='\n')
+      - name: Validate exported commands
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Import-Module ./src/HardeningLens/HardeningLens.psd1 -Force
+          foreach ($name in 'Test-HardeningLensResult','Test-HardeningLensPolicy','Invoke-HardeningLensFleet') {
+            if (-not (Get-Command -Name $name -Module HardeningLens -ErrorAction SilentlyContinue)) {
+              throw "Required 1.1 command '$name' is not exported."
+            }
+          }
+      - name: Run repository tests
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -AllowClobber
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -AllowClobber
+          ./build.ps1 -Task Test
+      - name: Commit export corrections
+        shell: bash
+        run: |
+          rm -f .github/workflows/exports-v1.1.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit --allow-empty -m "feat: implement Hardening Lens 1.1.0"
+          git push origin HEAD:release/v1.1.0

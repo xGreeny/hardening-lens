@@ -1,0 +1,53 @@
+name: Apply Hardening Lens 1.1 resiliently
+
+on:
+  push:
+    branches:
+      - release/v1.1.0
+    paths:
+      - .github/workflows/apply-v1.1-resilient.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: release/v1.1.0
+          fetch-depth: 0
+          show-progress: false
+      - name: Apply complete release
+        run: python3 tools/apply_v1_1_resilient.py
+      - name: Regenerate control reference
+        run: python3 tools/generate_control_reference.py
+      - name: Validate JSON syntax
+        run: python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in Path('.').rglob('*.json'):
+              json.loads(path.read_text(encoding='utf-8-sig'))
+          print('JSON syntax validated.')
+          PY
+      - name: Remove release application helpers
+        shell: bash
+        run: |
+          rm -f tools/apply_v1_1.py tools/apply_v1_1_resilient.py
+          rm -f .github/workflows/apply-v1.1.yml
+          rm -f .github/workflows/apply-v1.1-retry.yml
+          rm -f .github/workflows/apply-v1.1-resilient.yml
+          rm -f .github/workflows/repository-export.yml
+          rm -rf .v1.1-payload
+      - name: Commit release implementation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: implement Hardening Lens 1.1.0"
+          git push origin HEAD:release/v1.1.0

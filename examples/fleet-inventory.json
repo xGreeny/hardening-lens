@@ -1,0 +1,19 @@
+{
+  "targets": [
+    {
+      "computerName": "SRV-APP-01",
+      "baseline": "MemberServer",
+      "tags": ["production", "application"]
+    },
+    {
+      "computerName": "DC-01",
+      "baseline": "DomainController",
+      "tags": ["production", "tier-0"]
+    },
+    {
+      "computerName": "AVD-01",
+      "baseline": "AVDSessionHost",
+      "tags": ["pilot", "avd"]
+    }
+  ]
+}

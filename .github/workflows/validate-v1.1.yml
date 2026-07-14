@@ -1,0 +1,130 @@
+name: Validate Hardening Lens 1.1
+
+on:
+  push:
+    branches:
+      - release/v1.1.0
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: validate-v1.1
+  cancel-in-progress: true
+
+jobs:
+  repository-contract:
+    if: github.actor == 'github-actions[bot]' && contains(github.event.head_commit.message, 'implement Hardening Lens 1.1.0')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          show-progress: false
+      - run: python3 -m pip install --disable-pip-version-check -r requirements-dev.txt
+      - run: python3 tools/generate_control_reference.py --check
+      - run: python3 tools/validate_repository.py
+
+  powershell-linux:
+    if: github.actor == 'github-actions[bot]' && contains(github.event.head_commit.message, 'implement Hardening Lens 1.1.0')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          show-progress: false
+      - shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -AllowClobber
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -AllowClobber
+          ./build.ps1 -Task Test
+
+  windows-powershell:
+    if: github.actor == 'github-actions[bot]' && contains(github.event.head_commit.message, 'implement Hardening Lens 1.1.0')
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          show-progress: false
+      - shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -AllowClobber -SkipPublisherCheck
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -AllowClobber -SkipPublisherCheck
+          .\build.ps1 -Task Test
+
+  finalize:
+    needs: [repository-contract, powershell-linux, windows-powershell]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: release/v1.1.0
+          fetch-depth: 0
+          show-progress: false
+      - name: Remove release-only automation
+        shell: bash
+        run: |
+          rm -f tools/apply_v1_1.py
+          rm -f .github/workflows/apply-v1.1.yml
+          rm -f .github/workflows/validate-v1.1.yml
+          rm -rf .v1.1-payload
+      - name: Commit finalized release branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "build: finalize Hardening Lens 1.1.0"
+            git push origin HEAD:release/v1.1.0
+          fi
+      - name: Prepare pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          cat > /tmp/pr-body.md <<'EOF'
+          ## Hardening Lens 1.1 — Operational Trust
+
+          This release strengthens decision quality rather than merely increasing the control count.
+
+          ### Assessment and policy
+
+          - Explicit full versus focused assessment semantics
+          - Runtime result validation
+          - Policy-as-code quality gates and deterministic exit codes
+          - Canonical evidence fingerprints and evidence-loss-safe drift
+          - Explicit approval for comparisons of redacted results
+
+          ### Fleet operations
+
+          - Inventory-based fleet runs
+          - Retry, timeout, resume, and throttle controls
+          - One manifest record for every requested host
+          - Explicit connection, timeout, and assessment failure records
+          - Self-contained fleet HTML and CSV reporting
+
+          ### Windows security coverage
+
+          Adds 17 curated controls across TLS, NetBIOS, firewall telemetry, Remote UAC, CredSSP, AlwaysInstallElevated, domain-controller Print Spooler posture, Memory Integrity, Defender exclusions, advanced audit policy, and AVD session controls.
+
+          ### Engineering and supply chain
+
+          - Immutable GitHub Action references
+          - Build manifest, SPDX SBOM, checksums, and provenance attestation
+          - Expanded PowerShell tests on Linux and Windows PowerShell 5.1
+          - Roadmap for 1.2 interoperability and the 2.0 policy/evidence engine
+
+          All repository-contract, PowerShell 7, and Windows PowerShell 5.1 validation jobs passed before this branch was finalized.
+          EOF
+          gh pr edit 5 --title "feat: release Hardening Lens 1.1.0" --body-file /tmp/pr-body.md
+          gh pr ready 5

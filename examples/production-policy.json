@@ -1,0 +1,17 @@
+{
+  "$schema": "../src/HardeningLens/Schema/policy.schema.json",
+  "schemaVersion": "1.0",
+  "requireFullAssessment": true,
+  "minimumEvidenceCoverage": 95,
+  "maximumErrors": 0,
+  "maximumUnknown": 3,
+  "maximumExceptedCritical": 0,
+  "exceptionExpiryWarningDays": 30,
+  "maximumExpiringExceptions": 0,
+  "maximumFindings": {
+    "Critical": 0,
+    "High": 0,
+    "Medium": 10,
+    "Low": 25
+  }
+}

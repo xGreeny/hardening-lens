@@ -1,0 +1,44 @@
+name: Repository Export
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.head_ref == 'release/v1.1.0' || github.ref_name == 'release/v1.1.0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          show-progress: false
+      - name: Build repository archive
+        shell: python
+        run: |
+          from pathlib import Path
+          from zipfile import ZIP_DEFLATED, ZipFile
+
+          root = Path.cwd()
+          output = root / "repository-export.zip"
+          excluded_roots = {".git", "artifacts", "dist"}
+          with ZipFile(output, "w", ZIP_DEFLATED) as archive:
+              for path in sorted(root.rglob("*")):
+                  if not path.is_file() or path == output:
+                      continue
+                  relative = path.relative_to(root)
+                  if relative.parts and relative.parts[0] in excluded_roots:
+                      continue
+                  archive.write(path, relative.as_posix())
+      - name: Upload repository archive
+        uses: actions/upload-artifact@v7
+        with:
+          name: repository-export
+          path: repository-export.zip
+          archive: false
+          if-no-files-found: error
+          retention-days: 1
