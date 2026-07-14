@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  workflow_call:
+
+env:
+  PSSCRIPTANALYZER_VERSION: "1.25.0"
+  MINIMUM_COVERAGE_PERCENT: "45"
 
 permissions:
   contents: read
@@ -38,6 +43,8 @@ jobs:
     name: PowerShell 7 / Linux
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      PESTER_VERSION: "6.0.0"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -49,25 +56,24 @@ jobs:
           Set-PSRepository PSGallery -InstallationPolicy Trusted
 
           $pester = Get-Module -ListAvailable -Name Pester |
-            Where-Object { $_.Version -ge [version]'5.6.1' } |
-            Sort-Object Version -Descending |
+            Where-Object { $_.Version -eq [version]$env:PESTER_VERSION } |
             Select-Object -First 1
           if ($null -eq $pester) {
-            Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+            Install-Module Pester -RequiredVersion $env:PESTER_VERSION -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
           }
 
           $analyzer = Get-Module -ListAvailable -Name PSScriptAnalyzer |
-            Sort-Object Version -Descending |
+            Where-Object { $_.Version -eq [version]$env:PSSCRIPTANALYZER_VERSION } |
             Select-Object -First 1
           if ($null -eq $analyzer) {
-            Install-Module PSScriptAnalyzer -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
+            Install-Module PSScriptAnalyzer -RequiredVersion $env:PSSCRIPTANALYZER_VERSION -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -ErrorAction Stop
           }
       - name: Validate and test
         shell: pwsh
         run: |
           $logPath = Join-Path $PWD 'build-pwsh.log'
           try {
-            & ./build.ps1 -Task Test *>&1 | Tee-Object -FilePath $logPath
+            & ./build.ps1 -Task Test -MinimumCoveragePercent ([double]$env:MINIMUM_COVERAGE_PERCENT) *>&1 | Tee-Object -FilePath $logPath
           }
           catch {
             $_ | Format-List * -Force | Out-String | Tee-Object -FilePath $logPath -Append | Write-Host
@@ -88,6 +94,8 @@ jobs:
     name: Windows PowerShell 5.1
     runs-on: windows-latest
     timeout-minutes: 25
+    env:
+      PESTER_VERSION: "5.7.1"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -100,25 +108,24 @@ jobs:
           Set-PSRepository PSGallery -InstallationPolicy Trusted
 
           $pester = Get-Module -ListAvailable -Name Pester |
-            Where-Object { $_.Version -ge [version]'5.6.1' } |
-            Sort-Object Version -Descending |
+            Where-Object { $_.Version -eq [version]$env:PESTER_VERSION } |
             Select-Object -First 1
           if ($null -eq $pester) {
-            Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop
+            Install-Module Pester -RequiredVersion $env:PESTER_VERSION -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop
           }
 
           $analyzer = Get-Module -ListAvailable -Name PSScriptAnalyzer |
-            Sort-Object Version -Descending |
+            Where-Object { $_.Version -eq [version]$env:PSSCRIPTANALYZER_VERSION } |
             Select-Object -First 1
           if ($null -eq $analyzer) {
-            Install-Module PSScriptAnalyzer -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop
+            Install-Module PSScriptAnalyzer -RequiredVersion $env:PSSCRIPTANALYZER_VERSION -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop
           }
       - name: Validate and test
         shell: powershell
         run: |
           $logPath = Join-Path $PWD 'build-windows-powershell.log'
           try {
-            & .\build.ps1 -Task Test *>&1 | Tee-Object -FilePath $logPath
+            & .\build.ps1 -Task Test -MinimumCoveragePercent ([double]$env:MINIMUM_COVERAGE_PERCENT) *>&1 | Tee-Object -FilePath $logPath
           }
           catch {
             $_ | Format-List * -Force | Out-String | Tee-Object -FilePath $logPath -Append | Write-Host

@@ -14,31 +14,46 @@ concurrency:
 
 jobs:
   live-smoke:
-    name: Safe live collection / Windows
+    name: Safe live collection / ${{ matrix.name }}
     runs-on: windows-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows PowerShell 5.1
+            shell: powershell
+            artifact: windows-powershell
+            pester: "5.7.1"
+          - name: PowerShell 7
+            shell: pwsh
+            artifact: pwsh
+            pester: "6.0.0"
+    env:
+      PESTER_VERSION: ${{ matrix.pester }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     steps:
       - uses: actions/checkout@v7
       - name: Install Pester
-        shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           Set-PSRepository PSGallery -InstallationPolicy Trusted
 
           $pester = Get-Module -ListAvailable -Name Pester |
-            Where-Object { $_.Version -ge [version]'5.6.1' } |
-            Sort-Object Version -Descending |
+            Where-Object { $_.Version -eq [version]$env:PESTER_VERSION } |
             Select-Object -First 1
           if ($null -eq $pester) {
-            Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop
+            Install-Module Pester -RequiredVersion $env:PESTER_VERSION -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop
           }
       - name: Run tagged live smoke tests
-        shell: powershell
         env:
           HARDENINGLENS_LIVE_TESTS: "1"
         run: |
-          Import-Module Pester -MinimumVersion 5.6.1 -Force
+          $ErrorActionPreference = 'Stop'
+          Import-Module Pester -RequiredVersion $env:PESTER_VERSION -Force
           $configuration = New-PesterConfiguration
           $configuration.Run.Path = '.\tests\Integration'
           $configuration.Run.PassThru = $true
@@ -48,13 +63,27 @@ jobs:
           $configuration.TestResult.OutputPath = '.\WindowsLiveResults.xml'
           $configuration.TestResult.OutputFormat = 'NUnitXml'
           $result = Invoke-Pester -Configuration $configuration
-          if ($result.FailedCount -gt 0 -or $result.SkippedCount -gt 0) {
-            throw "Windows live smoke test did not complete cleanly: $($result.FailedCount) failed, $($result.SkippedCount) skipped."
+          $runFailed = [string]$result.Result -ne 'Passed' -or
+            $result.FailedCount -gt 0 -or
+            $result.FailedBlocksCount -gt 0 -or
+            $result.FailedContainersCount -gt 0 -or
+            $result.SkippedCount -gt 0 -or
+            $result.NotRunCount -gt 0 -or
+            $result.TotalCount -eq 0
+          if ($runFailed) {
+            throw ('Windows live smoke test failed: result={0}, tests={1}, blocks={2}, containers={3}, skipped={4}, notRun={5}, total={6}.' -f
+              $result.Result,
+              $result.FailedCount,
+              $result.FailedBlocksCount,
+              $result.FailedContainersCount,
+              $result.SkippedCount,
+              $result.NotRunCount,
+              $result.TotalCount)
           }
       - name: Upload smoke-test result
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: windows-live-results
+          name: windows-live-results-${{ matrix.artifact }}
           path: WindowsLiveResults.xml
           if-no-files-found: ignore

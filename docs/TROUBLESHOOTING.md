@@ -84,4 +84,4 @@ Common causes:
 
 ## Fleet results include remoting metadata
 
-Use the provided `Invoke-FleetAssessment.ps1`. It removes `PSComputerName`, `RunspaceId`, and `PSShowComputerName` before writing result JSON so the output remains schema-compatible.
+Use `Invoke-HardeningLensFleet`. It removes `PSComputerName`, `RunspaceId`, and `PSShowComputerName` before writing result JSON so the output remains schema-compatible. The legacy `scripts/Invoke-FleetAssessment.ps1` wrapper uses the same implementation.

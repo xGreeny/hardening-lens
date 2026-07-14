@@ -3,7 +3,7 @@
   "schemaVersion": "1.0",
   "name": "DomainController",
   "displayName": "Active Directory Domain Controller",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Role-aware posture profile for Active Directory domain controllers with stricter identity, LDAP, LAPS, audit, and log-retention checks.",
   "sourceBasis": [
     "Microsoft Security Compliance Toolkit and current Microsoft Windows security guidance",

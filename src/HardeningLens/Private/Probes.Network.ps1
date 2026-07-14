@@ -6,7 +6,10 @@ function Invoke-HLSmbConfigurationProbe {
 
         [Parameter(Mandatory)]
         [ValidateSet('Server', 'Client')]
-        [string]$Side
+        [string]$Side,
+
+        [AllowNull()]
+        [object]$CollectionContext
     )
 
     $commandName = if ($Side -eq 'Server') { 'Get-SmbServerConfiguration' } else { 'Get-SmbClientConfiguration' }
@@ -15,7 +18,9 @@ function Invoke-HLSmbConfigurationProbe {
     }
 
     try {
-        $configuration = & $commandName -ErrorAction Stop
+        $configuration = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name ("SmbConfiguration:$Side") -Factory {
+            & $commandName -ErrorAction Stop
+        }
         $property = [string]$Control.parameters.property
         if (-not (Test-HLProperty -InputObject $configuration -Name $property)) {
             return Get-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message "SMB $Side configuration does not expose '$property'."

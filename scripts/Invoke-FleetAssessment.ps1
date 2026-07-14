@@ -1,85 +1,129 @@
 #requires -Version 5.1
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName = 'BuiltIn')]
 param(
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory, Position = 0)]
+    [ValidateNotNullOrEmpty()]
     [string[]]$ComputerName,
 
-    [ValidateSet('Workstation', 'MemberServer', 'DomainController', 'AVDSessionHost')]
+    [Parameter(ParameterSetName = 'BuiltIn')]
+    [ValidateSet('Auto', 'Workstation', 'MemberServer', 'DomainController', 'AVDSessionHost')]
     [string]$Baseline = 'MemberServer',
+
+    [Parameter(Mandatory, ParameterSetName = 'Custom')]
+    [ValidateNotNullOrEmpty()]
+    [string]$CustomBaselinePath,
+
+    [ValidateNotNullOrEmpty()]
+    [string[]]$ControlId,
 
     [string]$ExceptionsPath,
 
+    [switch]$Redact,
+
+    [switch]$AllowPartial,
+
     [string]$OutputDirectory = (Join-Path -Path (Get-Location).Path -ChildPath 'fleet-results'),
 
+    [ValidateRange(1, 1024)]
     [int]$ThrottleLimit = 12,
 
-    [pscredential]$Credential
+    [pscredential]$Credential,
+
+    [switch]$Force,
+
+    [switch]$FailOnHostError
 )
 
+Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
-$moduleSource = Join-Path -Path (Join-Path -Path $PSScriptRoot -ChildPath '..') -ChildPath 'src/HardeningLens'
-$moduleFiles = Get-ChildItem -LiteralPath $moduleSource -File -Recurse | ForEach-Object {
-    [pscustomobject]@{ RelativePath = $_.FullName.Substring($moduleSource.Length).TrimStart('\'); Content = [Convert]::ToBase64String([IO.File]::ReadAllBytes($_.FullName)) }
+
+$repositoryRoot = Join-Path -Path $PSScriptRoot -ChildPath '..'
+$moduleRoot = Join-Path -Path (Join-Path -Path $repositoryRoot -ChildPath 'src') -ChildPath 'HardeningLens'
+$modulePath = Join-Path -Path $moduleRoot -ChildPath 'HardeningLens.psd1'
+$resolvedModulePath = (Resolve-Path -LiteralPath $modulePath -ErrorAction Stop).Path
+$resolvedModuleRoot = (Resolve-Path -LiteralPath $moduleRoot -ErrorAction Stop).Path
+$module = Get-Module -Name HardeningLens | Where-Object { $_.ModuleBase -eq $resolvedModuleRoot } | Select-Object -First 1
+if ($null -eq $module) {
+    Import-Module -Name $resolvedModulePath -Force -ErrorAction Stop
+    $module = Get-Module -Name HardeningLens | Where-Object { $_.ModuleBase -eq $resolvedModuleRoot } | Select-Object -First 1
 }
-$exceptionContent = if (-not [string]::IsNullOrWhiteSpace($ExceptionsPath)) { Get-Content -LiteralPath $ExceptionsPath -Raw -ErrorAction Stop } else { $null }
-[void](New-Item -Path $OutputDirectory -ItemType Directory -Force)
-
-$sessionOptions = @{ ComputerName = $ComputerName; ThrottleLimit = $ThrottleLimit; ErrorAction = 'Continue' }
-if ($null -ne $Credential) { $sessionOptions.Credential = $Credential }
-
-$results = Invoke-Command @sessionOptions -ArgumentList $moduleFiles,$Baseline,$exceptionContent -ScriptBlock {
-    param($Files,$SelectedBaseline,$ExceptionJson)
-    $tempRoot = Join-Path -Path $env:TEMP -ChildPath ('HardeningLens-' + [guid]::NewGuid().ToString('N'))
-    $moduleRoot = Join-Path -Path $tempRoot -ChildPath 'HardeningLens'
-    try {
-        foreach ($file in @($Files)) {
-            $target = Join-Path -Path $moduleRoot -ChildPath ([string]$file.RelativePath)
-            [void](New-Item -Path (Split-Path -Path $target -Parent) -ItemType Directory -Force)
-            [IO.File]::WriteAllBytes($target, [Convert]::FromBase64String([string]$file.Content))
-        }
-        Import-Module -Name (Join-Path -Path $moduleRoot -ChildPath 'HardeningLens.psd1') -Force
-        $parameters = @{ Baseline = $SelectedBaseline; AllowPartial = $true; Redact = $false; NoConsole = $true }
-        if (-not [string]::IsNullOrWhiteSpace($ExceptionJson)) {
-            $exceptionPath = Join-Path -Path $tempRoot -ChildPath 'exceptions.json'
-            [IO.File]::WriteAllText($exceptionPath, $ExceptionJson)
-            $parameters.ExceptionsPath = $exceptionPath
-        }
-        Invoke-HardeningLens @parameters
-    }
-    finally {
-        if (Test-Path -LiteralPath $tempRoot) { Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue }
-    }
+if ($null -eq $module) {
+    throw 'Hardening Lens could not be loaded.'
 }
 
-$cleanResults = New-Object System.Collections.Generic.List[object]
-foreach ($result in @($results)) {
-    if ($null -eq $result.schemaVersion) { continue }
-
-    # PowerShell remoting adds transport metadata to deserialized objects. Remove it
-    # before exporting so the result remains compatible with result.schema.json.
-    foreach ($propertyName in @('PSComputerName', 'RunspaceId', 'PSShowComputerName')) {
-        [void]$result.PSObject.Properties.Remove($propertyName)
-    }
-    $cleanResults.Add($result)
-
-    $safeName = ([string]$result.system.ComputerName) -replace '[^A-Za-z0-9._-]','-'
-    $path = Join-Path -Path $OutputDirectory -ChildPath ("$safeName.json")
-    [IO.File]::WriteAllText($path, (($result | ConvertTo-Json -Depth 40) + [Environment]::NewLine), (New-Object Text.UTF8Encoding($false)))
+$outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
+$latestSummaryPath = Join-Path -Path $outputRoot -ChildPath 'fleet-summary.csv'
+if ((Test-Path -LiteralPath $latestSummaryPath) -and -not $Force) {
+    throw "Legacy fleet summary already exists: $latestSummaryPath. Use -Force to replace it."
 }
 
-$summary = @($cleanResults | ForEach-Object {
-    [pscustomobject]@{
-        ComputerName = $_.system.ComputerName
-        Baseline = $_.baseline.name
-        Score = $_.summary.HardeningScore
-        Coverage = $_.summary.EvidenceCoverage
-        Fail = $_.summary.Fail
-        Warning = $_.summary.Warning
-        Excepted = $_.summary.Excepted
-        Unknown = $_.summary.Unknown
-        Error = $_.summary.Error
+$parameters = @{
+    ComputerName    = $ComputerName
+    ExceptionPath   = $ExceptionsPath
+    Redact          = $Redact
+    AllowPartial    = $AllowPartial
+    OutputDirectory = $outputRoot
+    ThrottleLimit   = $ThrottleLimit
+    Force           = $Force
+}
+if ($PSCmdlet.ParameterSetName -eq 'Custom') {
+    $parameters.CustomBaselinePath = $CustomBaselinePath
+}
+else {
+    $parameters.Baseline = $Baseline
+}
+if ($null -ne $ControlId -and @($ControlId).Count -gt 0) {
+    $parameters.ControlId = $ControlId
+}
+if ($null -ne $Credential) {
+    $parameters.Credential = $Credential
+}
+
+$fleetResult = & $module {
+    param($FleetParameters)
+    Invoke-HardeningLensFleet @FleetParameters
+} $parameters
+
+$baselineSelection = if ($PSCmdlet.ParameterSetName -eq 'Custom') { 'Custom' } else { $Baseline }
+$summaryRows = @($fleetResult.hosts | ForEach-Object {
+    $assessment = $_.assessment
+    [pscustomobject][ordered]@{
+        RunId                 = [string]$fleetResult.run.id
+        RequestedComputerName = [string]$_.requestedComputerName
+        ComputerName          = [string]$_.computerName
+        Status                = [string]$_.status
+        Error                 = if ($null -ne $_.error) { [string]$_.error.message } else { '' }
+        ErrorCategory         = if ($null -ne $_.error) { [string]$_.error.category } else { '' }
+        Baseline              = if ($null -ne $assessment) { [string]$assessment.baseline.name } else { $baselineSelection }
+        Score                 = if ($null -ne $assessment) { $assessment.summary.HardeningScore } else { $null }
+        Coverage              = if ($null -ne $assessment) { $assessment.summary.EvidenceCoverage } else { $null }
+        Fail                  = if ($null -ne $assessment) { $assessment.summary.Fail } else { $null }
+        Warning               = if ($null -ne $assessment) { $assessment.summary.Warning } else { $null }
+        Excepted              = if ($null -ne $assessment) { $assessment.summary.Excepted } else { $null }
+        Unknown               = if ($null -ne $assessment) { $assessment.summary.Unknown } else { $null }
+        ErrorCount            = if ($null -ne $assessment) { $assessment.summary.Error } else { 1 }
+        ArtifactPath          = [string]$_.artifactPath
     }
 })
-$summaryPath = Join-Path -Path $OutputDirectory -ChildPath 'fleet-summary.csv'
-$summary | Export-Csv -LiteralPath $summaryPath -NoTypeInformation -Encoding UTF8
-$summary
+
+if ((Test-Path -LiteralPath $latestSummaryPath) -and -not $Force) {
+    throw "Legacy fleet summary already exists: $latestSummaryPath. Use -Force to replace it."
+}
+$summaryContent = (@($summaryRows | ConvertTo-Csv -NoTypeInformation) -join [Environment]::NewLine) + [Environment]::NewLine
+& $module {
+    param($Path,$Content,$AllowOverwrite)
+    try {
+        Write-HLAtomicUtf8File -Path $Path -Content $Content -NoClobber:(-not $AllowOverwrite)
+    }
+    catch [System.IO.IOException] {
+        if (-not $AllowOverwrite -and (Test-Path -LiteralPath $Path)) {
+            throw "Legacy fleet summary already exists: $Path. Use -Force to replace it."
+        }
+        throw
+    }
+} $latestSummaryPath $summaryContent ([bool]$Force)
+
+$PSCmdlet.WriteObject($summaryRows, $true)
+if ($FailOnHostError -and $fleetResult.summary.failedCount -gt 0) {
+    throw "Fleet assessment $($fleetResult.run.id) failed on $($fleetResult.summary.failedCount) of $($fleetResult.summary.requestedCount) requested host(s)."
+}

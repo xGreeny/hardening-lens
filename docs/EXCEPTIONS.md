@@ -90,6 +90,34 @@ Test-HardeningLensExceptionFile -Path .\exceptions.json
 
 A register with missing approval metadata, unknown controls, invalid dates, duplicate IDs, or empty compensating controls is rejected. A global `*` target is accepted but produces a warning because narrower scopes are preferable.
 
+## Updating the lifecycle
+
+Add a named Draft and approve it after review:
+
+```powershell
+Set-HardeningLensException `
+    -Path .\exceptions.json `
+    -Add `
+    -Id EXC-AVD-SUPPORT `
+    -ControlId HL-RA-001 `
+    -Owner 'Workplace Engineering' `
+    -Reason 'Approved support workflow requires solicited Remote Assistance.' `
+    -Ticket SEC-1842 `
+    -Expires (Get-Date '2027-06-30') `
+    -Target 'AVD-PILOT-*' `
+    -Baseline AVDSessionHost `
+    -CompensatingControl 'Access is restricted to the support group.'
+
+Set-HardeningLensException `
+    -Path .\exceptions.json `
+    -Id EXC-AVD-SUPPORT `
+    -Status Approved `
+    -ApprovedBy 'Security Engineering' `
+    -ApprovedOn (Get-Date)
+```
+
+Revoke an approval with `-Revoke`. Updates are forward-only, validate the complete register, support `-WhatIf`, serialize concurrent writers, and replace the file atomically. Changing the scope, lifetime, rationale, ownership, compensating controls, or approval metadata of an `Approved` entry automatically resets it to `Draft` and removes `approvedBy` and `approvedOn`; approve the revised entry in a separate reviewed step. An expired Approved entry remains schema-compatible as `Approved` on disk and is reported as effective status `Expired`; it is never applied to an assessment.
+
 ## Review practice
 
 Store exception registers in a restricted repository or configuration-management system. Require pull-request review from both the service owner and security owner. Expiry should trigger reassessment, not automatic renewal. Report exports contain exception rationale and ownership; handle them as security-sensitive evidence.

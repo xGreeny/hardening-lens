@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/comparison.schema.json",
+  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.1.0/src/HardeningLens/Schema/comparison.schema.json",
   "title": "Hardening Lens drift comparison",
   "type": "object",
   "required": [
@@ -8,6 +8,8 @@
     "comparedAt",
     "computerName",
     "baseline",
+    "baselineContext",
+    "catalogContext",
     "referenceScan",
     "differenceScan",
     "summary",
@@ -18,7 +20,7 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": "1.0"
+      "const": "1.1"
     },
     "comparedAt": {
       "type": "string",
@@ -30,6 +32,12 @@
     "baseline": {
       "type": "string"
     },
+    "baselineContext": {
+      "$ref": "#/$defs/baselineContext"
+    },
+    "catalogContext": {
+      "$ref": "#/$defs/catalogContext"
+    },
     "referenceScan": {
       "$ref": "#/$defs/scanRef"
     },
@@ -40,6 +48,7 @@
       "type": "object",
       "required": [
         "ScoreDelta",
+        "CoverageDelta",
         "NewFindings",
         "Resolved",
         "Changed",
@@ -49,6 +58,12 @@
       ],
       "properties": {
         "ScoreDelta": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "CoverageDelta": {
           "type": [
             "number",
             "null"
@@ -91,6 +106,9 @@
           "Severity",
           "Category",
           "ChangeType",
+          "ChangedFields",
+          "Before",
+          "After",
           "BeforeStatus",
           "AfterStatus",
           "BeforeActual",
@@ -98,19 +116,14 @@
         ],
         "properties": {
           "ControlId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^HL-[A-Z]+-[0-9]{3}$"
           },
           "Title": {
             "type": "string"
           },
           "Severity": {
-            "enum": [
-              "Critical",
-              "High",
-              "Medium",
-              "Low",
-              "Informational"
-            ]
+            "$ref": "#/$defs/severity"
           },
           "Category": {
             "type": "string"
@@ -125,16 +138,59 @@
               "RemovedControl"
             ]
           },
+          "ChangedFields": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "Presence",
+                "Status",
+                "Severity",
+                "Expected",
+                "Actual",
+                "Evidence",
+                "Exception"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "Before": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/stateSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "After": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/stateSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "BeforeStatus": {
-            "type": [
-              "string",
-              "null"
+            "oneOf": [
+              {
+                "$ref": "#/$defs/status"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "AfterStatus": {
-            "type": [
-              "string",
-              "null"
+            "oneOf": [
+              {
+                "$ref": "#/$defs/status"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "BeforeActual": {},
@@ -145,12 +201,150 @@
     }
   },
   "$defs": {
+    "status": {
+      "enum": [
+        "Pass",
+        "Fail",
+        "Warning",
+        "Excepted",
+        "Unknown",
+        "Error",
+        "NotApplicable"
+      ]
+    },
+    "severity": {
+      "enum": [
+        "Critical",
+        "High",
+        "Medium",
+        "Low",
+        "Informational"
+      ]
+    },
+    "nullableDigest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "baselineRef": {
+      "type": "object",
+      "required": [
+        "Name",
+        "Version",
+        "Digest"
+      ],
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "Digest": {
+          "$ref": "#/$defs/nullableDigest"
+        }
+      },
+      "additionalProperties": false
+    },
+    "catalogRef": {
+      "type": "object",
+      "required": [
+        "Version",
+        "Digest"
+      ],
+      "properties": {
+        "Version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "Digest": {
+          "$ref": "#/$defs/nullableDigest"
+        }
+      },
+      "additionalProperties": false
+    },
+    "baselineContext": {
+      "type": "object",
+      "required": [
+        "Reference",
+        "Difference",
+        "Changed"
+      ],
+      "properties": {
+        "Reference": {
+          "$ref": "#/$defs/baselineRef"
+        },
+        "Difference": {
+          "$ref": "#/$defs/baselineRef"
+        },
+        "Changed": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "catalogContext": {
+      "type": "object",
+      "required": [
+        "Reference",
+        "Difference",
+        "Changed"
+      ],
+      "properties": {
+        "Reference": {
+          "$ref": "#/$defs/catalogRef"
+        },
+        "Difference": {
+          "$ref": "#/$defs/catalogRef"
+        },
+        "Changed": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "capability": {
+      "type": "object",
+      "required": [
+        "name",
+        "available",
+        "detail"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "detail": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "scanRef": {
       "type": "object",
       "required": [
         "Id",
         "CollectedAt",
-        "Score"
+        "ResultSchemaVersion",
+        "ModuleVersion",
+        "Score",
+        "EvidenceCoverage",
+        "CollectionDurationMs",
+        "ExceptionDigest",
+        "Capabilities"
       ],
       "properties": {
         "Id": {
@@ -161,6 +355,16 @@
           "type": "string",
           "format": "date-time"
         },
+        "ResultSchemaVersion": {
+          "enum": [
+            "1.0",
+            "1.1"
+          ]
+        },
+        "ModuleVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
         "Score": {
           "type": [
             "number",
@@ -168,6 +372,59 @@
           ],
           "minimum": 0,
           "maximum": 100
+        },
+        "EvidenceCoverage": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "CollectionDurationMs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "ExceptionDigest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "Capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/capability"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "stateSnapshot": {
+      "type": "object",
+      "required": [
+        "Status",
+        "Severity",
+        "Expected",
+        "Actual",
+        "Evidence",
+        "Exception"
+      ],
+      "properties": {
+        "Status": {
+          "$ref": "#/$defs/status"
+        },
+        "Severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "Expected": {},
+        "Actual": {},
+        "Evidence": {},
+        "Exception": {
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "additionalProperties": false

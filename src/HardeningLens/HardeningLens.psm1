@@ -4,6 +4,7 @@ $script:HLModuleRoot = $PSScriptRoot
 $script:HLDataRoot = Join-Path -Path $PSScriptRoot -ChildPath 'Data'
 $script:HLSchemaRoot = Join-Path -Path $PSScriptRoot -ChildPath 'Schema'
 $script:HLControlCatalogCache = $null
+$script:HLProbeRegistryCache = $null
 $script:HLAuditNativeLoaded = $false
 
 $privateFunctions = Get-ChildItem -LiteralPath (Join-Path -Path $PSScriptRoot -ChildPath 'Private') -Filter '*.ps1' -File | Sort-Object Name
@@ -20,10 +21,14 @@ foreach ($file in @($privateFunctions + $publicFunctions)) {
 
 Export-ModuleMember -Function @(
     'Invoke-HardeningLens',
+    'Invoke-HardeningLensFleet',
     'Export-HardeningLensReport',
     'Compare-HardeningLensResult',
     'Get-HardeningLensBaseline',
     'Get-HardeningLensControl',
+    'Test-HardeningLensBaseline',
+    'Test-HardeningLensPolicy',
     'Test-HardeningLensExceptionFile',
-    'New-HardeningLensExceptionFile'
+    'New-HardeningLensExceptionFile',
+    'Set-HardeningLensException'
 )

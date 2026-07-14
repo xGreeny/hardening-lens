@@ -14,7 +14,9 @@ function Get-HardeningLensControl {
         [switch]$RawCatalog
     )
 
-    $catalog = Get-HLControlCatalog
+    # The catalog is cached for performance. Never expose that mutable cache through
+    # the public API: callers commonly enrich returned objects for their own reports.
+    $catalog = Copy-HLObject -InputObject (Get-HLControlCatalog)
     if ($RawCatalog) {
         return $catalog
     }

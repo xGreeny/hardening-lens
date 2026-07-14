@@ -271,6 +271,7 @@ function Resolve-HLBaseline {
     if (-not [string]::IsNullOrWhiteSpace($Path)) {
         $resolvedPath = (Resolve-Path -LiteralPath $Path -ErrorAction Stop).Path
         $custom = Get-Content -LiteralPath $resolvedPath -Raw -ErrorAction Stop | ConvertFrom-Json
+        Assert-HLBaselineDocument -Document $custom -Catalog $catalog -Source "Custom baseline '$resolvedPath'"
 
         if ((Test-HLProperty -InputObject $custom -Name 'extends') -and -not [string]::IsNullOrWhiteSpace([string]$custom.extends)) {
             if ([string]$custom.extends -notin (Get-HLBuiltinBaselineName)) {
@@ -278,6 +279,14 @@ function Resolve-HLBaseline {
             }
             $basePath = Get-HLBuiltinBaselinePath -Name ([string]$custom.extends)
             $base = Get-Content -LiteralPath $basePath -Raw -ErrorAction Stop | ConvertFrom-Json
+            if (Test-HLProperty -InputObject $custom -Name 'excludedControls') {
+                $baseIds = @($base.controls | ForEach-Object { [string]$_.id })
+                foreach ($excludedId in @($custom.excludedControls)) {
+                    if ([string]$excludedId -notin $baseIds) {
+                        throw "Custom baseline '$resolvedPath' excludes control '$excludedId', which is not present in '$($custom.extends)'."
+                    }
+                }
+            }
         }
         else {
             $base = [pscustomobject][ordered]@{
@@ -365,6 +374,7 @@ function Resolve-HLBaseline {
         }
         $baselinePath = Get-HLBuiltinBaselinePath -Name $Name
         $baseline = Get-Content -LiteralPath $baselinePath -Raw -ErrorAction Stop | ConvertFrom-Json
+        Assert-HLBaselineDocument -Document $baseline -Catalog $catalog -Source "Built-in baseline '$Name'"
         $baseline | Add-Member -NotePropertyName sourcePath -NotePropertyValue $baselinePath -Force
     }
 

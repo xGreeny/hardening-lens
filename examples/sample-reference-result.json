@@ -1,16 +1,17 @@
 {
-  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/result.schema.json",
-  "schemaVersion": "1.0",
+  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.1.0/src/HardeningLens/Schema/result.schema.json",
+  "schemaVersion": "1.1",
   "scan": {
     "id": "e747bf2b-e9de-4e5a-bffe-514e51b86fe8",
     "collectedAt": "2026-06-12T09:38:02.1200000Z",
-    "moduleVersion": "1.0.0",
+    "moduleVersion": "1.1.0",
     "redacted": false,
     "readOnly": true,
     "elevated": true,
     "partialCollection": false,
     "exceptionRegisterUsed": true,
-    "selectedControlCount": 53
+    "selectedControlCount": 53,
+    "collectionDurationMs": 1298
   },
   "system": {
     "ComputerName": "SRV-DEMO-01",
@@ -32,7 +33,7 @@
   "baseline": {
     "name": "MemberServer",
     "displayName": "Windows Member Server",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Posture profile for domain-joined or centrally managed Windows member servers.",
     "source": "BuiltIn",
     "sourceBasis": [
@@ -46,6 +47,124 @@
     "notes": [
       "Application roles can require documented exceptions. The profile does not infer application-specific firewall, service, or authentication requirements."
     ]
+  },
+  "provenance": {
+    "catalogVersion": "1.0.1",
+    "catalogDigest": "ee4f598239afe802f2a85018ad261c93faecc681e47fc8bcab6811f515be3d81",
+    "baselineDigest": "96c57d4164756855bc63f42ffe093f38c735fae9b1295aafb4333bcfc80e74cd",
+    "capabilities": [
+      {
+        "name": "AsrRules",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "AuditPolicy",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "AutoRun",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "BitLocker",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "CredentialGuard",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "DefenderPreference",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "DefenderSignatureAge",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "DefenderStatus",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "EventLog",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "FirewallProfiles",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "LapsAdEncryption",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "LapsBackup",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "LapsPasswordAge",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "LocalGuestAccount",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "PowerShellModuleLogging",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "RegistryValue",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "SecureBoot",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "Service",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "SmbClient",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "SmbServer",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "WindowsOptionalFeature",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "WinRM",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      }
+    ],
+    "exceptionDigest": "a6147cdc628a44eb56a5bf4fff58bbd0672c9947b33b512b421c14636318538a"
   },
   "summary": {
     "Total": 53,
@@ -89,7 +208,8 @@
       ],
       "probe": "LocalGuestAccount",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 1
     },
     {
       "controlId": "HL-UAC-001",
@@ -120,7 +240,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 2
     },
     {
       "controlId": "HL-UAC-002",
@@ -169,7 +290,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 3
     },
     {
       "controlId": "HL-UAC-003",
@@ -198,7 +320,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 4
     },
     {
       "controlId": "HL-LSA-001",
@@ -238,7 +361,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 5
     },
     {
       "controlId": "HL-CRED-001",
@@ -269,7 +393,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 6
     },
     {
       "controlId": "HL-CRED-002",
@@ -296,7 +421,8 @@
       ],
       "probe": "CredentialGuard",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 7
     },
     {
       "controlId": "HL-LAPS-001",
@@ -324,7 +450,8 @@
       ],
       "probe": "LapsBackup",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 1
     },
     {
       "controlId": "HL-LAPS-002",
@@ -352,7 +479,8 @@
       ],
       "probe": "LapsPasswordAge",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 2
     },
     {
       "controlId": "HL-LAPS-003",
@@ -381,7 +509,8 @@
       ],
       "probe": "LapsAdEncryption",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 3
     },
     {
       "controlId": "HL-ANON-001",
@@ -412,7 +541,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 4
     },
     {
       "controlId": "HL-ANON-002",
@@ -443,7 +573,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 5
     },
     {
       "controlId": "HL-FW-001",
@@ -470,7 +601,8 @@
       ],
       "probe": "FirewallProfiles",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 6
     },
     {
       "controlId": "HL-FW-002",
@@ -498,7 +630,8 @@
       ],
       "probe": "FirewallProfiles",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 7
     },
     {
       "controlId": "HL-SMB-001",
@@ -526,7 +659,8 @@
       ],
       "probe": "WindowsOptionalFeature",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 1
     },
     {
       "controlId": "HL-SMB-002",
@@ -554,7 +688,8 @@
       ],
       "probe": "WindowsOptionalFeature",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 2
     },
     {
       "controlId": "HL-SMB-003",
@@ -582,7 +717,8 @@
       ],
       "probe": "SmbServer",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 3
     },
     {
       "controlId": "HL-SMB-004",
@@ -610,7 +746,8 @@
       ],
       "probe": "SmbClient",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 4
     },
     {
       "controlId": "HL-SMB-005",
@@ -638,7 +775,8 @@
       ],
       "probe": "SmbClient",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 5
     },
     {
       "controlId": "HL-RDP-001",
@@ -666,7 +804,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 6
     },
     {
       "controlId": "HL-WINRM-001",
@@ -694,7 +833,8 @@
       ],
       "probe": "WinRM",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 7
     },
     {
       "controlId": "HL-WINRM-002",
@@ -722,7 +862,8 @@
       ],
       "probe": "WinRM",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 1
     },
     {
       "controlId": "HL-NET-001",
@@ -753,7 +894,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 2
     },
     {
       "controlId": "HL-SVC-001",
@@ -782,7 +924,8 @@
       ],
       "probe": "Service",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 3
     },
     {
       "controlId": "HL-NTLM-001",
@@ -813,7 +956,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 4
     },
     {
       "controlId": "HL-DEF-001",
@@ -843,7 +987,8 @@
       ],
       "probe": "DefenderStatus",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 5
     },
     {
       "controlId": "HL-DEF-002",
@@ -882,7 +1027,8 @@
       ],
       "probe": "DefenderPreference",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 6
     },
     {
       "controlId": "HL-DEF-003",
@@ -912,7 +1058,8 @@
       ],
       "probe": "DefenderStatus",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 7
     },
     {
       "controlId": "HL-DEF-004",
@@ -942,7 +1089,8 @@
       ],
       "probe": "DefenderStatus",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 1
     },
     {
       "controlId": "HL-DEF-005",
@@ -981,7 +1129,8 @@
       ],
       "probe": "DefenderPreference",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 2
     },
     {
       "controlId": "HL-DEF-006",
@@ -1009,7 +1158,8 @@
       ],
       "probe": "DefenderPreference",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 3
     },
     {
       "controlId": "HL-DEF-007",
@@ -1039,7 +1189,8 @@
       ],
       "probe": "DefenderStatus",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 4
     },
     {
       "controlId": "HL-DEF-008",
@@ -1067,7 +1218,8 @@
       ],
       "probe": "DefenderSignatureAge",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 5
     },
     {
       "controlId": "HL-DEF-009",
@@ -1095,7 +1247,8 @@
       ],
       "probe": "DefenderPreference",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 6
     },
     {
       "controlId": "HL-ASR-001",
@@ -1127,7 +1280,8 @@
       ],
       "probe": "AsrRules",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 7
     },
     {
       "controlId": "HL-PS-001",
@@ -1164,7 +1318,8 @@
       ],
       "probe": "WindowsOptionalFeature",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 1
     },
     {
       "controlId": "HL-PSLOG-001",
@@ -1195,7 +1350,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 2
     },
     {
       "controlId": "HL-PSLOG-002",
@@ -1223,7 +1379,8 @@
       ],
       "probe": "PowerShellModuleLogging",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 3
     },
     {
       "controlId": "HL-PSLOG-003",
@@ -1254,7 +1411,8 @@
       ],
       "probe": "RegistryValue",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 4
     },
     {
       "controlId": "HL-AUD-001",
@@ -1289,7 +1447,8 @@
       ],
       "probe": "AuditPolicy",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 5
     },
     {
       "controlId": "HL-AUD-002",
@@ -1323,7 +1482,8 @@
       ],
       "probe": "AuditPolicy",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 6
     },
     {
       "controlId": "HL-AUD-003",
@@ -1358,7 +1518,8 @@
       ],
       "probe": "AuditPolicy",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 7
     },
     {
       "controlId": "HL-AUD-004",
@@ -1392,7 +1553,8 @@
       ],
       "probe": "AuditPolicy",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 1
     },
     {
       "controlId": "HL-AUD-005",
@@ -1427,7 +1589,8 @@
       ],
       "probe": "AuditPolicy",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 2
     },
     {
       "controlId": "HL-AUD-006",
@@ -1461,7 +1624,8 @@
       ],
       "probe": "AuditPolicy",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 3
     },
     {
       "controlId": "HL-AUD-007",
@@ -1490,7 +1654,8 @@
       ],
       "probe": "AuditPolicy",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 4
     },
     {
       "controlId": "HL-LOG-001",
@@ -1521,7 +1686,8 @@
       ],
       "probe": "EventLog",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 5
     },
     {
       "controlId": "HL-LOG-002",
@@ -1552,7 +1718,8 @@
       ],
       "probe": "EventLog",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 6
     },
     {
       "controlId": "HL-LOG-003",
@@ -1583,7 +1750,8 @@
       ],
       "probe": "EventLog",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 7
     },
     {
       "controlId": "HL-BIT-001",
@@ -1613,7 +1781,8 @@
       ],
       "probe": "BitLocker",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 1
     },
     {
       "controlId": "HL-BOOT-001",
@@ -1641,7 +1810,8 @@
       ],
       "probe": "SecureBoot",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 2
     },
     {
       "controlId": "HL-AUTORUN-001",
@@ -1669,7 +1839,8 @@
       ],
       "probe": "AutoRun",
       "exception": null,
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 3
     },
     {
       "controlId": "HL-RA-001",
@@ -1708,7 +1879,8 @@
           "Session activity is logged and reviewed."
         ]
       },
-      "collectedAt": "2026-06-12T09:38:02.1200000Z"
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 4
     }
   ]
 }

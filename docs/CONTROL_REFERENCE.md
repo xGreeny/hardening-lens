@@ -1,6 +1,6 @@
 # Control reference
 
-Catalog version **1.0.0**, dated **2026-07-12**. The catalog contains **58** read-only controls. Every control records expected state, effective state, status, evidence, rationale, remediation guidance, and first-party Microsoft references.
+Catalog version **1.0.1**, dated **2026-07-14**. The catalog contains **58** read-only controls. Every control records expected state, effective state, status, evidence, rationale, remediation guidance, and first-party Microsoft references.
 
 > The catalog is an operational assessment model. It is not a verbatim Microsoft Security Baseline,
 > CIS Benchmark, certification, or replacement for workload-specific risk assessment.

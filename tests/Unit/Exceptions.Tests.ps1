@@ -1,6 +1,10 @@
+BeforeDiscovery {
+    $repositoryRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
+    Import-Module -Name (Join-Path -Path $repositoryRoot -ChildPath 'src/HardeningLens/HardeningLens.psd1') -Force
+}
+
 BeforeAll {
     $script:RepositoryRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
-    Import-Module -Name (Join-Path -Path $script:RepositoryRoot -ChildPath 'src/HardeningLens/HardeningLens.psd1') -Force
 }
 
 Describe 'Exception register validation' {
@@ -94,6 +98,72 @@ Describe 'Exception register validation' {
         $result = Test-HardeningLensExceptionFile -Path $path
         $result.IsValid | Should -BeTrue
         $result.ExceptionCount | Should -Be 1
+    }
+
+    It 'atomically enforces no-clobber and Force without leaving temporary files' {
+        $path = Join-Path -Path $TestDrive -ChildPath 'atomic-force.json'
+        $null = New-HardeningLensExceptionFile `
+            -Path $path `
+            -ControlId HL-RA-001 `
+            -Target 'AVD-PILOT-*' `
+            -Owner 'Workplace Engineering' `
+            -Reason 'The initial register content must survive a no-clobber attempt.' `
+            -Ticket 'SEC-1843' `
+            -Expires (Get-Date).AddDays(30)
+        $before = [IO.File]::ReadAllText($path)
+
+        { New-HardeningLensExceptionFile -Path $path } | Should -Throw '*already exists*Use -Force*'
+        [IO.File]::ReadAllText($path) | Should -BeExactly $before
+
+        $null = New-HardeningLensExceptionFile -Path $path -Force
+        $document = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+        @($document.exceptions).Count | Should -Be 0
+        (Test-HardeningLensExceptionFile -Path $path).IsValid | Should -BeTrue
+        @(Get-ChildItem -LiteralPath $TestDrive -Force | Where-Object Name -Match '^\.atomic-force\.json\..+\.(tmp|bak)$').Count | Should -Be 0
+    }
+}
+
+Describe 'Exception register creation persistence' {
+    InModuleScope HardeningLens {
+        It 'commits a new register through the atomic writer' {
+            $path = Join-Path -Path $TestDrive -ChildPath 'atomic-new.json'
+            Mock Write-HLAtomicUtf8File {
+                param($Path, $Content, $NoClobber)
+                [IO.File]::WriteAllText($Path, $Content, (New-Object Text.UTF8Encoding($false)))
+            }
+
+            $null = New-HardeningLensExceptionFile -Path $path
+
+            Should -Invoke Write-HLAtomicUtf8File -Times 1 -Exactly -ParameterFilter { $NoClobber }
+            (Get-Content -LiteralPath $path -Raw | ConvertFrom-Json).schemaVersion | Should -Be '1.0'
+        }
+
+        It 'does not overwrite a file created between the initial check and the locked check' {
+            $path = Join-Path -Path $TestDrive -ChildPath 'creation-race.json'
+            Mock Enter-HLFileLock {
+                param($Path)
+                [IO.File]::WriteAllText($Path, 'concurrent owner')
+                $lock = New-Object System.Threading.Mutex($false)
+                [void]$lock.WaitOne()
+                return $lock
+            }
+            Mock Write-HLAtomicUtf8File { throw 'The atomic writer must not be called.' }
+
+            { New-HardeningLensExceptionFile -Path $path } | Should -Throw '*already exists*Use -Force*'
+
+            [IO.File]::ReadAllText($path) | Should -BeExactly 'concurrent owner'
+            Should -Invoke Write-HLAtomicUtf8File -Times 0 -Exactly
+        }
+
+        It 'keeps a concurrently created destination at the atomic no-clobber boundary' {
+            $path = Join-Path -Path $TestDrive -ChildPath 'atomic-boundary-race.json'
+            [IO.File]::WriteAllText($path, 'concurrent owner')
+
+            { Write-HLAtomicUtf8File -Path $path -Content 'replacement' -NoClobber } | Should -Throw
+
+            [IO.File]::ReadAllText($path) | Should -BeExactly 'concurrent owner'
+            @(Get-ChildItem -LiteralPath $TestDrive -Force | Where-Object Name -Match '^\.atomic-boundary-race\.json\..+\.(tmp|bak)$').Count | Should -Be 0
+        }
     }
 }
 

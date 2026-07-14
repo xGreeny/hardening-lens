@@ -75,16 +75,18 @@ Redaction replaces the detected computer name, domain, and current-user identity
 
 ## Fleet assessment
 
-`scripts/Invoke-FleetAssessment.ps1` transfers the module to temporary directories on remote hosts, runs locally through PowerShell remoting, removes transport metadata, writes one schema-compatible JSON result per host, and produces a fleet summary CSV.
+`Invoke-HardeningLensFleet` transfers the module to temporary directories on remote hosts, runs locally through PowerShell remoting, removes transport metadata, and preserves exactly one ordered outcome for every requested host.
 
 ```powershell
-.\scripts\Invoke-FleetAssessment.ps1 `
+Invoke-HardeningLensFleet `
     -ComputerName SRV-APP-01, SRV-FILE-01, SRV-WEB-01 `
     -Baseline MemberServer `
-    -ExceptionsPath .\exceptions.json `
+    -ExceptionPath .\exceptions.json `
     -OutputDirectory .\fleet-results `
     -ThrottleLimit 8
 ```
+
+Every invocation creates a run ID and builds host results, failure JSON, summary CSV, manifest, consolidated fleet-result JSON, and `commit.json` inside a private staging directory. The completed directory is then published as one committed run. A colliding run is rejected unless `-Force` is explicit; forced replacement keeps the previous committed directory until the new run is complete and restores it if publication fails. Consumers should treat the commit marker as the signal that the run is complete. Transport errors, empty remote output, and invalid scan results become explicit failed host entries. Use `-FailOnHostError` to throw only after all artifacts have been committed. `scripts/Invoke-FleetAssessment.ps1` remains available as a compatibility wrapper and writes its latest-summary alias atomically.
 
 Prerequisites:
 
@@ -93,7 +95,39 @@ Prerequisites:
 - matching PowerShell remoting architecture;
 - secure handling of generated result files.
 
-The helper does not install the module permanently on remote systems.
+The command does not install the module permanently on remote systems.
+
+## Automation policy
+
+Use the result object rather than console text as the automation contract:
+
+```powershell
+$evaluation = Test-HardeningLensPolicy `
+    -Path .\out\hardening-lens-result.json `
+    -MaxFailed 0 `
+    -MaxWarning 2 `
+    -MinimumScore 85 `
+    -MinimumCoverage 95 `
+    -DisallowPartialCollection `
+    -DisallowExpiredExceptions
+
+if (-not $evaluation.Passed) {
+    $evaluation.Violations | Format-Table Rule, Actual, Expected, Message
+    exit $evaluation.ExitCode
+}
+```
+
+`-FailOnViolation` emits a terminating error with ID `HardeningLens.PolicyViolation`. All thresholds are opt-in, so an omitted rule is not evaluated.
+
+## Provenance and reproducibility
+
+Schema 1.1 results distinguish three release identities:
+
+- `scan.moduleVersion`: assessment engine version;
+- `provenance.catalogVersion`: shipped control-content version;
+- `baseline.version`: selected baseline-content version.
+
+The provenance object hashes the full catalog, effective resolved baseline before any `-ControlId` filter, and the exception register when used. Compare these values before interpreting drift; a state change and an assessment-input change are different operational events.
 
 ## Drift comparison
 

@@ -106,11 +106,19 @@ function Invoke-HLRegistryValueProbe {
         [object]$Control,
 
         [Parameter(Mandatory)]
-        [object]$SystemContext
+        [object]$SystemContext,
+
+        [AllowNull()]
+        [object]$CollectionContext
     )
 
     $parameters = $Control.parameters
-    $registry = Get-HLRegistryValue -Path ([string]$parameters.path) -Name ([string]$parameters.name)
+    $registryPath = [string]$parameters.path
+    $registryName = [string]$parameters.name
+    $providerName = 'RegistryValue:{0}:{1}' -f $registryPath, $registryName
+    $registry = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name $providerName -Factory {
+        Get-HLRegistryValue -Path $registryPath -Name $registryName
+    }
     $expected = $parameters.expected
     $operator = if (Test-HLProperty -InputObject $parameters -Name 'operator') { [string]$parameters.operator } else { 'Equals' }
 

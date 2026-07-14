@@ -1,8 +1,8 @@
 {
   "$schema": "../Schema/control-catalog.schema.json",
   "schemaVersion": "1.0",
-  "catalogVersion": "1.0.0",
-  "generatedOn": "2026-07-12",
+  "catalogVersion": "1.0.1",
+  "generatedOn": "2026-07-14",
   "description": "Curated read-only Windows security posture controls for Hardening Lens. Controls are Microsoft-aligned operational checks, not a verbatim vendor baseline or certification.",
   "controls": [
     {

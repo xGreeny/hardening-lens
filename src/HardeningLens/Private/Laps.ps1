@@ -59,9 +59,14 @@ function Get-HLLapsEffectivePolicy {
 
 function Invoke-HLLapsBackupProbe {
     [CmdletBinding()]
-    param()
+    param(
+        [AllowNull()]
+        [object]$CollectionContext
+    )
 
-    $policy = Get-HLLapsEffectivePolicy
+    $policy = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'LapsEffectivePolicy' -Factory {
+        Get-HLLapsEffectivePolicy
+    }
     if ($policy.IsLegacy) {
         return Get-HLProbeResult -Status Fail -Expected 'Windows LAPS backup to Microsoft Entra ID or Active Directory' -Actual 'Legacy Microsoft LAPS policy detected' -Message 'Legacy Microsoft LAPS does not satisfy the Windows LAPS control.' -Evidence $policy
     }
@@ -83,10 +88,15 @@ function Invoke-HLLapsPasswordAgeProbe {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [object]$Control
+        [object]$Control,
+
+        [AllowNull()]
+        [object]$CollectionContext
     )
 
-    $policy = Get-HLLapsEffectivePolicy
+    $policy = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'LapsEffectivePolicy' -Factory {
+        Get-HLLapsEffectivePolicy
+    }
     if ($policy.IsLegacy) {
         return Get-HLProbeResult -Status Fail -Expected ('<= {0} days using Windows LAPS' -f [int]$Control.parameters.maximumDays) -Actual 'Legacy Microsoft LAPS policy detected' -Message 'Legacy Microsoft LAPS does not satisfy the Windows LAPS control.' -Evidence $policy
     }
@@ -105,9 +115,14 @@ function Invoke-HLLapsPasswordAgeProbe {
 
 function Invoke-HLLapsAdEncryptionProbe {
     [CmdletBinding()]
-    param()
+    param(
+        [AllowNull()]
+        [object]$CollectionContext
+    )
 
-    $policy = Get-HLLapsEffectivePolicy
+    $policy = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'LapsEffectivePolicy' -Factory {
+        Get-HLLapsEffectivePolicy
+    }
     if ($policy.IsLegacy) {
         return Get-HLProbeResult -Status Fail -Expected 'Windows LAPS AD password encryption enabled' -Actual 'Legacy Microsoft LAPS policy detected' -Message 'Legacy Microsoft LAPS does not provide the Windows LAPS AD encryption control.' -Evidence $policy
     }
@@ -131,14 +146,19 @@ function Invoke-HLLapsDsrmBackupProbe {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [object]$SystemContext
+        [object]$SystemContext,
+
+        [AllowNull()]
+        [object]$CollectionContext
     )
 
     if ([string]$SystemContext.DetectedRole -ne 'DomainController') {
         return Get-HLProbeResult -Status NotApplicable -Expected 'Enabled on domain controllers' -Actual $SystemContext.DetectedRole -Message 'DSRM password backup applies only to domain controllers.'
     }
 
-    $policy = Get-HLLapsEffectivePolicy
+    $policy = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'LapsEffectivePolicy' -Factory {
+        Get-HLLapsEffectivePolicy
+    }
     if ($policy.IsLegacy) {
         return Get-HLProbeResult -Status Fail -Expected 'Windows LAPS DSRM password backup enabled' -Actual 'Legacy Microsoft LAPS policy detected' -Message 'Legacy Microsoft LAPS does not provide Windows LAPS DSRM password management.' -Evidence $policy
     }

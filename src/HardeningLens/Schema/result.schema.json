@@ -1,11 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/result.schema.json",
+  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.1.0/src/HardeningLens/Schema/result.schema.json",
   "title": "Hardening Lens scan result",
   "type": "object",
   "required": [
     "schemaVersion",
     "scan",
+    "provenance",
     "system",
     "baseline",
     "summary",
@@ -16,7 +17,7 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": "1.0"
+      "const": "1.1"
     },
     "scan": {
       "type": "object",
@@ -29,7 +30,8 @@
         "elevated",
         "partialCollection",
         "exceptionRegisterUsed",
-        "selectedControlCount"
+        "selectedControlCount",
+        "collectionDurationMs"
       ],
       "properties": {
         "id": {
@@ -62,6 +64,41 @@
         "selectedControlCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "collectionDurationMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "catalogVersion",
+        "catalogDigest",
+        "baselineDigest",
+        "capabilities"
+      ],
+      "properties": {
+        "catalogVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "catalogDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        },
+        "baselineDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        },
+        "exceptionDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/capability"
+          }
         }
       },
       "additionalProperties": false
@@ -315,7 +352,8 @@
         "tags",
         "probe",
         "exception",
-        "collectedAt"
+        "collectedAt",
+        "probeDurationMs"
       ],
       "properties": {
         "controlId": {
@@ -391,6 +429,38 @@
         "collectedAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "probeDurationMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "sha256Digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "capability": {
+      "type": "object",
+      "required": [
+        "name",
+        "available",
+        "detail"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "detail": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false

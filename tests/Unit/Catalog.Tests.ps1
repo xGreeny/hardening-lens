@@ -27,6 +27,26 @@ Describe 'Control catalog contract' {
         @(Get-HardeningLensControl -Category 'Credential Protection').Count | Should -Be 7
         @(Get-HardeningLensControl -Tag 'laps').Count | Should -BeGreaterOrEqual 3
     }
+
+    It 'returns deep copies that cannot mutate the catalog cache or resolved baselines' {
+        $control = @(Get-HardeningLensControl -Id 'HL-SMB-001')[0]
+        $control.title = 'Caller-mutated title'
+        $control.parameters.features[0] = 'Caller-mutated feature'
+
+        $rawCatalog = Get-HardeningLensControl -RawCatalog
+        $rawControl = @($rawCatalog.controls | Where-Object id -eq 'HL-SMB-001')[0]
+        $rawControl.title = 'Raw-catalog mutation'
+        $rawControl.parameters.features[0] = 'Raw-catalog feature mutation'
+
+        $freshControl = @(Get-HardeningLensControl -Id 'HL-SMB-001')[0]
+        $freshControl.title | Should -Be 'SMBv1 server component is disabled'
+        $freshControl.parameters.features[0] | Should -Be 'SMB1Protocol-Server'
+
+        $baselineControl = @(Get-HardeningLensBaseline -Name MemberServer -IncludeControls).controls |
+            Where-Object id -eq 'HL-SMB-001'
+        $baselineControl.title | Should -Be 'SMBv1 server component is disabled'
+        $baselineControl.parameters.features[0] | Should -Be 'SMB1Protocol-Server'
+    }
 }
 
 Describe 'Built-in baseline contract' {

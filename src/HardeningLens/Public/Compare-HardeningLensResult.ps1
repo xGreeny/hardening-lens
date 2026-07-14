@@ -3,6 +3,9 @@ function Compare-HardeningLensResult {
     .SYNOPSIS
     Compares two Hardening Lens scan results and identifies security posture drift.
 
+    .DESCRIPTION
+    Accepts current schema 1.1 results and validated schema 1.0 legacy results. The comparison output always uses schema 1.1 and marks provenance that is unavailable in legacy inputs explicitly.
+
     .PARAMETER Reference
     Earlier scan object or JSON file path.
 
@@ -41,6 +44,22 @@ function Compare-HardeningLensResult {
 
     $referenceResult = Read-HLScanResult -InputObject $Reference
     $differenceResult = Read-HLScanResult -InputObject $Difference
+
+    # Validate the comparison-critical contract before reading nested properties or
+    # building ID maps. The full validator is used as an additional gate when the
+    # module version provides it.
+    Assert-HLComparableScanResult -ScanResult $referenceResult -InputName Reference
+    Assert-HLComparableScanResult -ScanResult $differenceResult -InputName Difference
+    if ($null -ne (Get-Command -Name Assert-HLScanResult -CommandType Function -ErrorAction SilentlyContinue)) {
+        Assert-HLScanResult -ScanResult $referenceResult
+        Assert-HLScanResult -ScanResult $differenceResult
+    }
+    $legacyInputNames = @()
+    if ([string]$referenceResult.schemaVersion -ceq '1.0') { $legacyInputNames += 'Reference' }
+    if ([string]$differenceResult.schemaVersion -ceq '1.0') { $legacyInputNames += 'Difference' }
+    if ($legacyInputNames.Count -gt 0) {
+        Write-Verbose ('Legacy result schema 1.0 accepted for: {0}. Provenance and timing fields unavailable in those inputs are emitted as null or empty values.' -f ($legacyInputNames -join ', '))
+    }
 
     $referenceComputer = [string]$referenceResult.system.ComputerName
     $differenceComputer = [string]$differenceResult.system.ComputerName

@@ -56,7 +56,10 @@ function Invoke-HLFirewallProfilesProbe {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [object]$Control
+        [object]$Control,
+
+        [AllowNull()]
+        [object]$CollectionContext
     )
 
     if ($null -eq (Get-Command -Name Get-NetFirewallProfile -ErrorAction SilentlyContinue)) {
@@ -64,7 +67,9 @@ function Invoke-HLFirewallProfilesProbe {
     }
 
     try {
-        $profiles = @(Get-NetFirewallProfile -PolicyStore ActiveStore -ErrorAction Stop | Where-Object { [string]$_.Name -in @('Domain', 'Private', 'Public') })
+        $profiles = @(Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'FirewallProfiles' -Factory {
+            @(Get-NetFirewallProfile -PolicyStore ActiveStore -ErrorAction Stop | Where-Object { [string]$_.Name -in @('Domain', 'Private', 'Public') })
+        })
         if ($profiles.Count -lt 3) {
             return Get-HLProbeResult -Status Unknown -Expected 'Domain, Private, and Public profiles' -Actual (@($profiles.Name) -join ', ') -Message 'Not every expected firewall profile was returned.' -Evidence $profiles
         }
