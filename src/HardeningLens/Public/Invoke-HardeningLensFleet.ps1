@@ -35,7 +35,7 @@ function Invoke-HardeningLensFleet {
         [switch]$Redact
     )
 
-    $moduleRoot = Split-Path -Path $PSScriptRoot -Parent
+    $moduleRoot = $script:ModuleRoot
     $resolvedOutput = [System.IO.Path]::GetFullPath($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputDirectory))
     $resultDirectory = Join-Path -Path $resolvedOutput -ChildPath 'results'
     $failureDirectory = Join-Path -Path $resolvedOutput -ChildPath 'failures'
