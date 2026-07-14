@@ -407,7 +407,7 @@ function Get-HLFleetRemoteScriptBlock {
         param($Files,$SelectedBaseline,$CustomBaselineJson,$ControlIds,$ExceptionJson,$PermitPartial,$UseRedaction)
 
         $ErrorActionPreference = 'Stop'
-        $tempRoot = Join-Path -Path $env:TEMP -ChildPath ('HardeningLens-' + [guid]::NewGuid().ToString('N'))
+        $tempRoot = Join-Path -Path ([IO.Path]::GetTempPath()) -ChildPath ('HardeningLens-' + [guid]::NewGuid().ToString('N'))
         $moduleRoot = Join-Path -Path $tempRoot -ChildPath 'HardeningLens'
         [void](New-Item -Path $moduleRoot -ItemType Directory -Force)
         try {
