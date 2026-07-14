@@ -31,10 +31,12 @@ jobs:
             pester: "6.0.0"
     env:
       PESTER_VERSION: ${{ matrix.pester }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     steps:
       - uses: actions/checkout@v7
       - name: Install Pester
-        shell: ${{ matrix.shell }}
         run: |
           $ErrorActionPreference = 'Stop'
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -47,7 +49,6 @@ jobs:
             Install-Module Pester -RequiredVersion $env:PESTER_VERSION -Scope CurrentUser -Repository PSGallery -Force -AllowClobber -SkipPublisherCheck -ErrorAction Stop
           }
       - name: Run tagged live smoke tests
-        shell: ${{ matrix.shell }}
         env:
           HARDENINGLENS_LIVE_TESTS: "1"
         run: |
