@@ -69,8 +69,12 @@ jobs:
             'Get-HardeningLensBaseline'
             'Get-HardeningLensControl'
             'Invoke-HardeningLens'
+            'Invoke-HardeningLensFleet'
             'New-HardeningLensExceptionFile'
+            'Set-HardeningLensException'
+            'Test-HardeningLensBaseline'
             'Test-HardeningLensExceptionFile'
+            'Test-HardeningLensPolicy'
           ) | Sort-Object
           $actual = @(Get-Command -Module HardeningLens -CommandType Function | Select-Object -ExpandProperty Name | Sort-Object)
           if (($actual -join ',') -cne ($expected -join ',')) {

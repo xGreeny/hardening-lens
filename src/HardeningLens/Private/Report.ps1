@@ -167,6 +167,7 @@ function ConvertTo-HLHtmlReport {
     $score = if ($null -eq $summary.HardeningScore) { 'n/a' } else { '{0:N1}%' -f [double]$summary.HardeningScore }
     $coverage = if ($null -eq $summary.EvidenceCoverage) { 'n/a' } else { '{0:N1}%' -f [double]$summary.EvidenceCoverage }
     $collected = try { ([datetime]$ScanResult.scan.collectedAt).ToString('yyyy-MM-dd HH:mm:ss K') } catch { [string]$ScanResult.scan.collectedAt }
+    $catalogVersion = if (Test-HLProperty -InputObject $ScanResult -Name 'provenance') { [string]$ScanResult.provenance.catalogVersion } else { 'legacy/unavailable' }
 
     [void]$builder.AppendLine('<!doctype html>')
     [void]$builder.AppendLine('<html lang="en"><head><meta charset="utf-8">')
@@ -192,6 +193,8 @@ a{color:var(--accent)}code,pre,.mono{font-family:"Cascadia Code","SFMono-Regular
         @('Operating system', "$($ScanResult.system.OSCaption) ($($ScanResult.system.BuildNumber))"),
         @('Detected role', $ScanResult.system.DetectedRole),
         @('Baseline', "$($ScanResult.baseline.name) $($ScanResult.baseline.version)"),
+        @('Module / catalog', "$($ScanResult.scan.moduleVersion) / $catalogVersion"),
+        @('Result schema', $ScanResult.schemaVersion),
         @('Scan ID', $ScanResult.scan.id),
         @('Redacted', $ScanResult.scan.redacted)
     )) {
@@ -260,11 +263,29 @@ a{color:var(--accent)}code,pre,.mono{font-family:"Cascadia Code","SFMono-Regular
     }
     [void]$builder.AppendLine('</tbody></table></div></section>')
 
+    if (Test-HLProperty -InputObject $ScanResult -Name 'provenance') {
+        $exceptionDigest = if (Test-HLProperty -InputObject $ScanResult.provenance -Name 'exceptionDigest') { [string]$ScanResult.provenance.exceptionDigest } else { 'not used' }
+        $capabilityText = @($ScanResult.provenance.capabilities | ForEach-Object {
+            if ($_.available) { "$(($_.name)): available" } else { "$(($_.name)): unavailable ($($_.detail))" }
+        }) -join '; '
+        [void]$builder.AppendLine('<section class="section card"><h2>Assessment provenance</h2><div class="kv">')
+        foreach ($provenanceItem in @(
+            @('Catalog digest', $ScanResult.provenance.catalogDigest),
+            @('Effective baseline digest', $ScanResult.provenance.baselineDigest),
+            @('Exception register digest', $exceptionDigest),
+            @('Collection duration', "$($ScanResult.scan.collectionDurationMs) ms"),
+            @('Probe capabilities', $capabilityText)
+        )) {
+            [void]$builder.AppendLine(('<div>{0}</div><div class="mono">{1}</div>' -f (ConvertTo-HLHtmlEncoded $provenanceItem[0]), (ConvertTo-HLHtmlEncoded $provenanceItem[1])))
+        }
+        [void]$builder.AppendLine('</div></section>')
+    }
+
     [void]$builder.AppendLine('<section class="section card"><h2>Assessment model</h2>')
     [void]$builder.AppendLine(('<p class="method">{0}</p>' -f (ConvertTo-HLHtmlEncoded $summary.ScoringModel)))
     [void]$builder.AppendLine('<p class="method">Hardening Lens is a read-only technical posture assessment. It does not change the device, prove policy intent, replace risk assessment, or certify compliance with Microsoft, CIS, NIST, or another framework. Validate findings against application requirements and change-control procedures before remediation.</p>')
     [void]$builder.AppendLine('</section>')
-    [void]$builder.AppendLine('<div class="footer mono">hardening-lens / xGreeny | report schema 1.0</div>')
+    [void]$builder.AppendLine(('<div class="footer mono">hardening-lens / xGreeny | report schema {0}</div>' -f (ConvertTo-HLHtmlEncoded $ScanResult.schemaVersion)))
     [void]$builder.Append('<script>')
     [void]$builder.Append($reportScript)
     [void]$builder.AppendLine('</script>')

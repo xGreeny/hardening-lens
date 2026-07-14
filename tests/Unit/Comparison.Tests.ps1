@@ -13,8 +13,14 @@ Describe 'Posture drift comparison' {
         $comparison.summary.Resolved | Should -Be 1
         $comparison.summary.Changed | Should -Be 1
         $comparison.summary.ScoreDelta | Should -Be -2.1
+        $comparison.summary.CoverageDelta | Should -Be 0
         @($comparison.changes | Where-Object ChangeType -eq 'NewFinding').ControlId | Should -Contain 'HL-SMB-003'
         @($comparison.changes | Where-Object ChangeType -eq 'Resolved').ControlId | Should -Contain 'HL-RDP-001'
+
+        $newFinding = @($comparison.changes | Where-Object ControlId -eq 'HL-SMB-003')[0]
+        @($newFinding.ChangedFields) | Should -Contain 'Status'
+        $newFinding.Before.Status | Should -Be 'Pass'
+        $newFinding.After.Status | Should -Be 'Fail'
     }
 
 
@@ -26,7 +32,11 @@ Describe 'Posture drift comparison' {
         $target.collectedAt = (Get-Date).ToUniversalTime().ToString('o')
 
         $comparison = Compare-HardeningLensResult -Reference $reference -Difference $difference
-        @($comparison.changes | Where-Object ControlId -eq 'HL-SMB-001')[0].ChangeType | Should -Be 'Changed'
+        $change = @($comparison.changes | Where-Object ControlId -eq 'HL-SMB-001')[0]
+        $change.ChangeType | Should -Be 'Changed'
+        (@($change.ChangedFields) -join ',') | Should -Be 'Evidence'
+        $change.Before.Evidence.Source | Should -Not -Be 'Synthetic verification'
+        $change.After.Evidence.Source | Should -Be 'Synthetic verification'
     }
 
     It 'ignores recursive object property order but preserves array order' {
@@ -47,11 +57,15 @@ Describe 'Posture drift comparison' {
         }
 
         $comparison = Compare-HardeningLensResult -Reference $reference -Difference $difference
-        @($comparison.changes | Where-Object ControlId -eq 'HL-SMB-001')[0].ChangeType | Should -Be 'Unchanged'
+        $change = @($comparison.changes | Where-Object ControlId -eq 'HL-SMB-001')[0]
+        $change.ChangeType | Should -Be 'Unchanged'
+        @($change.ChangedFields).Count | Should -Be 0
 
         $differenceTarget.evidence.Values = @(3, 2, 1)
         $comparison = Compare-HardeningLensResult -Reference $reference -Difference $difference
-        @($comparison.changes | Where-Object ControlId -eq 'HL-SMB-001')[0].ChangeType | Should -Be 'Changed'
+        $change = @($comparison.changes | Where-Object ControlId -eq 'HL-SMB-001')[0]
+        $change.ChangeType | Should -Be 'Changed'
+        (@($change.ChangedFields) -join ',') | Should -Be 'Evidence'
     }
 
     It 'rejects duplicate and empty control IDs in either input' {
@@ -87,6 +101,90 @@ Describe 'Posture drift comparison' {
         { Compare-HardeningLensResult -Reference $reference -Difference $difference } | Should -Throw "*Reference*missing required property 'results'*"
     }
 
+    It 'compares schema 1.1 provenance and exposes collection context' {
+        $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $catalogDigestA = 'a' * 64
+        $catalogDigestB = 'b' * 64
+        $baselineDigestA = 'c' * 64
+        $baselineDigestB = 'd' * 64
+
+        foreach ($fixture in @($reference, $difference)) {
+            $fixture.schemaVersion = '1.1'
+            $fixture.scan.moduleVersion = '1.1.0'
+            $fixture.scan.collectionDurationMs = 125
+            foreach ($result in @($fixture.results)) {
+                $result.probeDurationMs = 2
+            }
+        }
+        $reference.provenance = [pscustomobject][ordered]@{
+            catalogVersion = '1.0.1'
+            catalogDigest  = $catalogDigestA
+            baselineDigest = $baselineDigestA
+            exceptionDigest = 'f' * 64
+            capabilities   = @([pscustomobject][ordered]@{ name = 'Elevation'; available = $true; detail = 'Elevated token' })
+        }
+        $difference.provenance = [pscustomobject][ordered]@{
+            catalogVersion = '1.1.0'
+            catalogDigest  = $catalogDigestB
+            baselineDigest = $baselineDigestB
+            exceptionDigest = 'e' * 64
+            capabilities   = @([pscustomobject][ordered]@{ name = 'Elevation'; available = $true; detail = 'Elevated token' })
+        }
+
+        $comparison = Compare-HardeningLensResult -Reference $reference -Difference $difference
+
+        $comparison.schemaVersion | Should -Be '1.1'
+        $comparison.referenceScan.ResultSchemaVersion | Should -Be '1.1'
+        $comparison.referenceScan.CollectionDurationMs | Should -Be 125
+        @($comparison.referenceScan.Capabilities).Count | Should -Be 1
+        $comparison.catalogContext.Changed | Should -BeTrue
+        $comparison.catalogContext.Reference.Digest | Should -Be $catalogDigestA
+        $comparison.catalogContext.Difference.Digest | Should -Be $catalogDigestB
+        $comparison.baselineContext.Changed | Should -BeTrue
+        $comparison.differenceScan.ExceptionDigest | Should -Be ('e' * 64)
+    }
+
+    It 'accepts legacy schema 1.0 results with explicit unavailable provenance' {
+        $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference = Get-Content -LiteralPath $script:DifferencePath -Raw | ConvertFrom-Json
+        foreach ($fixture in @($reference, $difference)) {
+            $fixture.schemaVersion = '1.0'
+            $fixture.PSObject.Properties.Remove('provenance')
+            $fixture.scan.PSObject.Properties.Remove('collectionDurationMs')
+            foreach ($result in @($fixture.results)) {
+                $result.PSObject.Properties.Remove('probeDurationMs')
+            }
+        }
+
+        $comparison = Compare-HardeningLensResult -Reference $reference -Difference $difference
+
+        $comparison.schemaVersion | Should -Be '1.1'
+        $comparison.referenceScan.ResultSchemaVersion | Should -Be '1.0'
+        $comparison.referenceScan.CollectionDurationMs | Should -BeNullOrEmpty
+        @($comparison.referenceScan.Capabilities).Count | Should -Be 0
+        $comparison.baselineContext.Reference.Digest | Should -BeNullOrEmpty
+        $comparison.catalogContext.Reference.Version | Should -BeNullOrEmpty
+    }
+
+    It 'normalizes parsed timestamps to edition-independent ISO 8601 values' {
+        $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference = Get-Content -LiteralPath $script:DifferencePath -Raw | ConvertFrom-Json
+        $referenceJson = Get-Content -LiteralPath $script:ReferencePath -Raw
+        $differenceJson = Get-Content -LiteralPath $script:DifferencePath -Raw
+        $referenceMatch = [regex]::Match($referenceJson, '"collectedAt"\s*:\s*"([^"]+)"')
+        $differenceMatch = [regex]::Match($differenceJson, '"collectedAt"\s*:\s*"([^"]+)"')
+        $referenceMatch.Success | Should -BeTrue
+        $differenceMatch.Success | Should -BeTrue
+        $expectedReferenceTimestamp = $referenceMatch.Groups[1].Value
+        $expectedDifferenceTimestamp = $differenceMatch.Groups[1].Value
+
+        $comparison = Compare-HardeningLensResult -Reference $reference -Difference $difference
+
+        $comparison.referenceScan.CollectedAt | Should -Be $expectedReferenceTimestamp
+        $comparison.differenceScan.CollectedAt | Should -Be $expectedDifferenceTimestamp
+    }
+
     It 'rejects accidental cross-target and cross-baseline comparisons' {
         $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
         $difference = Get-Content -LiteralPath $script:DifferencePath -Raw | ConvertFrom-Json
@@ -110,7 +208,10 @@ Describe 'Posture drift comparison' {
 
         (Get-Content -LiteralPath $markdownPath -Raw) | Should -Match 'HL-SMB-003'
         $json = Get-Content -LiteralPath $jsonPath -Raw | ConvertFrom-Json
-        $json.schemaVersion | Should -Be '1.0'
+        $json.schemaVersion | Should -Be '1.1'
         @($json.changes).Count | Should -Be 53
+        @($json.changes[0].PSObject.Properties.Name) | Should -Contain 'ChangedFields'
+        @($json.changes[0].PSObject.Properties.Name) | Should -Contain 'Before'
+        @($json.changes[0].PSObject.Properties.Name) | Should -Contain 'After'
     }
 }

@@ -3,25 +3,24 @@
   "schemaVersion": "1.0",
   "exceptions": [
     {
-      "id": "EXC-AVD-REMOTE-ASSISTANCE",
+      "id": "EXC-DEMO-REMOTE-ASSISTANCE",
       "controlId": "HL-RA-001",
       "status": "Approved",
       "owner": "Workplace Engineering",
-      "reason": "The approved support workflow uses solicited Remote Assistance on pilot session hosts.",
+      "reason": "The approved support workflow requires solicited Remote Assistance on this managed server group.",
       "ticket": "SEC-1842",
-      "expires": "2027-12-31",
+      "expires": "2027-06-30",
       "targets": [
-        "AVD-PILOT-*"
+        "SRV-DEMO-*"
       ],
       "baselines": [
-        "AVDSessionHost"
+        "MemberServer"
       ],
       "approvedBy": "Security Engineering",
       "approvedOn": "2026-07-01",
       "compensatingControls": [
         "Access is restricted to the support group.",
-        "Session activity is logged and reviewed.",
-        "The exception is limited to the pilot host pool."
+        "Session activity is logged and reviewed."
       ]
     },
     {

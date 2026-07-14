@@ -2,7 +2,10 @@ function Invoke-HLDefenderStatusProbe {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [object]$Control
+        [object]$Control,
+
+        [AllowNull()]
+        [object]$CollectionContext
     )
 
     if ($null -eq (Get-Command -Name Get-MpComputerStatus -ErrorAction SilentlyContinue)) {
@@ -10,7 +13,9 @@ function Invoke-HLDefenderStatusProbe {
     }
 
     try {
-        $status = Get-MpComputerStatus -ErrorAction Stop
+        $status = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'DefenderStatus' -Factory {
+            Get-MpComputerStatus -ErrorAction Stop
+        }
         $property = [string]$Control.parameters.property
         if (-not (Test-HLProperty -InputObject $status -Name $property)) {
             return Get-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message "Defender status does not expose '$property'."
@@ -28,7 +33,10 @@ function Invoke-HLDefenderPreferenceProbe {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [object]$Control
+        [object]$Control,
+
+        [AllowNull()]
+        [object]$CollectionContext
     )
 
     if ($null -eq (Get-Command -Name Get-MpPreference -ErrorAction SilentlyContinue)) {
@@ -36,7 +44,9 @@ function Invoke-HLDefenderPreferenceProbe {
     }
 
     try {
-        $preference = Get-MpPreference -ErrorAction Stop
+        $preference = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'DefenderPreference' -Factory {
+            Get-MpPreference -ErrorAction Stop
+        }
         $property = [string]$Control.parameters.property
         if (-not (Test-HLProperty -InputObject $preference -Name $property)) {
             return Get-HLProbeResult -Status Unknown -Expected $Control.parameters.expected -Actual $null -Message "Defender preference does not expose '$property'."
@@ -57,7 +67,10 @@ function Invoke-HLDefenderSignatureAgeProbe {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [object]$Control
+        [object]$Control,
+
+        [AllowNull()]
+        [object]$CollectionContext
     )
 
     if ($null -eq (Get-Command -Name Get-MpComputerStatus -ErrorAction SilentlyContinue)) {
@@ -65,7 +78,9 @@ function Invoke-HLDefenderSignatureAgeProbe {
     }
 
     try {
-        $status = Get-MpComputerStatus -ErrorAction Stop
+        $status = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'DefenderStatus' -Factory {
+            Get-MpComputerStatus -ErrorAction Stop
+        }
         if ($null -eq $status.AntivirusSignatureLastUpdated) {
             return Get-HLProbeResult -Status Unknown -Expected ('<= {0} days' -f [int]$Control.parameters.maximumAgeDays) -Actual $null -Message 'Defender did not return a signature update timestamp.'
         }
@@ -88,7 +103,10 @@ function Invoke-HLAsrRulesProbe {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [object]$Control
+        [object]$Control,
+
+        [AllowNull()]
+        [object]$CollectionContext
     )
 
     if ($null -eq (Get-Command -Name Get-MpPreference -ErrorAction SilentlyContinue)) {
@@ -96,7 +114,9 @@ function Invoke-HLAsrRulesProbe {
     }
 
     try {
-        $preference = Get-MpPreference -ErrorAction Stop
+        $preference = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'DefenderPreference' -Factory {
+            Get-MpPreference -ErrorAction Stop
+        }
         $ids = @($preference.AttackSurfaceReductionRules_Ids)
         $actions = @($preference.AttackSurfaceReductionRules_Actions)
         $configured = @{}

@@ -42,9 +42,11 @@ Hardening Lens makes those distinctions explicit in a stable result schema.
 | **Read-only collection** | Registry, CIM, Windows APIs, and native Microsoft cmdlets; no remediation mode |
 | **Evidence-first results** | Expected state, actual state, status, message, rationale, remediation, references, and raw evidence |
 | **Governed exceptions** | Owner, rationale, ticket, target scope, baseline scope, approval, expiry, and compensating controls |
-| **Configuration drift** | New findings, resolved findings, changed evidence, added controls, removed controls, and score delta |
+| **Configuration drift** | Field-level before/after state, baseline and catalog provenance, coverage delta, findings, and control-set changes |
 | **Portable reports** | Self-contained HTML plus structured JSON and CSV |
-| **Fleet support** | PowerShell remoting helper with per-host results and summary CSV |
+| **Fleet support** | Pipeline-capable module command with complete per-host outcomes, run manifests, machine-readable failures, and summary CSV |
+| **Automation policy** | Deterministic gates for findings, score, evidence coverage, partial collection, and expired exceptions |
+| **Reproducible provenance** | SHA-256 fingerprints for catalog, effective baseline, and exception register plus probe capabilities and timings |
 | **Quality contract** | JSON Schemas, Pester, PSScriptAnalyzer, generated control documentation, dual-edition CI, and a scheduled safe live-collection smoke test on Windows |
 
 ## Quick start
@@ -64,7 +66,7 @@ The wrapper runs the assessment, writes HTML/JSON/CSV, and returns an automation
 
 ```text
 HARDENING LENS // SRV-DEMO-01
-Baseline: Windows Member Server 1.0.0 | Score: 77.1% | Coverage: 96.2%
+Baseline: Windows Member Server 1.0.1 | Score: 77.1% | Coverage: 96.2%
 PASS 40  FAIL 7  WARN 3  EXCEPTED 1  UNKNOWN 1  ERROR 1  N/A 0
 
 Top findings:
@@ -96,12 +98,16 @@ $result | Export-HardeningLensReport `
 | Command | Purpose |
 |---|---|
 | `Invoke-HardeningLens` | Run a local read-only assessment |
+| `Invoke-HardeningLensFleet` | Run complete, artifact-backed assessments across remote hosts |
 | `Export-HardeningLensReport` | Export HTML, JSON, and CSV |
 | `Compare-HardeningLensResult` | Compare two scan results |
 | `Get-HardeningLensBaseline` | Inspect or resolve baselines |
 | `Get-HardeningLensControl` | Query the control catalog |
+| `Test-HardeningLensBaseline` | Validate a custom baseline before deployment |
+| `Test-HardeningLensPolicy` | Evaluate an assessment against automation thresholds |
 | `Test-HardeningLensExceptionFile` | Validate exception governance and references |
 | `New-HardeningLensExceptionFile` | Create a schema-compatible exception register |
+| `Set-HardeningLensException` | Add, approve, update, or revoke an exception atomically |
 
 ## Baselines
 
@@ -150,6 +156,8 @@ Every control returns one of seven explicit states:
 | `NotApplicable` | The control does not apply to the observed role or configuration |
 
 The **hardening score** is severity-weighted and grants credit only to `Pass`. **Evidence coverage** independently measures how many applicable controls were resolved. See [scoring](docs/SCORING.md).
+
+Result schema 1.1 records the module version independently from catalog and baseline content versions, hashes the exact assessment inputs, lists probe capabilities, and reports collection timing. This keeps results explainable when code and security content evolve on different release cadences.
 
 ## Exceptions that remain visible
 
@@ -200,6 +208,7 @@ Only Approved, unexpired entries matching control, host, and optional baseline s
 ```
 
 ```powershell
+Test-HardeningLensBaseline -Path .\examples\custom-baseline.json
 Invoke-HardeningLens -BaselinePath .\examples\custom-baseline.json
 ```
 
@@ -226,18 +235,34 @@ Removed controls   0
 
 A drift finding records changes to status, severity, expected state, observed state, collected evidence, or exception governance. Collection timestamps and explanatory prose are intentionally ignored. Cross-target and cross-baseline comparisons are rejected unless explicitly enabled, reducing accidental comparisons of unrelated scans. A change does not imply that it was unauthorized, malicious, or operationally incorrect.
 
+## Enforce an automation policy
+
+```powershell
+$policy = $result | Test-HardeningLensPolicy `
+    -MaxFailed 0 `
+    -MaxWarning 2 `
+    -MinimumScore 85 `
+    -MinimumCoverage 95 `
+    -DisallowPartialCollection `
+    -DisallowExpiredExceptions
+
+if (-not $policy.Passed) { exit $policy.ExitCode }
+```
+
+Use `-FailOnViolation` when a terminating PowerShell error is the preferred CI contract. Policy evaluation validates the result first and returns every violation together rather than stopping at the first threshold.
+
 ## Assess a fleet
 
 ```powershell
-.\scripts\Invoke-FleetAssessment.ps1 `
+Invoke-HardeningLensFleet `
     -ComputerName SRV-APP-01, SRV-FILE-01, SRV-WEB-01 `
     -Baseline MemberServer `
-    -ExceptionsPath .\exceptions.json `
+    -ExceptionPath .\exceptions.json `
     -OutputDirectory .\fleet-results `
     -ThrottleLimit 8
 ```
 
-The helper transfers the module to a temporary remote path, evaluates each host locally, removes PowerShell remoting metadata, writes one result JSON per host, and produces `fleet-summary.csv`. It does not install the module remotely. See the [operations guide](docs/OPERATIONS.md).
+The command transfers the module to a temporary remote path, evaluates each host locally, and removes PowerShell remoting metadata. It writes exactly one success or failure outcome per requested host into a fully staged run directory containing host JSON, summary CSV, consolidated result, manifest, and a final commit marker. `-Force` swaps a complete committed run only after its replacement is ready, so a failed replacement leaves the prior run intact. The module is not installed remotely. The legacy script remains a compatibility wrapper. See the [operations guide](docs/OPERATIONS.md).
 
 ## Security properties
 

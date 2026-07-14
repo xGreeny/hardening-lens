@@ -5,7 +5,8 @@ function New-HardeningLensExceptionFile {
 
     .DESCRIPTION
     Builds a schema-compatible exception register. Approved entries require an approver,
-    approval date, expiry date, and at least one compensating control.
+    approval date, expiry date, and at least one compensating control. Creation is
+    serialized with lifecycle updates and committed through an atomic file replacement.
     #>
     [CmdletBinding(SupportsShouldProcess)]
     param(
@@ -111,13 +112,32 @@ function New-HardeningLensExceptionFile {
         exceptions    = $exceptions
     }
 
-    $parent = Split-Path -Path $fullPath -Parent
-    if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
-        [void](New-Item -Path $parent -ItemType Directory -Force)
-    }
-
     if ($PSCmdlet.ShouldProcess($fullPath, 'Create Hardening Lens exception register')) {
-        Write-HLUtf8File -Path $fullPath -Content (($document | ConvertTo-Json -Depth 20) + [Environment]::NewLine)
-        return Get-Item -LiteralPath $fullPath
+        $parent = Split-Path -Path $fullPath -Parent
+        if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
+            [void](New-Item -Path $parent -ItemType Directory -Force)
+        }
+
+        $fileLock = Enter-HLFileLock -Path $fullPath
+        try {
+            # Repeat the no-clobber check while holding the same lock used by lifecycle
+            # updates. This closes the check/write race between cooperating processes.
+            if ((Test-Path -LiteralPath $fullPath) -and -not $Force) {
+                throw "File already exists: $fullPath. Use -Force to overwrite."
+            }
+            try {
+                Write-HLAtomicUtf8File -Path $fullPath -Content (($document | ConvertTo-Json -Depth 20) + [Environment]::NewLine) -NoClobber:(-not $Force)
+            }
+            catch [System.IO.IOException] {
+                if (-not $Force -and (Test-Path -LiteralPath $fullPath)) {
+                    throw "File already exists: $fullPath. Use -Force to overwrite."
+                }
+                throw
+            }
+            return Get-Item -LiteralPath $fullPath
+        }
+        finally {
+            Exit-HLFileLock -Lock $fileLock
+        }
     }
 }

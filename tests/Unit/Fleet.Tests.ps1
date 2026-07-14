@@ -1,118 +1,164 @@
 BeforeAll {
     $script:RepositoryRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
     $script:FleetScript = Join-Path -Path $script:RepositoryRoot -ChildPath 'scripts/Invoke-FleetAssessment.ps1'
-
-    function Get-HLFleetTestResult {
-        [CmdletBinding()]
-        param(
-            [Parameter(Mandatory)]
-            [string]$RequestedComputerName,
-
-            [Parameter(Mandatory)]
-            [string]$ComputerName
-        )
-
-        $result = [pscustomobject][ordered]@{
-            schemaVersion = '1.0'
-            scan = [pscustomobject]@{
-                id          = [guid]::NewGuid().ToString()
-                collectedAt = (Get-Date).ToUniversalTime().ToString('o')
-            }
-            system = [pscustomobject]@{
-                ComputerName = $ComputerName
-            }
-            baseline = [pscustomobject]@{
-                name = 'MemberServer'
-            }
-            summary = [pscustomobject]@{
-                HardeningScore   = 90.0
-                EvidenceCoverage = 100.0
-                Fail             = 1
-                Warning          = 0
-                Excepted         = 0
-                Unknown          = 0
-                Error            = 0
-            }
-            results = @()
-        }
-        $result | Add-Member -NotePropertyName PSComputerName -NotePropertyValue $RequestedComputerName
-        $result | Add-Member -NotePropertyName RunspaceId -NotePropertyValue ([guid]::NewGuid())
-        $result | Add-Member -NotePropertyName PSShowComputerName -NotePropertyValue $true
-        return $result
-    }
+    $script:ModulePath = Join-Path -Path $script:RepositoryRoot -ChildPath 'src/HardeningLens/HardeningLens.psd1'
+    Import-Module -Name $script:ModulePath -Force
 }
 
-Describe 'Fleet assessment orchestration' {
-    It 'returns exactly one successful summary row per requested host and writes run-scoped artifacts' {
-        Mock Invoke-Command {
-            @(
-                Get-HLFleetTestResult -RequestedComputerName 'srv-a.contoso.test' -ComputerName 'SRV-A'
-                Get-HLFleetTestResult -RequestedComputerName 'srv-b.contoso.test' -ComputerName 'SRV-B'
-            )
+Describe 'Legacy fleet assessment wrapper' {
+    It 'keeps summary-row output and the fleet-summary.csv compatibility artifact' {
+        Mock Invoke-HardeningLensFleet -ModuleName HardeningLens {
+            [pscustomobject][ordered]@{
+                run = [pscustomobject]@{ id = '11111111-2222-3333-4444-555555555555' }
+                summary = [pscustomobject]@{ requestedCount = 2; succeededCount = 2; failedCount = 0 }
+                hosts = @(
+                    [pscustomobject][ordered]@{
+                        requestedComputerName = 'srv-a'
+                        computerName = 'SRV-A'
+                        status = 'Succeeded'
+                        error = $null
+                        artifactPath = 'srv-a.json'
+                        assessment = [pscustomobject]@{
+                            baseline = [pscustomobject]@{ name = 'MemberServer' }
+                            summary = [pscustomobject]@{
+                                HardeningScore = 90; EvidenceCoverage = 100; Fail = 1; Warning = 0
+                                Excepted = 0; Unknown = 0; Error = 0
+                            }
+                        }
+                    }
+                    [pscustomobject][ordered]@{
+                        requestedComputerName = 'srv-b'
+                        computerName = 'SRV-B'
+                        status = 'Succeeded'
+                        error = $null
+                        artifactPath = 'srv-b.json'
+                        assessment = [pscustomobject]@{
+                            baseline = [pscustomobject]@{ name = 'MemberServer' }
+                            summary = [pscustomobject]@{
+                                HardeningScore = 80; EvidenceCoverage = 95; Fail = 2; Warning = 1
+                                Excepted = 0; Unknown = 0; Error = 0
+                            }
+                        }
+                    }
+                )
+            }
         }
 
         $output = Join-Path -Path $TestDrive -ChildPath 'success'
-        $summary = @(& $script:FleetScript -ComputerName 'srv-a.contoso.test','srv-b.contoso.test' -OutputDirectory $output)
+        [void](New-Item -Path $output -ItemType Directory -Force)
+        $summary = @(& $script:FleetScript -ComputerName 'srv-a','srv-b' -OutputDirectory $output)
 
         $summary.Count | Should -Be 2
         @($summary | Where-Object Status -eq 'Succeeded').Count | Should -Be 2
-        @($summary | Select-Object -ExpandProperty RequestedComputerName | Sort-Object) | Should -Be @('srv-a.contoso.test','srv-b.contoso.test')
-        @($summary | Select-Object -ExpandProperty RunId | Sort-Object -Unique).Count | Should -Be 1
-        foreach ($row in $summary) {
-            $row.Error | Should -BeNullOrEmpty
-            Test-Path -LiteralPath $row.ArtifactPath -PathType Leaf | Should -BeTrue
-            (Split-Path -Path $row.ArtifactPath -Leaf) | Should -Match '^fleet-\d{8}T\d{9}Z-'
-        }
-
-        $manifestPath = @(Get-ChildItem -LiteralPath $output -Filter 'fleet-run-*.json').FullName
-        @($manifestPath).Count | Should -Be 1
-        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-        $manifest.requestedCount | Should -Be 2
-        $manifest.succeededCount | Should -Be 2
-        $manifest.failedCount | Should -Be 0
+        (@($summary.RequestedComputerName) -join ',') | Should -Be 'srv-a,srv-b'
+        $summary[0].Score | Should -Be 90
         Test-Path -LiteralPath (Join-Path -Path $output -ChildPath 'fleet-summary.csv') -PathType Leaf | Should -BeTrue
-        @(Get-ChildItem -LiteralPath $output -Filter 'fleet-summary-*.csv').Count | Should -Be 1
     }
 
-    It 'creates a failed summary row and machine-readable failure artifact when a host returns nothing' {
-        Mock Invoke-Command {
-            Get-HLFleetTestResult -RequestedComputerName 'srv-a' -ComputerName 'SRV-A'
+    It 'preserves failed host details and throws after writing the compatibility summary when requested' {
+        Mock Invoke-HardeningLensFleet -ModuleName HardeningLens {
+            [pscustomobject][ordered]@{
+                run = [pscustomobject]@{ id = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
+                summary = [pscustomobject]@{ requestedCount = 1; succeededCount = 0; failedCount = 1 }
+                hosts = @(
+                    [pscustomobject][ordered]@{
+                        requestedComputerName = 'srv-failed'
+                        computerName = 'srv-failed'
+                        status = 'Failed'
+                        error = [pscustomobject]@{
+                            message = 'WinRM connection failed.'
+                            category = 'OpenError'
+                        }
+                        artifactPath = 'srv-failed.error.json'
+                        assessment = $null
+                    }
+                )
+            }
         }
 
-        $output = Join-Path -Path $TestDrive -ChildPath 'partial'
-        $warnings = @()
-        $summary = @(& $script:FleetScript -ComputerName 'srv-a','srv-b' -OutputDirectory $output -WarningVariable warnings)
-
-        $summary.Count | Should -Be 2
-        @($summary | Where-Object Status -eq 'Succeeded').Count | Should -Be 1
-        $failed = @($summary | Where-Object Status -eq 'Failed')
-        $failed.Count | Should -Be 1
-        $failed[0].RequestedComputerName | Should -Be 'srv-b'
-        $failed[0].ErrorCategory | Should -Be 'RemoteResultMissing'
-        $failed[0].Error | Should -Not -BeNullOrEmpty
-        $warnings.Count | Should -Be 1
-
-        $failureArtifact = Get-Content -LiteralPath $failed[0].ArtifactPath -Raw | ConvertFrom-Json
-        $failureArtifact.artifactType | Should -Be 'HardeningLens.FleetHostFailure'
-        $failureArtifact.status | Should -Be 'Failed'
-        $failureArtifact.requestedComputerName | Should -Be 'srv-b'
-        $failureArtifact.error.message | Should -Not -BeNullOrEmpty
-
-        $manifestPath = @(Get-ChildItem -LiteralPath $output -Filter 'fleet-run-*.json').FullName
-        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-        $manifest.requestedCount | Should -Be 2
-        $manifest.succeededCount | Should -Be 1
-        $manifest.failedCount | Should -Be 1
-    }
-
-    It 'can turn host failures into a terminating automation error after writing artifacts' {
-        Mock Invoke-Command { @() }
-
-        $output = Join-Path -Path $TestDrive -ChildPath 'fail-fast'
-        { & $script:FleetScript -ComputerName 'srv-a' -OutputDirectory $output -FailOnHostError -WarningAction SilentlyContinue | Out-Null } |
+        $output = Join-Path -Path $TestDrive -ChildPath 'failed'
+        [void](New-Item -Path $output -ItemType Directory -Force)
+        { & $script:FleetScript -ComputerName 'srv-failed' -OutputDirectory $output -FailOnHostError | Out-Null } |
             Should -Throw '*failed on 1 of 1 requested host*'
 
-        @(Get-ChildItem -LiteralPath $output -Filter '*.error.json').Count | Should -Be 1
-        @(Get-ChildItem -LiteralPath $output -Filter 'fleet-run-*.json').Count | Should -Be 1
+        $summaryPath = Join-Path -Path $output -ChildPath 'fleet-summary.csv'
+        Test-Path -LiteralPath $summaryPath -PathType Leaf | Should -BeTrue
+        $saved = @(Import-Csv -LiteralPath $summaryPath)
+        $saved.Count | Should -Be 1
+        $saved[0].Status | Should -Be 'Failed'
+        $saved[0].Error | Should -Be 'WinRM connection failed.'
+        $saved[0].ErrorCategory | Should -Be 'OpenError'
+    }
+
+    It 'requires Force before replacing the compatibility summary' {
+        Mock Invoke-HardeningLensFleet -ModuleName HardeningLens {
+            [pscustomobject][ordered]@{
+                run = [pscustomobject]@{ id = '99999999-8888-7777-6666-555555555555' }
+                summary = [pscustomobject]@{ requestedCount = 1; succeededCount = 1; failedCount = 0 }
+                hosts = @(
+                    [pscustomobject][ordered]@{
+                        requestedComputerName = 'srv-a'
+                        computerName = 'SRV-A'
+                        status = 'Succeeded'
+                        error = $null
+                        artifactPath = 'srv-a.json'
+                        assessment = [pscustomobject]@{
+                            baseline = [pscustomobject]@{ name = 'MemberServer' }
+                            summary = [pscustomobject]@{
+                                HardeningScore = 100; EvidenceCoverage = 100; Fail = 0; Warning = 0
+                                Excepted = 0; Unknown = 0; Error = 0
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
+        $output = Join-Path -Path $TestDrive -ChildPath 'force'
+        [void](New-Item -Path $output -ItemType Directory -Force)
+        [IO.File]::WriteAllText((Join-Path -Path $output -ChildPath 'fleet-summary.csv'), 'existing')
+
+        { & $script:FleetScript -ComputerName 'srv-a' -OutputDirectory $output | Out-Null } |
+            Should -Throw '*already exists*Use -Force*'
+        $summary = @(& $script:FleetScript -ComputerName 'srv-a' -OutputDirectory $output -Force)
+        $summary.Count | Should -Be 1
+        $summary[0].Status | Should -Be 'Succeeded'
+        $summaryPath = Join-Path -Path $output -ChildPath 'fleet-summary.csv'
+        $committedSummary = Get-Content -LiteralPath $summaryPath -Raw
+        $committedSummary | Should -Match '99999999-8888-7777-6666-555555555555'
+        @(Get-ChildItem -LiteralPath $output -File -Force | Where-Object Name -Match '\.(tmp|bak)$').Count | Should -Be 0
+
+        Mock Write-HLAtomicUtf8File -ModuleName HardeningLens { throw 'Injected legacy summary write failure.' }
+        { & $script:FleetScript -ComputerName 'srv-a' -OutputDirectory $output -Force | Out-Null } |
+            Should -Throw '*Injected legacy summary write failure*'
+        (Get-Content -LiteralPath $summaryPath -Raw) | Should -BeExactly $committedSummary
+    }
+
+    It 'uses the atomic no-clobber boundary for a new compatibility summary' {
+        Mock Invoke-HardeningLensFleet -ModuleName HardeningLens {
+            [pscustomobject][ordered]@{
+                run = [pscustomobject]@{ id = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
+                summary = [pscustomobject]@{ requestedCount = 1; succeededCount = 1; failedCount = 0 }
+                hosts = @(
+                    [pscustomobject][ordered]@{
+                        requestedComputerName = 'srv-a'; computerName = 'SRV-A'; status = 'Succeeded'
+                        error = $null; artifactPath = 'srv-a.json'
+                        assessment = [pscustomobject]@{
+                            baseline = [pscustomobject]@{ name = 'MemberServer' }
+                            summary = [pscustomobject]@{
+                                HardeningScore = 100; EvidenceCoverage = 100; Fail = 0; Warning = 0
+                                Excepted = 0; Unknown = 0; Error = 0
+                            }
+                        }
+                    }
+                )
+            }
+        }
+        Mock Write-HLAtomicUtf8File -ModuleName HardeningLens { }
+
+        $output = Join-Path -Path $TestDrive -ChildPath 'no-clobber'
+        $null = & $script:FleetScript -ComputerName 'srv-a' -OutputDirectory $output
+
+        Should -Invoke Write-HLAtomicUtf8File -ModuleName HardeningLens -Times 1 -Exactly -ParameterFilter { $NoClobber }
     }
 }

@@ -170,21 +170,25 @@ function Assert-HLScanResult {
         throw 'Invalid Hardening Lens scan result: the input must be an object.'
     }
 
-    Test-HLScanRequiredPropertySet -InputObject $ScanResult -Names @(
-        'schemaVersion', 'scan', 'system', 'baseline', 'summary', 'results'
-    ) -Path '' -Errors $errors
-
+    $schemaVersion = $null
     if (Test-HLScanValidationProperty -InputObject $ScanResult -Name 'schemaVersion') {
         $schemaVersion = Get-HLScanValidationProperty -InputObject $ScanResult -Name 'schemaVersion'
-        if ($schemaVersion -isnot [string] -or $schemaVersion -cne '1.0') {
-            Add-HLScanValidationError -Errors $errors -Path 'schemaVersion' -Message "must be the string '1.0'."
+        if ($schemaVersion -isnot [string] -or [string]$schemaVersion -cnotin @('1.0', '1.1')) {
+            Add-HLScanValidationError -Errors $errors -Path 'schemaVersion' -Message "must be the string '1.0' or '1.1'."
         }
     }
+    $isSchema11 = $schemaVersion -is [string] -and [string]$schemaVersion -ceq '1.1'
 
-    $scan = Assert-HLScanObjectSection -Root $ScanResult -Name 'scan' -RequiredProperties @(
+    $rootRequired = @('schemaVersion', 'scan', 'system', 'baseline', 'summary', 'results')
+    if ($isSchema11) { $rootRequired += 'provenance' }
+    Test-HLScanRequiredPropertySet -InputObject $ScanResult -Names $rootRequired -Path '' -Errors $errors
+
+    $scanRequired = @(
         'id', 'collectedAt', 'moduleVersion', 'redacted', 'readOnly', 'elevated',
         'partialCollection', 'exceptionRegisterUsed', 'selectedControlCount'
-    ) -Errors $errors
+    )
+    if ($isSchema11) { $scanRequired += 'collectionDurationMs' }
+    $scan = Assert-HLScanObjectSection -Root $ScanResult -Name 'scan' -RequiredProperties $scanRequired -Errors $errors
     $system = Assert-HLScanObjectSection -Root $ScanResult -Name 'system' -RequiredProperties @(
         'ComputerName', 'Domain', 'DomainJoined', 'DetectedRole', 'ProductType', 'OSCaption',
         'OSVersion', 'BuildNumber', 'OSArchitecture', 'Manufacturer', 'Model', 'PowerShellVersion',
@@ -198,6 +202,12 @@ function Assert-HLScanResult {
         'Total', 'Applicable', 'Pass', 'Fail', 'Warning', 'Excepted', 'Unknown', 'Error',
         'NotApplicable', 'HardeningScore', 'EvidenceCoverage', 'HighestOpenSeverity', 'ScoringModel'
     ) -Errors $errors
+    $provenance = $null
+    if ($isSchema11) {
+        $provenance = Assert-HLScanObjectSection -Root $ScanResult -Name 'provenance' -RequiredProperties @(
+            'catalogVersion', 'catalogDigest', 'baselineDigest', 'capabilities'
+        ) -Errors $errors
+    }
 
     if ($null -ne $scan) {
         $id = if (Test-HLScanValidationProperty -InputObject $scan -Name 'id') { Get-HLScanValidationProperty -InputObject $scan -Name 'id' } else { $null }
@@ -234,6 +244,86 @@ function Assert-HLScanResult {
             $selectedControlCount = Get-HLScanValidationProperty -InputObject $scan -Name 'selectedControlCount'
             if (-not (Test-HLScanValidationInteger -Value $selectedControlCount) -or [decimal]$selectedControlCount -lt 0) {
                 Add-HLScanValidationError -Errors $errors -Path 'scan.selectedControlCount' -Message 'must be a non-negative integer.'
+            }
+        }
+
+        if ($isSchema11 -and (Test-HLScanValidationProperty -InputObject $scan -Name 'collectionDurationMs')) {
+            $collectionDuration = Get-HLScanValidationProperty -InputObject $scan -Name 'collectionDurationMs'
+            if (-not (Test-HLScanValidationInteger -Value $collectionDuration) -or [decimal]$collectionDuration -lt 0) {
+                Add-HLScanValidationError -Errors $errors -Path 'scan.collectionDurationMs' -Message 'must be a non-negative integer.'
+            }
+        }
+    }
+
+    if ($null -ne $provenance) {
+        if (Test-HLScanValidationProperty -InputObject $provenance -Name 'catalogVersion') {
+            $catalogVersion = Get-HLScanValidationProperty -InputObject $provenance -Name 'catalogVersion'
+            if ($catalogVersion -isnot [string] -or [string]$catalogVersion -notmatch '^\d+\.\d+\.\d+$') {
+                Add-HLScanValidationError -Errors $errors -Path 'provenance.catalogVersion' -Message 'must use semantic version form x.y.z.'
+            }
+        }
+
+        foreach ($digestName in @('catalogDigest', 'baselineDigest', 'exceptionDigest')) {
+            if (Test-HLScanValidationProperty -InputObject $provenance -Name $digestName) {
+                $digest = Get-HLScanValidationProperty -InputObject $provenance -Name $digestName
+                if ($digest -isnot [string] -or [string]$digest -cnotmatch '^[0-9a-f]{64}$') {
+                    Add-HLScanValidationError -Errors $errors -Path "provenance.$digestName" -Message 'must be a lowercase SHA-256 digest.'
+                }
+            }
+        }
+
+        if ($null -ne $scan -and (Test-HLScanValidationProperty -InputObject $scan -Name 'exceptionRegisterUsed')) {
+            $registerUsed = Get-HLScanValidationProperty -InputObject $scan -Name 'exceptionRegisterUsed'
+            $hasExceptionDigest = Test-HLScanValidationProperty -InputObject $provenance -Name 'exceptionDigest'
+            if ($registerUsed -eq $true -and -not $hasExceptionDigest) {
+                Add-HLScanValidationError -Errors $errors -Path 'provenance.exceptionDigest' -Message 'is required when an exception register was used.'
+            }
+            if ($registerUsed -eq $false -and $hasExceptionDigest) {
+                Add-HLScanValidationError -Errors $errors -Path 'provenance.exceptionDigest' -Message 'must be omitted when no exception register was used.'
+            }
+        }
+
+        if (Test-HLScanValidationProperty -InputObject $provenance -Name 'capabilities') {
+            $capabilities = Get-HLScanValidationProperty -InputObject $provenance -Name 'capabilities'
+            if (-not (Test-HLScanValidationArray -Value $capabilities)) {
+                Add-HLScanValidationError -Errors $errors -Path 'provenance.capabilities' -Message 'must be an array.'
+            }
+            else {
+                $capabilityNames = New-Object System.Collections.Generic.List[string]
+                $capabilityIndex = 0
+                foreach ($capability in @($capabilities)) {
+                    $capabilityPath = 'provenance.capabilities[{0}]' -f $capabilityIndex
+                    $capabilityIndex++
+                    if (-not (Test-HLScanValidationObject -Value $capability)) {
+                        Add-HLScanValidationError -Errors $errors -Path $capabilityPath -Message 'must be an object.'
+                        continue
+                    }
+                    Test-HLScanRequiredPropertySet -InputObject $capability -Names @('name', 'available', 'detail') -Path $capabilityPath -Errors $errors
+                    if (Test-HLScanValidationProperty -InputObject $capability -Name 'name') {
+                        $capabilityName = Get-HLScanValidationProperty -InputObject $capability -Name 'name'
+                        if ($capabilityName -isnot [string] -or [string]::IsNullOrWhiteSpace([string]$capabilityName)) {
+                            Add-HLScanValidationError -Errors $errors -Path "$capabilityPath.name" -Message 'must be a non-empty string.'
+                        }
+                        else {
+                            $capabilityNames.Add([string]$capabilityName)
+                        }
+                    }
+                    if ((Test-HLScanValidationProperty -InputObject $capability -Name 'available') -and (Get-HLScanValidationProperty -InputObject $capability -Name 'available') -isnot [bool]) {
+                        Add-HLScanValidationError -Errors $errors -Path "$capabilityPath.available" -Message 'must be a Boolean.'
+                    }
+                    if (Test-HLScanValidationProperty -InputObject $capability -Name 'detail') {
+                        $detail = Get-HLScanValidationProperty -InputObject $capability -Name 'detail'
+                        if ($null -ne $detail -and $detail -isnot [string]) {
+                            Add-HLScanValidationError -Errors $errors -Path "$capabilityPath.detail" -Message 'must be null or a string.'
+                        }
+                    }
+                }
+                if (@($capabilityNames | Sort-Object -Unique).Count -ne $capabilityNames.Count) {
+                    Add-HLScanValidationError -Errors $errors -Path 'provenance.capabilities' -Message 'must contain unique capability names.'
+                }
+                if (($capabilityNames.ToArray() -join '|') -cne (@($capabilityNames.ToArray() | Sort-Object) -join '|')) {
+                    Add-HLScanValidationError -Errors $errors -Path 'provenance.capabilities' -Message 'must be sorted by name.'
+                }
             }
         }
     }
@@ -341,11 +431,13 @@ function Assert-HLScanResult {
                 continue
             }
 
-            Test-HLScanRequiredPropertySet -InputObject $result -Names @(
+            $resultRequired = @(
                 'controlId', 'title', 'category', 'severity', 'status', 'originalStatus', 'expected',
                 'actual', 'message', 'evidence', 'rationale', 'remediation', 'references', 'tags',
                 'probe', 'exception', 'collectedAt'
-            ) -Path $resultPath -Errors $errors
+            )
+            if ($isSchema11) { $resultRequired += 'probeDurationMs' }
+            Test-HLScanRequiredPropertySet -InputObject $result -Names $resultRequired -Path $resultPath -Errors $errors
 
             if (Test-HLScanValidationProperty -InputObject $result -Name 'controlId') {
                 $controlId = Get-HLScanValidationProperty -InputObject $result -Name 'controlId'
@@ -414,6 +506,13 @@ function Assert-HLScanResult {
                 $parsedResultTimestamp = [datetimeoffset]::MinValue
                 if ($resultTimestamp -isnot [datetime] -and $resultTimestamp -isnot [datetimeoffset] -and ($resultTimestamp -isnot [string] -or -not [datetimeoffset]::TryParse([string]$resultTimestamp, [ref]$parsedResultTimestamp))) {
                     Add-HLScanValidationError -Errors $errors -Path "$resultPath.collectedAt" -Message 'must be a date-time string.'
+                }
+            }
+
+            if ($isSchema11 -and (Test-HLScanValidationProperty -InputObject $result -Name 'probeDurationMs')) {
+                $probeDuration = Get-HLScanValidationProperty -InputObject $result -Name 'probeDurationMs'
+                if (-not (Test-HLScanValidationInteger -Value $probeDuration) -or [decimal]$probeDuration -lt 0) {
+                    Add-HLScanValidationError -Errors $errors -Path "$resultPath.probeDurationMs" -Message 'must be a non-negative integer.'
                 }
             }
         }

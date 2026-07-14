@@ -57,6 +57,7 @@ function Invoke-HardeningLens {
     )
 
     Assert-HLWindows
+    $collectionContext = New-HLCollectionContext
     $systemContext = Get-HLSystemContext
     if (-not $systemContext.IsElevated -and -not $AllowPartial) {
         throw 'Run Hardening Lens from an elevated PowerShell session, or use -AllowPartial to preserve unresolved controls as evidence gaps.'
@@ -78,8 +79,10 @@ function Invoke-HardeningLens {
 
     $exceptions = @()
     $exceptionValidation = $null
+    $exceptionDocument = $null
     if (-not [string]::IsNullOrWhiteSpace($ExceptionsPath)) {
         $exceptionFile = Read-HLExceptionFile -Path $ExceptionsPath
+        $exceptionDocument = $exceptionFile.Document
         $exceptionValidation = Test-HLExceptionDocument -Document $exceptionFile.Document
         if (-not $exceptionValidation.IsValid) {
             throw ('Exception register validation failed: {0}' -f (@($exceptionValidation.Errors) -join ' '))
@@ -105,7 +108,7 @@ function Invoke-HardeningLens {
     foreach ($control in $controls) {
         Write-Verbose "Evaluating $($control.id): $($control.title)"
         $collectedAt = (Get-Date).ToUniversalTime().ToString('o')
-        $probeResult = Invoke-HLProbe -Control $control -SystemContext $systemContext
+        $probeResult = Invoke-HLProbe -Control $control -SystemContext $systemContext -CollectionContext $collectionContext
         $status = [string]$probeResult.Status
         $originalStatus = $null
         $appliedException = $null
@@ -145,12 +148,25 @@ function Invoke-HardeningLens {
             probe          = [string]$control.probe
             exception      = $appliedException
             collectedAt    = $collectedAt
+            probeDurationMs = [int]$probeResult.DurationMs
         })
     }
 
+    $collectionContext.Stopwatch.Stop()
+    $catalog = Get-HLControlCatalog
+    $provenance = [pscustomobject][ordered]@{
+        catalogVersion = [string]$catalog.catalogVersion
+        catalogDigest  = Get-HLContentDigest -InputObject $catalog
+        baselineDigest = Get-HLContentDigest -InputObject (Get-HLLogicalBaseline -Baseline $resolvedBaseline)
+        capabilities   = @(Get-HLProbeCapability -Controls $controls)
+    }
+    if ($null -ne $exceptionDocument) {
+        $provenance | Add-Member -NotePropertyName exceptionDigest -NotePropertyValue (Get-HLContentDigest -InputObject $exceptionDocument)
+    }
+
     $scanResult = [pscustomobject][ordered]@{
-        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.0.1/src/HardeningLens/Schema/result.schema.json'
-        schemaVersion = '1.0'
+        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.1.0/src/HardeningLens/Schema/result.schema.json'
+        schemaVersion = '1.1'
         scan = [pscustomobject][ordered]@{
             id                    = [guid]::NewGuid().ToString()
             collectedAt           = (Get-Date).ToUniversalTime().ToString('o')
@@ -161,6 +177,7 @@ function Invoke-HardeningLens {
             partialCollection     = [bool](-not $systemContext.IsElevated)
             exceptionRegisterUsed = [bool](-not [string]::IsNullOrWhiteSpace($ExceptionsPath))
             selectedControlCount  = @($controls).Count
+            collectionDurationMs  = [int][math]::Round($collectionContext.Stopwatch.Elapsed.TotalMilliseconds)
         }
         system = $systemContext
         baseline = [pscustomobject][ordered]@{
@@ -174,6 +191,7 @@ function Invoke-HardeningLens {
             controlCount  = @($controls).Count
             notes         = @($resolvedBaseline.notes)
         }
+        provenance = $provenance
         summary = Get-HLSummary -Results $results.ToArray()
         results = $results.ToArray()
     }

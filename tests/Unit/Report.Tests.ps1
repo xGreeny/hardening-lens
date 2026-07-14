@@ -31,6 +31,9 @@ Describe 'Report export' {
         $content | Should -Not -Match "script-src 'unsafe-inline'"
         $content | Should -Match 'HL-SMB-003'
         $content | Should -Match 'Prioritized findings'
+        $content | Should -Match 'Assessment provenance'
+        $content | Should -Match 'ee4f598239afe802f2a85018ad261c93faecc681e47fc8bcab6811f515be3d81'
+        $content | Should -Match 'report schema 1\.1'
         $content | Should -Not -Match '<script[^>]+src='
         $content | Should -Not -Match '<link[^>]+stylesheet'
 
@@ -143,6 +146,6 @@ Describe 'Report export' {
         [IO.File]::ReadAllText($target) | Should -BeExactly 'sentinel'
 
         $null = Export-HardeningLensReport -Path $script:SamplePath -Format Json -OutputDirectory $TestDrive -FileNamePrefix 'protected' -Force
-        (Get-Content -LiteralPath $target -Raw | ConvertFrom-Json).schemaVersion | Should -Be '1.0'
+        (Get-Content -LiteralPath $target -Raw | ConvertFrom-Json).schemaVersion | Should -Be '1.1'
     }
 }

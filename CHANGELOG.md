@@ -2,6 +2,24 @@
 
 All notable changes are documented here. The project follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-07-14
+
+### Added
+
+- Record catalog, effective-baseline, and exception-register SHA-256 provenance in result schema 1.1.
+- Report collection and per-probe durations plus a deterministic capability snapshot.
+- Cache shared provider snapshots within one assessment and dispatch probes through an explicit parameter-aware registry.
+- Expose `Invoke-HardeningLensFleet` as a pipeline-capable module command with unambiguous host correlation and transactionally committed run directories.
+- Add automation policy gates for findings, score, evidence coverage, partial collection, and expired exceptions.
+- Add structured baseline validation plus serialized, atomic exception lifecycle updates that require re-approval after material changes.
+- Explain drift through field-level before/after snapshots, baseline provenance, catalog provenance, and evidence-coverage delta.
+
+### Changed
+
+- Accept schema 1.0 scan inputs as a controlled legacy format while emitting schema 1.1 for new scans and comparisons.
+- Decouple the module release from catalog and baseline content versions; module 1.1.0 continues to ship catalog and baseline content 1.0.1.
+- Keep the legacy fleet script as a compatibility wrapper over the public module API.
+
 ## [1.0.1] - 2026-07-14
 
 ### Security

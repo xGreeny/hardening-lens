@@ -10,12 +10,16 @@ flowchart LR
     Baseline --> Engine[Assessment engine]
     Context --> Engine
     Exceptions[Exception register] --> Engine
-    Engine --> Probes[Read-only probes]
+    Engine --> Registry[Probe registry]
+    Registry --> Probes[Read-only probes]
     Probes --> Windows[Registry / CIM / Windows APIs / Cmdlets]
-    Engine --> Result[Result schema 1.0]
+    Context --> Cache[Collection-scoped provider cache]
+    Cache --> Probes
+    Engine --> Result[Result schema 1.1 + provenance]
     Result --> Reports[HTML / JSON / CSV]
     Result --> Drift[Drift comparison]
-    Result --> Fleet[Fleet summary]
+    Result --> Fleet[Fleet result]
+    Result --> Policy[Automation policy]
 ```
 
 ## Module layout
@@ -45,12 +49,14 @@ src/HardeningLens/
 2. Enforce elevation unless partial collection is explicitly allowed.
 3. Resolve a built-in or custom baseline against the catalog.
 4. Validate the exception register before evaluating controls.
-5. Dispatch each control to a named read-only probe.
-6. Normalize the probe result to expected, actual, status, message, and evidence.
-7. Apply a matching Approved exception to `Fail` or `Warning` only.
-8. Calculate score and evidence coverage.
-9. Optionally redact stable host identifiers.
-10. Return one schema-versioned result object.
+5. Resolve the named probe through an explicit parameter contract and capability registry.
+6. Reuse collection-scoped provider snapshots where multiple controls query the same source.
+7. Normalize the probe result to expected, actual, status, message, evidence, and duration.
+8. Apply a matching Approved exception to `Fail` or `Warning` only.
+9. Calculate score and evidence coverage.
+10. Fingerprint the full catalog, effective baseline, and optional exception register with canonical SHA-256.
+11. Optionally redact stable host identifiers.
+12. Return one schema-versioned result object with a sorted capability snapshot.
 
 ## Control contract
 
@@ -74,14 +80,15 @@ Message
 Evidence
 ```
 
-The engine adds catalog metadata, collection time, exception data, and scan context. This prevents probe implementations from inventing inconsistent result structures.
+The engine adds catalog metadata, collection time, probe duration, exception data, scan context, and provenance. This prevents probe implementations from inventing inconsistent result structures.
 
 ## Read-only boundary
 
 No public or private assessment function contains a remediation path. State-changing operations are limited to:
 
 - writing report and comparison files;
-- creating an exception-register file;
+- creating or atomically updating an exception-register file;
+- staging and atomically publishing complete fleet run directories;
 - installing a copy of the module when the dedicated installer is invoked;
 - creating temporary module files during fleet collection.
 
@@ -93,7 +100,9 @@ Live collection requires Windows. The following operations remain cross-platform
 
 - catalog and baseline inspection;
 - custom baseline resolution;
+- structured baseline validation;
 - exception validation;
+- policy evaluation;
 - report generation from existing JSON;
 - result comparison;
 - repository tests that use synthetic fixtures.
@@ -104,8 +113,8 @@ This split allows CI on both Windows PowerShell 5.1 and current PowerShell witho
 
 A new probe requires:
 
-1. a private function returning `New-HLProbeResult`;
-2. a dispatcher entry in `Invoke-HLProbe`;
+1. a private function returning `Get-HLProbeResult`;
+2. a parameter and capability contract in the probe registry;
 3. one or more catalog controls;
 4. role placement in built-in baselines where appropriate;
 5. Pester coverage and synthetic fixtures;

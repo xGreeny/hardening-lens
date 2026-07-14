@@ -5,9 +5,9 @@ BeforeAll {
 }
 
 Describe 'Module manifest and public surface' {
-    It 'loads as version 1.0.1 on the current PowerShell edition' {
+    It 'loads as version 1.1.0 on the current PowerShell edition' {
         $manifest = Test-ModuleManifest -Path $script:ModulePath
-        $manifest.Version.ToString() | Should -Be '1.0.1'
+        $manifest.Version.ToString() | Should -Be '1.1.0'
         $manifest.PowerShellVersion | Should -Be ([version]'5.1')
     }
 
@@ -18,8 +18,12 @@ Describe 'Module manifest and public surface' {
             'Get-HardeningLensBaseline'
             'Get-HardeningLensControl'
             'Invoke-HardeningLens'
+            'Invoke-HardeningLensFleet'
             'New-HardeningLensExceptionFile'
+            'Set-HardeningLensException'
+            'Test-HardeningLensBaseline'
             'Test-HardeningLensExceptionFile'
+            'Test-HardeningLensPolicy'
         ) | Sort-Object
         $actual = @(Get-Command -Module HardeningLens -CommandType Function | Select-Object -ExpandProperty Name | Sort-Object)
         ($actual -join ',') | Should -Be ($expected -join ',')

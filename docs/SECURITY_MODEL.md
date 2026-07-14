@@ -22,7 +22,7 @@ Elevation increases the sensitivity of both the process and its output. Run from
 | Built-in baselines | Versioned role contracts resolved only to catalog controls |
 | Custom baseline | Can alter scope, severity, and expected parameters; requires review |
 | Exception register | Can convert failures to accepted exposure; requires strict approval control |
-| Existing result JSON | Used for reports and drift; should be treated as untrusted data and schema-validated by consuming systems |
+| Existing result JSON | Used for reports, policy, and drift; validated by the module before consumption and still treated as untrusted data |
 
 JSON inputs cannot embed executable PowerShell. Baselines reference known control IDs and named probes only.
 
@@ -40,6 +40,14 @@ Probes use documented local sources such as:
 - BitLocker and Secure Boot cmdlets.
 
 Every probe catches operational failures and returns an explicit `Unknown` or `Error` result. A missing provider does not become a pass unless the control explicitly defines a secure operating-system default for an absent value.
+
+Repeated controls can share a provider snapshot only within one in-memory collection context. The cache is discarded after the scan; it neither writes Windows state nor survives into another assessment. Probe dispatch is restricted to a built-in registry with explicit parameter allowlists.
+
+## Provenance boundary
+
+Schema 1.1 hashes the full catalog, effective resolved baseline, and optional exception register through edition-independent canonical JSON and SHA-256. These digests identify assessment inputs; they are not signatures and do not prove publisher authenticity. Verify release archives and source trust separately.
+
+Capability and timing fields explain missing providers and collection cost without turning an unavailable provider into a passing result.
 
 ## Data sensitivity
 

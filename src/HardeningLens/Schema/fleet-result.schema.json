@@ -1,0 +1,330 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.1.0/src/HardeningLens/Schema/fleet-result.schema.json",
+  "title": "Hardening Lens fleet assessment result",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "run",
+    "summary",
+    "artifacts",
+    "hosts"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "schemaVersion": {
+      "const": "1.1"
+    },
+    "run": {
+      "$ref": "#/$defs/run"
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "artifacts": {
+      "$ref": "#/$defs/artifacts"
+    },
+    "hosts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/hostResult"
+      }
+    }
+  },
+  "$defs": {
+    "run": {
+      "type": "object",
+      "required": [
+        "id",
+        "startedAt",
+        "completedAt",
+        "moduleVersion",
+        "baselineSelection",
+        "customBaseline",
+        "redacted",
+        "allowPartial",
+        "throttleLimit",
+        "requestedCount",
+        "succeededCount",
+        "failedCount"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "moduleVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "baselineSelection": {
+          "type": "string",
+          "minLength": 1
+        },
+        "customBaseline": {
+          "type": "boolean"
+        },
+        "redacted": {
+          "type": "boolean"
+        },
+        "allowPartial": {
+          "type": "boolean"
+        },
+        "throttleLimit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "requestedCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "succeededCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failedCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "requestedCount",
+        "succeededCount",
+        "failedCount",
+        "averageHardeningScore",
+        "averageEvidenceCoverage",
+        "totalFail",
+        "totalWarning",
+        "totalExcepted",
+        "totalUnknown",
+        "totalError"
+      ],
+      "properties": {
+        "requestedCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "succeededCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failedCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "averageHardeningScore": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "averageEvidenceCoverage": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "totalFail": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalWarning": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalExcepted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalUnknown": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalError": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "object",
+      "required": [
+        "outputDirectory",
+        "summaryPath",
+        "resultPath",
+        "manifestPath",
+        "commitMarkerPath"
+      ],
+      "properties": {
+        "outputDirectory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summaryPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resultPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifestPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commitMarkerPath": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "message",
+        "category",
+        "fullyQualifiedErrorId"
+      ],
+      "properties": {
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fullyQualifiedErrorId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "assessment": {
+      "$ref": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.1.0/src/HardeningLens/Schema/result.schema.json"
+    },
+    "hostResult": {
+      "type": "object",
+      "required": [
+        "ordinal",
+        "requestedComputerName",
+        "computerName",
+        "status",
+        "error",
+        "assessment",
+        "artifactPath"
+      ],
+      "properties": {
+        "ordinal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "requestedComputerName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "computerName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "Succeeded",
+            "Failed"
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/error"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assessment": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/assessment"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "artifactPath": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "Succeeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "type": "null"
+              },
+              "assessment": {
+                "$ref": "#/$defs/assessment"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "Failed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "$ref": "#/$defs/error"
+              },
+              "assessment": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -12,7 +12,9 @@ Describe 'Live Windows assessment' -Tag WindowsLive {
             -AllowPartial `
             -NoConsole
 
-        $result.schemaVersion | Should -Be '1.0'
+        $result.schemaVersion | Should -Be '1.1'
+        $result.provenance.catalogDigest | Should -Match '^[0-9a-f]{64}$'
+        $result.provenance.baselineDigest | Should -Match '^[0-9a-f]{64}$'
         $result.scan.readOnly | Should -BeTrue
         @($result.results).Count | Should -Be 3
     }

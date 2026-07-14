@@ -15,10 +15,12 @@ a{color:var(--accent)}code,pre,.mono{font-family:"Cascadia Code","SFMono-Regular
 <h1>Hardening Lens</h1>
 <p class="subtitle">Read-only posture assessment for <strong>SRV-DEMO-01</strong> against <strong>Windows Member Server</strong>.</p>
 <div class="meta-grid">
-<div class="card"><div class="small">Collected</div><div class="mono">2026-07-12 09:42:18 Z</div></div>
+<div class="card"><div class="small">Collected</div><div class="mono">2026-07-12 11:42:18 +02:00</div></div>
 <div class="card"><div class="small">Operating system</div><div class="mono">Microsoft Windows Server 2025 Standard (26100)</div></div>
 <div class="card"><div class="small">Detected role</div><div class="mono">MemberServer</div></div>
 <div class="card"><div class="small">Baseline</div><div class="mono">MemberServer 1.0.1</div></div>
+<div class="card"><div class="small">Module / catalog</div><div class="mono">1.1.0 / 1.0.1</div></div>
+<div class="card"><div class="small">Result schema</div><div class="mono">1.1</div></div>
 <div class="card"><div class="small">Scan ID</div><div class="mono">8fc7045c-a95e-4f23-bdb7-2bb858322c52</div></div>
 <div class="card"><div class="small">Redacted</div><div class="mono">False</div></div>
 </div></section>
@@ -300,10 +302,17 @@ a{color:var(--accent)}code,pre,.mono{font-family:"Cascadia Code","SFMono-Regular
 <tr data-status="Pass" data-severity="Medium" data-search="hl-autorun-001 autorun and autoplay are disabled attack surface reduction pass medium"><td><strong class="mono">HL-AUTORUN-001</strong><br>AutoRun and AutoPlay are disabled</td><td><span class="badge pass">Pass</span></td><td class="severity sev-medium">Medium</td><td>Attack Surface Reduction</td><td class="mono">NoDriveTypeAutoRun=255 and NoAutorun=1</td><td class="mono">NoDriveTypeAutoRun=255 and NoAutorun=1</td><td>The effective state matches the selected baseline.</td></tr>
 <tr data-status="Excepted" data-severity="Low" data-search="hl-ra-001 solicited remote assistance is disabled remote administration excepted low"><td><strong class="mono">HL-RA-001</strong><br>Solicited Remote Assistance is disabled</td><td><span class="badge excepted">Excepted</span></td><td class="severity sev-low">Low</td><td>Remote Administration</td><td class="mono">0</td><td class="mono">1</td><td>Solicited Remote Assistance is enabled for the approved support workflow.</td></tr>
 </tbody></table></div></section>
+<section class="section card"><h2>Assessment provenance</h2><div class="kv">
+<div>Catalog digest</div><div class="mono">ee4f598239afe802f2a85018ad261c93faecc681e47fc8bcab6811f515be3d81</div>
+<div>Effective baseline digest</div><div class="mono">96c57d4164756855bc63f42ffe093f38c735fae9b1295aafb4333bcfc80e74cd</div>
+<div>Exception register digest</div><div class="mono">a6147cdc628a44eb56a5bf4fff58bbd0672c9947b33b512b421c14636318538a</div>
+<div>Collection duration</div><div class="mono">1432 ms</div>
+<div>Probe capabilities</div><div class="mono">AsrRules: available; AuditPolicy: available; AutoRun: available; BitLocker: available; CredentialGuard: available; DefenderPreference: available; DefenderSignatureAge: available; DefenderStatus: available; EventLog: available; FirewallProfiles: available; LapsAdEncryption: available; LapsBackup: available; LapsPasswordAge: available; LocalGuestAccount: available; PowerShellModuleLogging: available; RegistryValue: available; SecureBoot: available; Service: available; SmbClient: available; SmbServer: available; WindowsOptionalFeature: available; WinRM: available</div>
+</div></section>
 <section class="section card"><h2>Assessment model</h2>
 <p class="method">Severity-weighted pass percentage. Exceptions, unknowns, warnings, and errors receive no pass credit; not-applicable and informational controls are excluded.</p>
 <p class="method">Hardening Lens is a read-only technical posture assessment. It does not change the device, prove policy intent, replace risk assessment, or certify compliance with Microsoft, CIS, NIST, or another framework. Validate findings against application requirements and change-control procedures before remediation.</p>
 </section>
-<div class="footer mono">hardening-lens / xGreeny | report schema 1.0</div>
+<div class="footer mono">hardening-lens / xGreeny | report schema 1.1</div>
 <script>(function(){const search=document.getElementById('search'),status=document.getElementById('statusFilter'),severity=document.getElementById('severityFilter'),rows=[...document.querySelectorAll('#controlRows tr')],count=document.getElementById('visibleCount');function filter(){const q=search.value.trim().toLowerCase();let visible=0;rows.forEach(r=>{const ok=(!q||r.dataset.search.includes(q))&&(!status.value||r.dataset.status===status.value)&&(!severity.value||r.dataset.severity===severity.value);r.classList.toggle('hidden',!ok);if(ok)visible++;});count.textContent=visible+' of '+rows.length+' controls';}search.addEventListener('input',filter);status.addEventListener('change',filter);severity.addEventListener('change',filter);filter();})();</script>
 </main></body></html>

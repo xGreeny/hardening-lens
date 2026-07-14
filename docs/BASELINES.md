@@ -1,5 +1,13 @@
 # Baselines
 
+Module, catalog, and baseline versions have independent lifecycles. Hardening Lens 1.1.0 ships catalog and built-in baseline content 1.0.1; a module update does not imply that control intent changed. Scan provenance records each identity and the effective baseline digest separately.
+
+Validate custom content before deployment with:
+
+```powershell
+Test-HardeningLensBaseline -Path .\custom-baseline.json
+```
+
 Hardening Lens ships four role-aware profiles. They are deliberately opinionated operational checks built from current Microsoft security guidance and common Windows engineering requirements. They are not copied vendor baselines and do not establish compliance by themselves.
 
 | Baseline | Controls | Selection | Primary emphasis |
