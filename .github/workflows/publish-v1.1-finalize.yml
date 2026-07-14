@@ -1,0 +1,96 @@
+name: Publish Hardening Lens 1.1 final release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: publish-v1.1-final
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          fetch-depth: 0
+          show-progress: false
+      - name: Detect release readiness
+        id: readiness
+        shell: pwsh
+        run: |
+          $manifest = Test-ModuleManifest ./src/HardeningLens/HardeningLens.psd1
+          $ready = $manifest.Version.ToString() -eq '1.1.0'
+          "ready=$($ready.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          if (-not $ready) { Write-Host "main is still at $($manifest.Version); publication will wait." }
+      - name: Install validation dependencies
+        if: steps.readiness.outputs.ready == 'true'
+        run: python3 -m pip install --disable-pip-version-check -r requirements-dev.txt
+      - name: Validate repository contract
+        if: steps.readiness.outputs.ready == 'true'
+        run: |
+          python3 tools/generate_control_reference.py --check
+          python3 tools/validate_repository.py
+      - name: Test and package
+        if: steps.readiness.outputs.ready == 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -AllowClobber
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -AllowClobber
+          ./build.ps1 -Task All
+          ./tools/New-ReleaseMetadata.ps1 -ArtifactsDirectory ./artifacts -SourceCommit '${{ github.sha }}'
+      - name: Attest module archive
+        if: steps.readiness.outputs.ready == 'true'
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: artifacts/HardeningLens-1.1.0.zip
+      - name: Remove publication workflow
+        if: steps.readiness.outputs.ready == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/publish-v1.1-finalize.yml
+          git add -A
+          git commit -m "build: finalize Hardening Lens 1.1.0 publication"
+          git push origin HEAD:main
+      - name: Tag and publish release
+        if: steps.readiness.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          final_sha=$(git rev-parse HEAD)
+          if ! git ls-remote --exit-code --tags origin refs/tags/v1.1.0 >/dev/null 2>&1; then
+            git tag -a v1.1.0 "$final_sha" -m "Hardening Lens 1.1.0"
+            git push origin v1.1.0
+          fi
+          if gh release view v1.1.0 >/dev/null 2>&1; then
+            gh release upload v1.1.0 \
+              artifacts/HardeningLens-1.1.0.zip \
+              artifacts/HardeningLens-1.1.0.zip.sha256 \
+              artifacts/build-manifest.json \
+              artifacts/sbom.spdx.json \
+              --clobber
+          else
+            gh release create v1.1.0 \
+              artifacts/HardeningLens-1.1.0.zip \
+              artifacts/HardeningLens-1.1.0.zip.sha256 \
+              artifacts/build-manifest.json \
+              artifacts/sbom.spdx.json \
+              --title "Hardening Lens 1.1.0" \
+              --generate-notes \
+              --verify-tag
+          fi
