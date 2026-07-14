@@ -29,6 +29,64 @@ Describe 'Posture drift comparison' {
         @($comparison.changes | Where-Object ControlId -eq 'HL-SMB-001')[0].ChangeType | Should -Be 'Changed'
     }
 
+    It 'ignores recursive object property order but preserves array order' {
+        $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $referenceTarget = @($reference.results | Where-Object controlId -eq 'HL-SMB-001')[0]
+        $differenceTarget = @($difference.results | Where-Object controlId -eq 'HL-SMB-001')[0]
+
+        $referenceTarget.evidence = [pscustomobject][ordered]@{
+            Source = 'Synthetic verification'
+            Nested = [pscustomobject][ordered]@{ Alpha = 1; Beta = 2 }
+            Values = @(1, 2, 3)
+        }
+        $differenceTarget.evidence = [pscustomobject][ordered]@{
+            Values = @(1, 2, 3)
+            Nested = [pscustomobject][ordered]@{ Beta = 2; Alpha = 1 }
+            Source = 'Synthetic verification'
+        }
+
+        $comparison = Compare-HardeningLensResult -Reference $reference -Difference $difference
+        @($comparison.changes | Where-Object ControlId -eq 'HL-SMB-001')[0].ChangeType | Should -Be 'Unchanged'
+
+        $differenceTarget.evidence.Values = @(3, 2, 1)
+        $comparison = Compare-HardeningLensResult -Reference $reference -Difference $difference
+        @($comparison.changes | Where-Object ControlId -eq 'HL-SMB-001')[0].ChangeType | Should -Be 'Changed'
+    }
+
+    It 'rejects duplicate and empty control IDs in either input' {
+        $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $reference.results += $reference.results[0]
+        { Compare-HardeningLensResult -Reference $reference -Difference $difference } | Should -Throw '*Reference*duplicate controlId*'
+
+        $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference.results += $difference.results[0]
+        { Compare-HardeningLensResult -Reference $reference -Difference $difference } | Should -Throw '*Difference*duplicate controlId*'
+
+        $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $reference.results[0].controlId = '  '
+        { Compare-HardeningLensResult -Reference $reference -Difference $difference } | Should -Throw '*Reference*empty controlId*'
+
+        $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference.results[0].controlId = ''
+        { Compare-HardeningLensResult -Reference $reference -Difference $difference } | Should -Throw '*Difference*empty controlId*'
+    }
+
+    It 'rejects unsupported schemas and malformed minimal contracts' {
+        $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $difference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $reference.schemaVersion = '2.0'
+        { Compare-HardeningLensResult -Reference $reference -Difference $difference } | Should -Throw '*Reference*unsupported schemaVersion*'
+
+        $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
+        $reference.PSObject.Properties.Remove('results')
+        { Compare-HardeningLensResult -Reference $reference -Difference $difference } | Should -Throw "*Reference*missing required property 'results'*"
+    }
+
     It 'rejects accidental cross-target and cross-baseline comparisons' {
         $reference = Get-Content -LiteralPath $script:ReferencePath -Raw | ConvertFrom-Json
         $difference = Get-Content -LiteralPath $script:DifferencePath -Raw | ConvertFrom-Json

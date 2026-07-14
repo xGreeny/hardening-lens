@@ -42,6 +42,16 @@ function Compare-HardeningLensResult {
     $referenceResult = Read-HLScanResult -InputObject $Reference
     $differenceResult = Read-HLScanResult -InputObject $Difference
 
+    # Validate the comparison-critical contract before reading nested properties or
+    # building ID maps. The full validator is used as an additional gate when the
+    # module version provides it.
+    Assert-HLComparableScanResult -ScanResult $referenceResult -InputName Reference
+    Assert-HLComparableScanResult -ScanResult $differenceResult -InputName Difference
+    if ($null -ne (Get-Command -Name Assert-HLScanResult -CommandType Function -ErrorAction SilentlyContinue)) {
+        Assert-HLScanResult -ScanResult $referenceResult
+        Assert-HLScanResult -ScanResult $differenceResult
+    }
+
     $referenceComputer = [string]$referenceResult.system.ComputerName
     $differenceComputer = [string]$differenceResult.system.ComputerName
     if (-not $AllowCrossTargetComparison -and

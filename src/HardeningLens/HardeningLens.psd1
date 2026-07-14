@@ -1,6 +1,6 @@
 @{
     RootModule           = 'HardeningLens.psm1'
-    ModuleVersion        = '1.0.0'
+    ModuleVersion        = '1.0.1'
     GUID                 = '1b1d694c-40f9-4db4-a7ad-b6ca5ad934af'
     Author               = 'xGreeny'
     CompanyName          = 'xGreeny'
@@ -28,7 +28,7 @@
             Tags         = @('Windows', 'Security', 'Hardening', 'Audit', 'PowerShell', 'Baseline', 'Drift', 'SecOps')
             LicenseUri   = 'https://github.com/xGreeny/hardening-lens/blob/main/LICENSE'
             ProjectUri   = 'https://github.com/xGreeny/hardening-lens'
-            ReleaseNotes = 'Initial 1.0.0 release with four role-aware baselines, 58 controls, governed exceptions, drift comparison, and self-contained reports.'
+            ReleaseNotes = 'Trust and integrity update with hardened report imports, deterministic drift, isolated catalog objects, complete fleet outcomes, and corrected quality gates.'
         }
     }
 }

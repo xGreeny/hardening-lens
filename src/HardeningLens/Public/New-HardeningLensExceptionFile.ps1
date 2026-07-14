@@ -106,7 +106,7 @@ function New-HardeningLensExceptionFile {
     }
 
     $document = [pscustomobject][ordered]@{
-        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/exception.schema.json'
+        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.0.1/src/HardeningLens/Schema/exception.schema.json'
         schemaVersion = '1.0'
         exceptions    = $exceptions
     }

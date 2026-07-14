@@ -17,6 +17,9 @@ function Export-HardeningLensReport {
 
     .PARAMETER FileNamePrefix
     Optional file name prefix without an extension.
+
+    .PARAMETER Force
+    Overwrites existing report files. Without Force, existing files cause an error.
     #>
     [CmdletBinding(DefaultParameterSetName = 'Object')]
     param(
@@ -31,14 +34,18 @@ function Export-HardeningLensReport {
 
         [string]$OutputDirectory = (Get-Location).Path,
 
-        [string]$FileNamePrefix
+        [string]$FileNamePrefix,
+
+        [switch]$Force
     )
+
+    begin {
+        $usedPrefixes = @{}
+    }
 
     process {
         $scanResult = if ($PSCmdlet.ParameterSetName -eq 'Path') { Read-HLScanResult -InputObject $Path } else { $InputObject }
-        if (-not (Test-HLProperty -InputObject $scanResult -Name 'schemaVersion') -or [string]$scanResult.schemaVersion -ne '1.0') {
-            throw 'Input is not a supported Hardening Lens scan result.'
-        }
+        Assert-HLScanResult -ScanResult $scanResult
 
         if (-not (Test-Path -LiteralPath $OutputDirectory -PathType Container)) {
             [void](New-Item -Path $OutputDirectory -ItemType Directory -Force)
@@ -48,32 +55,62 @@ function Export-HardeningLensReport {
         if ([string]::IsNullOrWhiteSpace($FileNamePrefix)) {
             $hostPart = ConvertTo-HLFileNamePart -Value ([string]$scanResult.system.ComputerName)
             $timestamp = try { ([datetime]$scanResult.scan.collectedAt).ToUniversalTime().ToString('yyyyMMddTHHmmssZ') } catch { (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ') }
-            $FileNamePrefix = "hardening-lens-$hostPart-$timestamp"
+            $basePrefix = "hardening-lens-$hostPart-$timestamp"
         }
         else {
-            $FileNamePrefix = ConvertTo-HLFileNamePart -Value $FileNamePrefix
+            $basePrefix = ConvertTo-HLFileNamePart -Value $FileNamePrefix
+        }
+
+        if ([string]::IsNullOrWhiteSpace($basePrefix)) {
+            throw 'FileNamePrefix does not contain any valid file-name characters.'
+        }
+
+        $currentPrefix = $basePrefix
+        $suffix = 1
+        while ($usedPrefixes.ContainsKey($currentPrefix)) {
+            $suffix++
+            $currentPrefix = '{0}-{1}' -f $basePrefix, $suffix
+        }
+        $usedPrefixes[$currentPrefix] = $true
+
+        $plannedOutputs = New-Object System.Collections.Generic.List[object]
+        foreach ($outputFormat in @($Format | Sort-Object -Unique)) {
+            $extension = switch ($outputFormat) {
+                'Html' { '.html' }
+                'Json' { '.json' }
+                'Csv' { '.csv' }
+            }
+            $plannedOutputs.Add([pscustomobject][ordered]@{
+                Format = $outputFormat
+                Path = Join-Path -Path $resolvedOutput -ChildPath ($currentPrefix + $extension)
+            })
+        }
+
+        if (-not $Force) {
+            $existing = @($plannedOutputs | Where-Object { Test-Path -LiteralPath $_.Path })
+            if ($existing.Count -gt 0) {
+                throw ("Output file already exists: '{0}'. Use -Force to overwrite existing report files." -f $existing[0].Path)
+            }
         }
 
         $written = New-Object System.Collections.Generic.List[object]
-        foreach ($outputFormat in @($Format | Sort-Object -Unique)) {
-            switch ($outputFormat) {
+        foreach ($plannedOutput in $plannedOutputs) {
+            $content = switch ($plannedOutput.Format) {
                 'Html' {
-                    $outputPath = Join-Path -Path $resolvedOutput -ChildPath ($FileNamePrefix + '.html')
-                    Write-HLUtf8File -Path $outputPath -Content (ConvertTo-HLHtmlReport -ScanResult $scanResult)
+                    ConvertTo-HLHtmlReport -ScanResult $scanResult
                 }
                 'Json' {
-                    $outputPath = Join-Path -Path $resolvedOutput -ChildPath ($FileNamePrefix + '.json')
-                    Write-HLUtf8File -Path $outputPath -Content (($scanResult | ConvertTo-Json -Depth 40) + [Environment]::NewLine)
+                    ($scanResult | ConvertTo-Json -Depth 40) + [Environment]::NewLine
                 }
                 'Csv' {
-                    $outputPath = Join-Path -Path $resolvedOutput -ChildPath ($FileNamePrefix + '.csv')
                     $csv = @($scanResult.results | ForEach-Object { ConvertTo-HLFlatResult -Result $_ } | ConvertTo-Csv -NoTypeInformation)
-                    Write-HLUtf8File -Path $outputPath -Content (($csv -join [Environment]::NewLine) + [Environment]::NewLine)
+                    ($csv -join [Environment]::NewLine) + [Environment]::NewLine
                 }
             }
 
-            $file = Get-Item -LiteralPath $outputPath
-            $written.Add([pscustomobject][ordered]@{ Format = $outputFormat; Path = $file.FullName; Bytes = $file.Length })
+            Write-HLReportFile -Path $plannedOutput.Path -Content $content -Force:$Force
+            $file = Get-Item -LiteralPath $plannedOutput.Path
+            $written.Add([pscustomobject][ordered]@{ Format = $plannedOutput.Format; Path = $file.FullName; Bytes = $file.Length })
         }
 
         return $written.ToArray()

@@ -4,7 +4,10 @@ param(
     [ValidateSet('Clean', 'Validate', 'Test', 'Build', 'Package', 'All')]
     [string]$Task = 'All',
 
-    [switch]$SkipAnalyzer
+    [switch]$SkipAnalyzer,
+
+    [ValidateRange(0, 100)]
+    [double]$MinimumCoveragePercent = 45.0
 )
 
 Set-StrictMode -Version 2.0
@@ -122,12 +125,30 @@ function Invoke-TestSuite {
     $configuration.CodeCoverage.Path = $coverageFiles
     $configuration.CodeCoverage.OutputPath = Join-Path -Path $artifacts -ChildPath 'coverage.xml'
     $configuration.CodeCoverage.OutputFormat = 'JaCoCo'
+    $configuration.CodeCoverage.CoveragePercentTarget = $MinimumCoveragePercent
 
     $result = Invoke-Pester -Configuration $configuration
-    if ($result.FailedCount -gt 0) {
-        throw "$($result.FailedCount) Pester test(s) failed."
+    $runFailed = [string]$result.Result -ne 'Passed' -or
+        $result.FailedCount -gt 0 -or
+        $result.FailedBlocksCount -gt 0 -or
+        $result.FailedContainersCount -gt 0
+    if ($runFailed) {
+        throw ('Pester run failed: result={0}, tests={1}, blocks={2}, containers={3}.' -f
+            $result.Result,
+            $result.FailedCount,
+            $result.FailedBlocksCount,
+            $result.FailedContainersCount)
     }
-    Write-Host ("Pester passed: {0} tests, {1} skipped." -f $result.PassedCount, $result.SkippedCount) -ForegroundColor Green
+
+    if ($null -eq $result.CodeCoverage -or $null -eq $result.CodeCoverage.CoveragePercent) {
+        throw 'Pester did not return a code coverage result.'
+    }
+    $coveragePercent = [double]$result.CodeCoverage.CoveragePercent
+    if ($coveragePercent -lt $MinimumCoveragePercent) {
+        throw ('Code coverage {0:N2}% is below the required {1:N2}%.' -f $coveragePercent, $MinimumCoveragePercent)
+    }
+
+    Write-Host ("Pester passed: {0} tests, {1} skipped, {2:N2}% coverage (minimum {3:N2}%)." -f $result.PassedCount, $result.SkippedCount, $coveragePercent, $MinimumCoveragePercent) -ForegroundColor Green
 }
 
 function Invoke-Build {

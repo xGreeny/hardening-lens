@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/comparison.schema.json",
+  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.0.1/src/HardeningLens/Schema/comparison.schema.json",
   "schemaVersion": "1.0",
   "comparedAt": "2026-07-12T10:06:04.0000000Z",
   "computerName": "SRV-DEMO-01",

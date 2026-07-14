@@ -3,7 +3,7 @@
   "schemaVersion": "1.0",
   "name": "NorthstarMemberServer",
   "displayName": "Northstar Member Server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Organization-specific member-server profile with larger Security log retention, a documented lab encryption scope, and reviewed service severity.",
   "extends": "MemberServer",
   "excludedControls": [

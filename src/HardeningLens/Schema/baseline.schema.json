@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/baseline.schema.json",
+  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.0.1/src/HardeningLens/Schema/baseline.schema.json",
   "title": "Hardening Lens baseline",
   "type": "object",
   "required": [

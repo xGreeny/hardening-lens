@@ -3,7 +3,7 @@
   "schemaVersion": "1.0",
   "name": "AVDSessionHost",
   "displayName": "Azure Virtual Desktop Session Host",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Posture profile for pooled or personal Azure Virtual Desktop session hosts, balancing endpoint controls with multi-session operations.",
   "sourceBasis": [
     "Microsoft Security Compliance Toolkit and current Microsoft Windows security guidance",

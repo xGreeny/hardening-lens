@@ -20,6 +20,119 @@ function Test-HLOpenStatus {
     return $Status -in @('Fail','Warning','Excepted','Error')
 }
 
+function ConvertTo-HLCanonicalJson {
+    [CmdletBinding()]
+    param(
+        [AllowNull()]
+        [object]$Value
+    )
+
+    if ($null -eq $Value) {
+        return 'null'
+    }
+
+    if ($Value -is [System.Collections.IDictionary]) {
+        [string[]]$names = @($Value.Keys | ForEach-Object { [string]$_ })
+        [Array]::Sort($names, [StringComparer]::Ordinal)
+        $members = foreach ($name in $names) {
+            $encodedName = ConvertTo-Json -InputObject $name -Compress
+            '{0}:{1}' -f $encodedName, (ConvertTo-HLCanonicalJson -Value $Value[$name])
+        }
+        return '{' + (@($members) -join ',') + '}'
+    }
+
+    if ($Value -is [pscustomobject]) {
+        [string[]]$names = @($Value.PSObject.Properties | ForEach-Object { $_.Name })
+        [Array]::Sort($names, [StringComparer]::Ordinal)
+        $members = foreach ($name in $names) {
+            $encodedName = ConvertTo-Json -InputObject $name -Compress
+            '{0}:{1}' -f $encodedName, (ConvertTo-HLCanonicalJson -Value $Value.PSObject.Properties[$name].Value)
+        }
+        return '{' + (@($members) -join ',') + '}'
+    }
+
+    if ($Value -is [System.Collections.IEnumerable] -and $Value -isnot [string]) {
+        $items = foreach ($item in $Value) {
+            ConvertTo-HLCanonicalJson -Value $item
+        }
+        return '[' + (@($items) -join ',') + ']'
+    }
+
+    # JSON-derived scalar values retain their JSON type and invariant representation.
+    return (ConvertTo-Json -InputObject $Value -Depth 2 -Compress)
+}
+
+function Assert-HLComparableScanResult {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [AllowNull()]
+        [object]$ScanResult,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('Reference', 'Difference')]
+        [string]$InputName
+    )
+
+    if ($null -eq $ScanResult) {
+        throw "$InputName scan result cannot be null."
+    }
+
+    foreach ($propertyName in @('schemaVersion', 'scan', 'system', 'baseline', 'summary', 'results')) {
+        if (-not (Test-HLProperty -InputObject $ScanResult -Name $propertyName)) {
+            throw "$InputName scan result is missing required property '$propertyName'."
+        }
+    }
+
+    if ($ScanResult.schemaVersion -isnot [string] -or [string]$ScanResult.schemaVersion -cne '1.0') {
+        throw "$InputName scan result uses unsupported schemaVersion '$($ScanResult.schemaVersion)'. Expected '1.0'."
+    }
+
+    foreach ($contract in @(
+        @{ Object = $ScanResult.scan; Name = 'scan'; Properties = @('id', 'collectedAt') }
+        @{ Object = $ScanResult.system; Name = 'system'; Properties = @('ComputerName') }
+        @{ Object = $ScanResult.baseline; Name = 'baseline'; Properties = @('name') }
+        @{ Object = $ScanResult.summary; Name = 'summary'; Properties = @('HardeningScore') }
+    )) {
+        if ($null -eq $contract.Object) {
+            throw "$InputName scan result property '$($contract.Name)' cannot be null."
+        }
+        foreach ($propertyName in $contract.Properties) {
+            if (-not (Test-HLProperty -InputObject $contract.Object -Name $propertyName)) {
+                throw "$InputName scan result property '$($contract.Name)' is missing required property '$propertyName'."
+            }
+        }
+    }
+
+    if ($null -eq $ScanResult.results) {
+        throw "$InputName scan result property 'results' cannot be null."
+    }
+    if ($ScanResult.results -is [string] -or $ScanResult.results -isnot [System.Collections.IEnumerable]) {
+        throw "$InputName scan result property 'results' must be an array."
+    }
+
+    $seenControlIds = @{}
+    foreach ($result in @($ScanResult.results)) {
+        if ($null -eq $result) {
+            throw "$InputName scan result contains a null result entry."
+        }
+        foreach ($propertyName in @('controlId', 'title', 'category', 'severity', 'status')) {
+            if (-not (Test-HLProperty -InputObject $result -Name $propertyName)) {
+                throw "$InputName scan result contains an entry missing required property '$propertyName'."
+            }
+        }
+
+        $controlId = [string]$result.controlId
+        if ([string]::IsNullOrWhiteSpace($controlId)) {
+            throw "$InputName scan result contains an empty controlId."
+        }
+        if ($seenControlIds.ContainsKey($controlId)) {
+            throw "$InputName scan result contains duplicate controlId '$controlId'."
+        }
+        $seenControlIds[$controlId] = $true
+    }
+}
+
 function Get-HLResultStateFingerprint {
     [CmdletBinding()]
     param(
@@ -38,7 +151,7 @@ function Get-HLResultStateFingerprint {
         Exception = $Result.exception
     }
 
-    return ($state | ConvertTo-Json -Depth 30 -Compress)
+    return (ConvertTo-HLCanonicalJson -Value $state)
 }
 
 function Compare-HLScanResult {
@@ -96,7 +209,7 @@ function Compare-HLScanResult {
     $delta = if ($null -ne $referenceScore -and $null -ne $differenceScore) { [math]::Round($differenceScore - $referenceScore, 1) } else { $null }
 
     return [pscustomobject][ordered]@{
-        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/main/src/HardeningLens/Schema/comparison.schema.json'
+        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.0.1/src/HardeningLens/Schema/comparison.schema.json'
         schemaVersion = '1.0'
         comparedAt    = (Get-Date).ToUniversalTime().ToString('o')
         computerName  = [string]$Difference.system.ComputerName
