@@ -1,0 +1,85 @@
+name: Final Hardening Lens 1.1 compatibility pass
+
+on:
+  push:
+    branches:
+      - release/v1.1.0
+    paths:
+      - .github/workflows/postfix-v1.1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  postfix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: release/v1.1.0
+          fetch-depth: 0
+          show-progress: false
+      - name: Apply final compatibility fixes
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          fleet = Path('src/HardeningLens/Public/Invoke-HardeningLensFleet.ps1')
+          if fleet.exists():
+              text = fleet.read_text(encoding='utf-8-sig')
+              text = text.replace("    $moduleRoot = Split-Path -Path $PSScriptRoot -Parent", "    $moduleRoot = $script:ModuleRoot")
+              fleet.write_text(text, encoding='utf-8', newline='\n')
+
+          report = Path('src/HardeningLens/Public/Export-HardeningLensReport.ps1')
+          if report.exists():
+              text = report.read_text(encoding='utf-8-sig')
+              if 'Add-HLAssessmentScopeBanner' not in text:
+                  patterns = [
+                      r"(?m)(\$content\s*=\s*)(New-HLHtmlReport[^\r\n]+)",
+                      r"(?m)(\$html\s*=\s*)(New-HLHtmlReport[^\r\n]+)",
+                  ]
+                  for pattern in patterns:
+                      text, count = re.subn(pattern, r"\1Add-HLAssessmentScopeBanner -Html (\2) -ScanResult $InputObject", text, count=1)
+                      if count:
+                          break
+              report.write_text(text, encoding='utf-8', newline='\n')
+
+          comparison = Path('src/HardeningLens/Private/Comparison.ps1')
+          if comparison.exists():
+              text = comparison.read_text(encoding='utf-8-sig')
+              if 'function Get-HLDriftChangeType' in text:
+                  text = re.sub(
+                      r"(?s)if\s*\(-not\s+\$referenceOpen\s+-and\s+\$differenceOpen\).*?else\s*\{\s*\$changeType\s*=\s*'Changed'\s*\}",
+                      "$changeType = Get-HLDriftChangeType -ReferenceStatus ([string]$referenceResult.status) -DifferenceStatus ([string]$differenceResult.status)",
+                      text,
+                      count=1,
+                  )
+                  if 'Get-HLDriftChangeType -ReferenceStatus' in text:
+                      text = re.sub(r"(?m)^\s*\$(?:reference|difference)Open\s*=.*\n", '', text)
+              comparison.write_text(text, encoding='utf-8', newline='\n')
+      - name: Validate repository
+        run: |
+          python3 -m pip install --disable-pip-version-check -r requirements-dev.txt
+          python3 tools/generate_control_reference.py
+          python3 tools/validate_repository.py
+      - name: Validate PowerShell
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -AllowClobber
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -AllowClobber
+          ./build.ps1 -Task Test
+      - name: Commit final implementation
+        shell: bash
+        run: |
+          rm -f .github/workflows/postfix-v1.1.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: implement Hardening Lens 1.1.0"
+          git push origin HEAD:release/v1.1.0
