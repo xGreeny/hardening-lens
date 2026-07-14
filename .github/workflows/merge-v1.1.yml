@@ -1,0 +1,114 @@
+name: Merge Hardening Lens 1.1
+
+on:
+  push:
+    branches:
+      - release/v1.1.0
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: merge-v1.1
+  cancel-in-progress: true
+
+jobs:
+  repository-contract:
+    if: github.actor == 'github-actions[bot]' && contains(github.event.head_commit.message, 'finalize Hardening Lens 1.1.0')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          show-progress: false
+      - run: python3 -m pip install --disable-pip-version-check -r requirements-dev.txt
+      - run: python3 tools/generate_control_reference.py --check
+      - run: python3 tools/validate_repository.py
+
+  powershell-linux:
+    if: github.actor == 'github-actions[bot]' && contains(github.event.head_commit.message, 'finalize Hardening Lens 1.1.0')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          show-progress: false
+      - shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -AllowClobber
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -AllowClobber
+          ./build.ps1 -Task Test
+
+  windows-powershell:
+    if: github.actor == 'github-actions[bot]' && contains(github.event.head_commit.message, 'finalize Hardening Lens 1.1.0')
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          show-progress: false
+      - shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -AllowClobber -SkipPublisherCheck
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -AllowClobber -SkipPublisherCheck
+          .\build.ps1 -Task Test
+
+  merge-and-release:
+    needs: [repository-contract, powershell-linux, windows-powershell]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: release/v1.1.0
+          fetch-depth: 0
+          show-progress: false
+      - name: Build release archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser -Force -AllowClobber
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -AllowClobber
+          ./build.ps1 -Task All
+          ./tools/New-ReleaseMetadata.ps1 -ArtifactsDirectory ./artifacts -SourceCommit '${{ github.sha }}'
+      - name: Attest module archive
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: artifacts/HardeningLens-1.1.0.zip
+      - name: Remove merge automation and update branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/merge-v1.1.yml
+          git add -A
+          git commit -m "build: remove v1.1 merge automation"
+          git push origin HEAD:release/v1.1.0
+      - name: Merge pull request and publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh pr ready 5 || true
+          gh pr merge 5 --squash --delete-branch --subject "feat: release Hardening Lens 1.1.0" --body "Operational-trust release with explicit assessment scope, policy gates, reliable fleet execution, modern Windows controls, stronger drift semantics, and hardened release provenance."
+          merge_sha=$(gh pr view 5 --json mergeCommit --jq '.mergeCommit.oid')
+          git tag -a v1.1.0 "$merge_sha" -m "Hardening Lens 1.1.0"
+          git push origin v1.1.0
+          gh release create v1.1.0 \
+            artifacts/HardeningLens-1.1.0.zip \
+            artifacts/HardeningLens-1.1.0.zip.sha256 \
+            artifacts/build-manifest.json \
+            artifacts/sbom.spdx.json \
+            --title "Hardening Lens 1.1.0" \
+            --generate-notes \
+            --verify-tag
