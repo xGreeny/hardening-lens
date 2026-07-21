@@ -9,6 +9,7 @@
   <img alt="Windows" src="https://img.shields.io/badge/platform-Windows-0078D4?logo=windows&logoColor=white">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-55e69d"></a>
   <a href="docs/CONTROL_REFERENCE.md"><img alt="64 controls" src="https://img.shields.io/badge/controls-64-55e69d"></a>
+  <a href="https://www.powershellgallery.com/packages/HardeningLens"><img alt="PowerShell Gallery" src="https://img.shields.io/powershellgallery/v/HardeningLens?label=PSGallery&color=55e69d"></a>
 </p>
 
 **Hardening Lens turns effective Windows security configuration into evidence you can review, diff, and govern.** It evaluates a local device against a role-aware baseline, explains every finding, applies only valid time-bounded exceptions, and exports a self-contained report without changing Windows configuration.
@@ -40,18 +41,28 @@ Hardening Lens makes those distinctions explicit in a stable result schema.
 | **64 controls** | Curated checks for identity, credentials, network protection, remote administration, session security, Defender, ASR, VBS, audit policy, logging, BitLocker, Secure Boot, and PowerShell |
 | **Four role baselines** | `Workstation`, `MemberServer`, `DomainController`, `AVDSessionHost` |
 | **Read-only collection** | Registry, CIM, Windows APIs, and native Microsoft cmdlets; no remediation mode |
+| **Locale-independent collection** | Failures classified through exception types and error codes rather than English message text; verified against localized Windows systems |
 | **Evidence-first results** | Expected state, actual state, status, message, rationale, remediation, references, and raw evidence |
 | **Governed exceptions** | Owner, rationale, ticket, target scope, baseline scope, approval, expiry, and compensating controls |
 | **Configuration drift** | Field-level before/after state, baseline and catalog provenance, coverage delta, findings, and control-set changes |
 | **Portable reports** | Self-contained HTML plus structured JSON and CSV |
-| **Fleet support** | Pipeline-capable module command with complete per-host outcomes, run manifests, machine-readable failures, and summary CSV |
+| **Fleet support** | Pipeline-capable module command with complete per-host outcomes, run manifests, machine-readable failures, summary CSV, and one aggregated fleet HTML report |
 | **Automation policy** | Deterministic gates for findings, score, evidence coverage, partial collection, and expired exceptions |
 | **Reproducible provenance** | SHA-256 fingerprints for catalog, effective baseline, and exception register plus probe capabilities and timings |
-| **Quality contract** | JSON Schemas, Pester, PSScriptAnalyzer, generated control documentation, dual-edition CI, and a scheduled safe live-collection smoke test on Windows |
+| **Quality contract** | JSON Schemas, Pester, PSScriptAnalyzer, generated control documentation and demo assets, dual-edition CI, a scheduled full-baseline live smoke test on Windows, and PowerShell Gallery publishing |
 
 ## Quick start
 
-Live collection requires Windows. Run from an elevated Windows PowerShell 5.1 or PowerShell 7 session:
+Live collection requires Windows. Install from the [PowerShell Gallery](https://www.powershellgallery.com/packages/HardeningLens) and run from an elevated Windows PowerShell 5.1 or PowerShell 7 session:
+
+```powershell
+Install-PSResource HardeningLens    # PowerShellGet: Install-Module HardeningLens
+
+Invoke-HardeningLens -Baseline Auto |
+    Export-HardeningLensReport -OutputDirectory .\out
+```
+
+Alternatively, clone the repository and use the CLI wrapper, which runs the assessment, writes HTML/JSON/CSV, and returns an automation-friendly exit code:
 
 ```powershell
 git clone https://github.com/xGreeny/hardening-lens.git
@@ -61,8 +72,6 @@ Set-Location .\hardening-lens
     -Baseline Auto `
     -OutputDirectory .\out
 ```
-
-The wrapper runs the assessment, writes HTML/JSON/CSV, and returns an automation-friendly exit code.
 
 ```text
 HARDENING LENS // SRV-DEMO-01
@@ -81,7 +90,8 @@ The committed [sample result](examples/sample-result.json), [HTML report](exampl
 ## Module usage
 
 ```powershell
-Import-Module .\src\HardeningLens\HardeningLens.psd1 -Force
+Import-Module HardeningLens
+# from a clone: Import-Module .\src\HardeningLens\HardeningLens.psd1 -Force
 
 $result = Invoke-HardeningLens `
     -Baseline MemberServer `
@@ -227,7 +237,7 @@ Compare-HardeningLensResult `
 ```
 
 ```text
-Score delta       -2.1 points
+Score delta       -2.0 points
 New findings       2
 Resolved           1
 Changed            1
@@ -264,7 +274,16 @@ Invoke-HardeningLensFleet `
     -ThrottleLimit 8
 ```
 
-The command transfers the module to a temporary remote path, evaluates each host locally, and removes PowerShell remoting metadata. It writes exactly one success or failure outcome per requested host into a fully staged run directory containing host JSON, summary CSV, consolidated result, manifest, and a final commit marker. `-Force` swaps a complete committed run only after its replacement is ready, so a failed replacement leaves the prior run intact. The module is not installed remotely. The legacy script remains a compatibility wrapper. See the [operations guide](docs/OPERATIONS.md).
+The command transfers the module to a temporary remote path, evaluates each host locally, and removes PowerShell remoting metadata. It writes exactly one success or failure outcome per requested host into a fully staged run directory containing host JSON, summary CSV, consolidated result, manifest, and a final commit marker. `-Force` swaps a complete committed run only after its replacement is ready, so a failed replacement leaves the prior run intact. The module is not installed remotely. The legacy script remains a compatibility wrapper.
+
+Pipe the run into `Export-HardeningLensFleetReport` for one aggregated, self-contained HTML report with per-host scores, failed collections, and the controls affecting the most hosts:
+
+```powershell
+Invoke-HardeningLensFleet -ComputerName SRV-APP-01, SRV-FILE-01 -Baseline MemberServer -OutputDirectory .\fleet-results |
+    Export-HardeningLensFleetReport -OutputDirectory .\fleet-results
+```
+
+See the [operations guide](docs/OPERATIONS.md).
 
 ## Security properties
 
@@ -275,7 +294,7 @@ The command transfers the module to a temporary remote path, evaluates each host
 - Reports fetch no external scripts, styles, fonts, or images.
 - Redaction replaces detected host, domain, and current-user identifiers.
 - Approved exceptions require expiry and compensating controls.
-- Release archives include SHA-256 checksums.
+- Releases are published to the PowerShell Gallery and as archives with SHA-256 checksums.
 
 Hardening Lens output is security-sensitive. Redaction is targeted rather than universal; review reports before sharing. See the [security model](docs/SECURITY_MODEL.md) and [security policy](SECURITY.md).
 
@@ -289,11 +308,14 @@ Hardening Lens output is security-sensitive. Redaction is targeted rather than u
 
 Catalog, baseline, exception, report, and drift operations are cross-platform. Unsupported or non-authoritative providers produce explicit evidence gaps.
 
-Install the versioned module for the current user:
+Install the module for the current user:
 
 ```powershell
+Install-PSResource HardeningLens              # PSResourceGet
+Install-Module HardeningLens -Scope CurrentUser   # PowerShellGet
+
+# from a clone, without the PowerShell Gallery:
 .\scripts\Install-HardeningLens.ps1 -Scope CurrentUser
-Import-Module HardeningLens
 ```
 
 ## Quality gate
@@ -303,11 +325,12 @@ The repository contract is enforced through:
 - Pester tests for catalog, baselines, scoring, value evaluation, exceptions, redaction, reports, and drift;
 - PSScriptAnalyzer on module, scripts, CLI, build, and tests;
 - JSON Schema validation and cross-file reference checks;
-- deterministic generation of the control reference;
+- deterministic generation of the control reference and demo assets;
 - Windows PowerShell 5.1 and PowerShell 7 CI;
-- a scheduled, tagged live-collection smoke test on a Windows runner;
+- a scheduled full-baseline live smoke test on a Windows runner that forbids collection errors in robust probe classes;
 - tag-to-manifest version verification;
-- versioned release archive and checksum generation.
+- versioned release archive and checksum generation;
+- PowerShell Gallery publication for tagged releases.
 
 ```powershell
 Install-Module Pester -MinimumVersion 5.6.1 -Scope CurrentUser
