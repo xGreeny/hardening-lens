@@ -4,9 +4,9 @@
 * **Baseline:** `MemberServer`
 * **Reference:** `e747bf2b-e9de-4e5a-bffe-514e51b86fe8` (2026-06-12T09:38:02.1200000Z)
 * **Current:** `8fc7045c-a95e-4f23-bdb7-2bb858322c52` (2026-07-12T09:42:18.4210000Z)
-* **Baseline provenance:** `MemberServer` `1.0.1` (`96c57d4164756855bc63f42ffe093f38c735fae9b1295aafb4333bcfc80e74cd`) -> `MemberServer` `1.0.1` (`96c57d4164756855bc63f42ffe093f38c735fae9b1295aafb4333bcfc80e74cd`)
-* **Catalog provenance:** `1.0.1` (`ee4f598239afe802f2a85018ad261c93faecc681e47fc8bcab6811f515be3d81`) -> `1.0.1` (`ee4f598239afe802f2a85018ad261c93faecc681e47fc8bcab6811f515be3d81`)
-* **Score delta:** -2.1 points
+* **Baseline provenance:** `MemberServer` `1.1.0` (`14c95413f6e477b4a1e1fdebbbf9270a56df02567bd1b0c8a0572c5ccedf056e`) -> `MemberServer` `1.1.0` (`14c95413f6e477b4a1e1fdebbbf9270a56df02567bd1b0c8a0572c5ccedf056e`)
+* **Catalog provenance:** `1.1.0` (`96c64d2c508f3e0a6edfc6da41494808a243046a50c9e00de5499e9e185958f8`) -> `1.1.0` (`96c64d2c508f3e0a6edfc6da41494808a243046a50c9e00de5499e9e185958f8`)
+* **Score delta:** -2.0 points
 * **Evidence coverage delta:** +0.0 points
 
 | New findings | Resolved | Changed | Added controls | Removed controls |

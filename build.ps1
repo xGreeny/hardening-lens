@@ -40,8 +40,8 @@ function Invoke-Validation {
 
     Import-Module -Name $manifestPath -Force -ErrorAction Stop
     $catalog = @(Get-HardeningLensControl)
-    if ($catalog.Count -ne 58) {
-        throw "Expected 58 controls, found $($catalog.Count)."
+    if ($catalog.Count -ne 64) {
+        throw "Expected 64 controls, found $($catalog.Count)."
     }
     $uniqueIds = @($catalog.id | Sort-Object -Unique)
     if ($uniqueIds.Count -ne $catalog.Count) {

@@ -165,3 +165,65 @@ Describe 'Windows optional feature probe normalization' {
         }
     }
 }
+
+Describe 'Device Guard service probe normalization' {
+    InModuleScope HardeningLens {
+        BeforeAll {
+            if ($null -eq (Get-Command -Name Get-CimInstance -ErrorAction SilentlyContinue)) {
+                Set-Item -Path Function:Get-CimInstance -Value {
+                    [CmdletBinding()]
+                    param(
+                        [string]$Namespace,
+                        [string]$ClassName,
+                        [string]$Filter
+                    )
+                    throw 'The test stub must be replaced by a Pester mock.'
+                }
+            }
+
+            $script:hvciControl = [pscustomobject]@{
+                parameters = [pscustomobject]@{
+                    serviceId   = 2
+                    serviceName = 'Memory integrity (HVCI)'
+                }
+            }
+        }
+
+        It 'returns Pass when the requested security service is running' {
+            Mock Get-CimInstance {
+                [pscustomobject]@{
+                    VirtualizationBasedSecurityStatus = 2
+                    SecurityServicesConfigured        = @(1, 2)
+                    SecurityServicesRunning           = @(1, 2)
+                }
+            } -ParameterFilter { $ClassName -eq 'Win32_DeviceGuard' }
+
+            $result = Invoke-HLDeviceGuardServiceProbe -Control $script:hvciControl -CollectionContext $null
+            $result.Status | Should -Be 'Pass'
+            $result.Evidence.ServiceId | Should -Be 2
+        }
+
+        It 'distinguishes configured-but-not-running from unconfigured' {
+            Mock Get-CimInstance {
+                [pscustomobject]@{
+                    VirtualizationBasedSecurityStatus = 1
+                    SecurityServicesConfigured        = @(2)
+                    SecurityServicesRunning           = @()
+                }
+            } -ParameterFilter { $ClassName -eq 'Win32_DeviceGuard' }
+
+            $result = Invoke-HLDeviceGuardServiceProbe -Control $script:hvciControl -CollectionContext $null
+            $result.Status | Should -Be 'Fail'
+            $result.Actual | Should -Be 'Configured but not running'
+        }
+
+        It 'returns Unknown when the Device Guard provider is unavailable' {
+            Mock Get-CimInstance {
+                throw 'Ungueltiger Namespace.'
+            } -ParameterFilter { $ClassName -eq 'Win32_DeviceGuard' }
+
+            $result = Invoke-HLDeviceGuardServiceProbe -Control $script:hvciControl -CollectionContext $null
+            $result.Status | Should -Be 'Unknown'
+        }
+    }
+}

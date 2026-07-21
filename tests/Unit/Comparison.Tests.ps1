@@ -12,7 +12,7 @@ Describe 'Posture drift comparison' {
         $comparison.summary.NewFindings | Should -Be 2
         $comparison.summary.Resolved | Should -Be 1
         $comparison.summary.Changed | Should -Be 1
-        $comparison.summary.ScoreDelta | Should -Be -2.1
+        $comparison.summary.ScoreDelta | Should -Be -2
         $comparison.summary.CoverageDelta | Should -Be 0
         @($comparison.changes | Where-Object ChangeType -eq 'NewFinding').ControlId | Should -Contain 'HL-SMB-003'
         @($comparison.changes | Where-Object ChangeType -eq 'Resolved').ControlId | Should -Contain 'HL-RDP-001'
@@ -209,7 +209,7 @@ Describe 'Posture drift comparison' {
         (Get-Content -LiteralPath $markdownPath -Raw) | Should -Match 'HL-SMB-003'
         $json = Get-Content -LiteralPath $jsonPath -Raw | ConvertFrom-Json
         $json.schemaVersion | Should -Be '1.1'
-        @($json.changes).Count | Should -Be 53
+        @($json.changes).Count | Should -Be 54
         @($json.changes[0].PSObject.Properties.Name) | Should -Contain 'ChangedFields'
         @($json.changes[0].PSObject.Properties.Name) | Should -Contain 'Before'
         @($json.changes[0].PSObject.Properties.Name) | Should -Contain 'After'

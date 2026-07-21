@@ -52,6 +52,45 @@ function Invoke-HLCredentialGuardProbe {
     }
 }
 
+function Invoke-HLDeviceGuardServiceProbe {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [object]$Control,
+
+        [AllowNull()]
+        [object]$CollectionContext
+    )
+
+    $serviceId = [int]$Control.parameters.serviceId
+    $serviceName = [string]$Control.parameters.serviceName
+    $expected = "$serviceName running"
+    try {
+        $deviceGuard = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'DeviceGuard' -Factory {
+            Get-CimInstance -Namespace 'root\Microsoft\Windows\DeviceGuard' -ClassName Win32_DeviceGuard -ErrorAction Stop
+        }
+        $configured = @($deviceGuard.SecurityServicesConfigured | ForEach-Object { [int]$_ })
+        $running = @($deviceGuard.SecurityServicesRunning | ForEach-Object { [int]$_ })
+        $evidence = [pscustomobject][ordered]@{
+            ServiceId                         = $serviceId
+            VirtualizationBasedSecurityStatus = [int]$deviceGuard.VirtualizationBasedSecurityStatus
+            SecurityServicesConfigured        = $configured
+            SecurityServicesRunning           = $running
+        }
+
+        if ($serviceId -in $running) {
+            return Get-HLProbeResult -Status Pass -Expected $expected -Actual 'Running' -Message "$serviceName is reported as running." -Evidence $evidence
+        }
+        if ($serviceId -in $configured) {
+            return Get-HLProbeResult -Status Fail -Expected $expected -Actual 'Configured but not running' -Message "$serviceName is configured but the security service is not running." -Evidence $evidence
+        }
+        return Get-HLProbeResult -Status Fail -Expected $expected -Actual 'Not configured' -Message "$serviceName is not configured or running." -Evidence $evidence
+    }
+    catch {
+        return Get-HLProbeResult -Status Unknown -Expected $expected -Actual $null -Message "Unable to query the Device Guard provider: $($_.Exception.Message)"
+    }
+}
+
 function Invoke-HLFirewallProfilesProbe {
     [CmdletBinding()]
     param(
@@ -141,7 +180,10 @@ function Invoke-HLWindowsOptionalFeatureProbe {
         }
         catch {
             $message = [string]$_.Exception.Message
-            $notPresent = $message -match '(?i:0x800f080c|feature name.+unknown|not recognized|does not exist|cannot find|could not be found)'
+            # 0x800F080C (unknown feature name) is matched through the error
+            # code chain because DISM messages are localized.
+            $notPresent = (Test-HLErrorMatchesCode -Exception $_.Exception -Code 0x800f080c) -or
+                $message -match '(?i:feature name.+unknown|not recognized|does not exist|cannot find|could not be found)'
             if ($notPresent) {
                 $evidence.Add([pscustomobject][ordered]@{
                     FeatureName = [string]$featureName

@@ -23,6 +23,7 @@ Export-ModuleMember -Function @(
     'Invoke-HardeningLens',
     'Invoke-HardeningLensFleet',
     'Export-HardeningLensReport',
+    'Export-HardeningLensFleetReport',
     'Compare-HardeningLensResult',
     'Get-HardeningLensBaseline',
     'Get-HardeningLensControl',

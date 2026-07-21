@@ -27,8 +27,8 @@ Describe 'Policy governance' {
         )
         $evaluation.Metrics.Failed | Should -Be 7
         $evaluation.Metrics.Warning | Should -Be 3
-        $evaluation.Metrics.HardeningScore | Should -Be 77.1
-        $evaluation.Metrics.EvidenceCoverage | Should -Be 96.2
+        $evaluation.Metrics.HardeningScore | Should -Be 77.6
+        $evaluation.Metrics.EvidenceCoverage | Should -Be 96.3
     }
 
     It 'passes when supplied thresholds are met and leaves input unchanged' {

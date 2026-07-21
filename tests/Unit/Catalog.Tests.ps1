@@ -5,10 +5,10 @@ BeforeAll {
 }
 
 Describe 'Control catalog contract' {
-    It 'contains exactly 58 unique controls' {
+    It 'contains exactly 64 unique controls' {
         $controls = @(Get-HardeningLensControl)
-        $controls.Count | Should -Be 58
-        @($controls.id | Sort-Object -Unique).Count | Should -Be 58
+        $controls.Count | Should -Be 64
+        @($controls.id | Sort-Object -Unique).Count | Should -Be 64
     }
 
     It 'uses stable IDs, supported severities, and first-party references' {
@@ -58,10 +58,10 @@ Describe 'Built-in baseline contract' {
     }
 
     It 'resolves every profile to its documented control count' -ForEach @(
-        @{ Name = 'Workstation'; Count = 54 }
-        @{ Name = 'MemberServer'; Count = 53 }
-        @{ Name = 'DomainController'; Count = 55 }
-        @{ Name = 'AVDSessionHost'; Count = 53 }
+        @{ Name = 'Workstation'; Count = 56 }
+        @{ Name = 'MemberServer'; Count = 54 }
+        @{ Name = 'DomainController'; Count = 57 }
+        @{ Name = 'AVDSessionHost'; Count = 58 }
     ) {
         $baseline = Get-HardeningLensBaseline -Name $Name -IncludeControls
         $baseline.controlCount | Should -Be $Count

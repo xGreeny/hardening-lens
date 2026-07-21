@@ -368,8 +368,8 @@ def validate_contracts() -> None:
 
     controls = catalog["controls"]
     ids = [item["id"] for item in controls]
-    if len(controls) != 58:
-        fail(f"Control catalog must contain 58 controls; found {len(controls)}.")
+    if len(controls) != 64:
+        fail(f"Control catalog must contain 64 controls; found {len(controls)}.")
     duplicates = sorted(control_id for control_id, count in Counter(ids).items() if count > 1)
     if duplicates:
         fail(f"Duplicate control IDs: {', '.join(duplicates)}")
@@ -520,7 +520,7 @@ def validate_repository_hygiene() -> None:
     if readme.exists():
         text = readme.read_text(encoding="utf-8")
         normalized_text = text.casefold()
-        for required_phrase in ["58 controls", "read-only", "Workstation", "DomainController", "Exceptions", "Drift"]:
+        for required_phrase in ["64 controls", "read-only", "Workstation", "DomainController", "Exceptions", "Drift"]:
             if required_phrase.casefold() not in normalized_text:
                 fail(f"README.md does not document required capability: {required_phrase}")
 

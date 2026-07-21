@@ -12,10 +12,10 @@ Hardening Lens ships four role-aware profiles. They are deliberately opinionated
 
 | Baseline | Controls | Selection | Primary emphasis |
 |---|---:|---|---|
-| `Workstation` | 54 | Automatic for `ProductType=1` | Endpoint protection, BitLocker, SmartScreen, credential protection, PowerShell logging |
-| `MemberServer` | 53 | Automatic for `ProductType=3` | Server attack surface, remote administration, signing, audit, event retention |
-| `DomainController` | 55 | Automatic for `ProductType=2` | LDAP protection, DSRM management, credential exposure, high-value audit telemetry |
-| `AVDSessionHost` | 53 | Explicit selection | Multi-session endpoint protection, AVD-compatible logging, session-host hardening |
+| `Workstation` | 56 | Automatic for `ProductType=1` | Endpoint protection, BitLocker, SmartScreen, credential protection, PowerShell logging |
+| `MemberServer` | 54 | Automatic for `ProductType=3` | Server attack surface, remote administration, signing, audit, event retention |
+| `DomainController` | 57 | Automatic for `ProductType=2` | LDAP protection, DSRM management, credential exposure, high-value audit telemetry |
+| `AVDSessionHost` | 58 | Explicit selection | Multi-session endpoint protection, AVD-compatible logging, session-host hardening |
 
 ## Selection behavior
 

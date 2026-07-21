@@ -2,6 +2,21 @@
 
 All notable changes are documented here. The project follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-07-21
+
+### Added
+
+- Classify collection failures through exception types and locale-independent error codes instead of English message text. Missing elevation and privileges become explainable `Unknown` results for Secure Boot and advanced audit policy, and a stopped Microsoft Defender service (0x800106BA) is reported as `Unknown` with explicit guidance instead of a generic error.
+- Record third-party antivirus registrations from the Security Center and the Defender running mode as evidence, so a passive or disabled Defender can be judged against the actually authoritative endpoint protection platform.
+- Add `Export-HardeningLensFleetReport`: one aggregated, self-contained fleet HTML report with per-host scores, failed collections, and the controls affecting the most hosts, under the same encoding and Content Security Policy rules as the single-host report.
+- Ship control catalog 1.1.0 with six new controls (64 total): memory integrity (HVCI), Sudo for Windows, domain-controller Print Spooler exposure, and session clipboard redirection, drive redirection, and screen capture protection for AVD session hosts. Baselines: Workstation 56, MemberServer 54, DomainController 57, AVDSessionHost 58 controls, all versioned 1.1.0.
+- Publish tagged releases to the PowerShell Gallery when a gallery API key is configured.
+
+### Changed
+
+- Extend the scheduled Windows live smoke test to collect the full member-server baseline and fail when robust probe classes return `Error`.
+- Verify generated demo assets in the quality gate (`tools/generate_demo_assets.py --check`) and refresh the committed examples from the current generator.
+
 ## [1.1.1] - 2026-07-21
 
 ### Fixed

@@ -66,6 +66,8 @@ def expected_value(control: dict[str, Any]) -> Any:
         return "Disabled or absent"
     if control["probe"] == "CredentialGuard":
         return "Credential Guard running"
+    if control["probe"] == "DeviceGuardService":
+        return f"{parameters.get('serviceName')} running"
     if control["probe"] == "LapsBackup":
         return "Microsoft Entra ID or Active Directory"
     if control["probe"] == "LapsAdEncryption":
@@ -557,8 +559,7 @@ def drift_markdown(comparison: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def main() -> None:
-    EXAMPLES.mkdir(parents=True, exist_ok=True)
+def build_outputs() -> dict[Path, str]:
     current_overrides=status_overrides()
     current=create_result("8fc7045c-a95e-4f23-bdb7-2bb858322c52",COLLECTED_AT,current_overrides,1432)
     reference_overrides=json.loads(json.dumps(current_overrides))
@@ -569,12 +570,38 @@ def main() -> None:
     reference=create_result("e747bf2b-e9de-4e5a-bffe-514e51b86fe8","2026-06-12T09:38:02.1200000Z",reference_overrides,1298)
     comparison=create_comparison(reference,current)
 
-    (EXAMPLES/"sample-result.json").write_text(json.dumps(current,indent=2)+"\n",encoding="utf-8")
-    (EXAMPLES/"sample-reference-result.json").write_text(json.dumps(reference,indent=2)+"\n",encoding="utf-8")
-    (EXAMPLES/"sample-report.html").write_text(render_html(current),encoding="utf-8")
-    (EXAMPLES/"sample-report.csv").write_text(flatten_csv(current),encoding="utf-8")
-    (EXAMPLES/"sample-drift.json").write_text(json.dumps(comparison,indent=2)+"\n",encoding="utf-8")
-    (EXAMPLES/"sample-drift.md").write_text(drift_markdown(comparison),encoding="utf-8")
+    return {
+        EXAMPLES/"sample-result.json": json.dumps(current,indent=2)+"\n",
+        EXAMPLES/"sample-reference-result.json": json.dumps(reference,indent=2)+"\n",
+        EXAMPLES/"sample-report.html": render_html(current),
+        EXAMPLES/"sample-report.csv": flatten_csv(current),
+        EXAMPLES/"sample-drift.json": json.dumps(comparison,indent=2)+"\n",
+        EXAMPLES/"sample-drift.md": drift_markdown(comparison),
+    }
+
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Generate deterministic synthetic demo assets.")
+    parser.add_argument("--check", action="store_true", help="Verify that committed demo assets match the generator output.")
+    args = parser.parse_args()
+
+    outputs = build_outputs()
+    if args.check:
+        stale = []
+        for path, content in outputs.items():
+            committed = path.read_text(encoding="utf-8") if path.exists() else None
+            if committed is None or committed.replace("\r\n", "\n") != content.replace("\r\n", "\n"):
+                stale.append(str(path.relative_to(ROOT)))
+        if stale:
+            raise SystemExit("Demo assets are stale: " + ", ".join(sorted(stale)) + ". Run tools/generate_demo_assets.py.")
+        print("Demo assets are current.")
+        return
+
+    EXAMPLES.mkdir(parents=True, exist_ok=True)
+    for path, content in outputs.items():
+        path.write_text(content, encoding="utf-8")
     print("Generated synthetic demo results, report, CSV, and drift artifacts.")
 
 

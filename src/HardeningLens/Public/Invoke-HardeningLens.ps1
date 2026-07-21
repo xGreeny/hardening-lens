@@ -165,7 +165,7 @@ function Invoke-HardeningLens {
     }
 
     $scanResult = [pscustomobject][ordered]@{
-        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.1.1/src/HardeningLens/Schema/result.schema.json'
+        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.0/src/HardeningLens/Schema/result.schema.json'
         schemaVersion = '1.1'
         scan = [pscustomobject][ordered]@{
             id                    = [guid]::NewGuid().ToString()

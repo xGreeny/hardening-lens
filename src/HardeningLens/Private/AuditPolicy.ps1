@@ -95,7 +95,15 @@ function Invoke-HLAuditPolicyProbe {
     )
 
     $parameters = $Control.parameters
-    $setting = Get-HLAuditPolicySetting -SubcategoryGuid ([guid][string]$parameters.subcategoryGuid)
+    try {
+        $setting = Get-HLAuditPolicySetting -SubcategoryGuid ([guid][string]$parameters.subcategoryGuid)
+    }
+    catch {
+        if (Test-HLErrorMatchesCode -Exception $_.Exception -Code 1314, 0x80070522) {
+            return Get-HLProbeResult -Status Unknown -Expected (@($parameters.requiredFlags) -join ' and ') -Actual $null -Message 'Querying the advanced audit policy requires an elevated session holding SeSecurityPrivilege. Collect with elevation to resolve this control.'
+        }
+        throw
+    }
     $missing = New-Object System.Collections.Generic.List[string]
     foreach ($requiredFlag in @($parameters.requiredFlags)) {
         if (-not [bool]$setting.$requiredFlag) {

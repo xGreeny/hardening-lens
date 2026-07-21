@@ -87,6 +87,7 @@
             "DefenderPreference",
             "DefenderSignatureAge",
             "DefenderStatus",
+            "DeviceGuardService",
             "EventLog",
             "FirewallProfiles",
             "LapsAdEncryption",

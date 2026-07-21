@@ -3,7 +3,7 @@
   "schemaVersion": "1.0",
   "name": "AVDSessionHost",
   "displayName": "Azure Virtual Desktop Session Host",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Posture profile for pooled or personal Azure Virtual Desktop session hosts, balancing endpoint controls with multi-session operations.",
   "sourceBasis": [
     "Microsoft Security Compliance Toolkit and current Microsoft Windows security guidance",
@@ -183,6 +183,21 @@
     {
       "id": "HL-RA-001",
       "severity": "Medium"
+    },
+    {
+      "id": "HL-VBS-001"
+    },
+    {
+      "id": "HL-SUDO-001"
+    },
+    {
+      "id": "HL-AVD-001"
+    },
+    {
+      "id": "HL-AVD-002"
+    },
+    {
+      "id": "HL-AVD-003"
     }
   ],
   "notes": [

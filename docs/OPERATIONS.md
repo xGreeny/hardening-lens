@@ -97,6 +97,19 @@ Prerequisites:
 
 The command does not install the module permanently on remote systems.
 
+### Aggregated fleet report
+
+`Export-HardeningLensFleetReport` renders one self-contained HTML page for a fleet run: per-host scores, status counts, failed collections with their recorded errors, and the controls affecting the most hosts.
+
+```powershell
+Invoke-HardeningLensFleet -ComputerName SRV-APP-01, SRV-FILE-01 -Baseline MemberServer -OutputDirectory .\fleet-results |
+    Export-HardeningLensFleetReport -OutputDirectory .\fleet-results
+
+Export-HardeningLensFleetReport -Path .\fleet-results\<run-id>\fleet-result.json -OutputDirectory .\reports
+```
+
+The report embeds no external scripts, styles, fonts, or images, uses a restrictive Content Security Policy, and encodes all values. It inherits the redaction state of the fleet run; review it like any other assessment artifact before sharing.
+
 ## Automation policy
 
 Use the result object rather than console text as the automation contract:

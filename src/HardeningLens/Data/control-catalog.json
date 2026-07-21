@@ -1,8 +1,8 @@
 {
   "$schema": "../Schema/control-catalog.schema.json",
   "schemaVersion": "1.0",
-  "catalogVersion": "1.0.1",
-  "generatedOn": "2026-07-14",
+  "catalogVersion": "1.1.0",
+  "generatedOn": "2026-07-21",
   "description": "Curated read-only Windows security posture controls for Hardening Lens. Controls are Microsoft-aligned operational checks, not a verbatim vendor baseline or certification.",
   "controls": [
     {
@@ -1366,6 +1366,149 @@
       ],
       "tags": [
         "remote-assistance"
+      ]
+    },
+    {
+      "id": "HL-VBS-001",
+      "title": "Memory integrity (HVCI) is running",
+      "category": "Platform Security",
+      "severity": "High",
+      "probe": "DeviceGuardService",
+      "description": "Checks that hypervisor-enforced code integrity is reported as a running virtualization-based security service.",
+      "rationale": "Memory integrity prevents kernel-mode code injection and driver tampering by enforcing code integrity in a hypervisor-protected environment.",
+      "remediation": "Enable memory integrity through Windows Security, Intune, or Group Policy after validating driver compatibility.",
+      "parameters": {
+        "serviceId": 2,
+        "serviceName": "Memory integrity (HVCI)"
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/security/hardware-security/enable-virtualization-based-protection-of-code-integrity"
+      ],
+      "tags": [
+        "vbs",
+        "hvci",
+        "memory-integrity"
+      ]
+    },
+    {
+      "id": "HL-SUDO-001",
+      "title": "Sudo for Windows is disabled",
+      "category": "Privilege Management",
+      "severity": "Medium",
+      "probe": "RegistryValue",
+      "description": "Checks that the Sudo for Windows elevation shortcut introduced with Windows 11 24H2 is disabled or absent.",
+      "rationale": "Sudo for Windows adds an additional inline elevation path from a terminal that bypasses established elevation workflows and their auditing expectations.",
+      "remediation": "Disable Sudo for Windows through Settings, Intune, or Group Policy unless the elevation model explicitly permits it.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Sudo",
+        "name": "Enabled",
+        "operator": "Equals",
+        "expected": 0,
+        "missingIsPass": true
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/sudo/"
+      ],
+      "tags": [
+        "sudo",
+        "elevation"
+      ]
+    },
+    {
+      "id": "HL-SPOOL-001",
+      "title": "Print Spooler is disabled on domain controllers",
+      "category": "Domain Controller",
+      "severity": "High",
+      "probe": "Service",
+      "description": "Checks that the Print Spooler service is disabled and stopped on domain controllers.",
+      "rationale": "The Print Spooler service on domain controllers has repeatedly enabled remote code execution and privilege escalation and is rarely required there.",
+      "remediation": "Disable and stop the Print Spooler service on domain controllers unless printing from the domain controller is an explicit, documented requirement.",
+      "parameters": {
+        "name": "Spooler",
+        "startupType": "Disabled",
+        "requireStopped": true
+      },
+      "references": [
+        "https://learn.microsoft.com/windows-server/security/windows-services/security-guidelines-for-disabling-system-services-in-windows-server"
+      ],
+      "tags": [
+        "service",
+        "print-spooler",
+        "domain-controller"
+      ]
+    },
+    {
+      "id": "HL-AVD-001",
+      "title": "Session clipboard redirection is disabled",
+      "category": "Remote Administration",
+      "severity": "Medium",
+      "probe": "RegistryValue",
+      "description": "Checks the machine policy that disables clipboard redirection into and out of remote sessions.",
+      "rationale": "Clipboard redirection is a common unmonitored data exfiltration and malware introduction path on shared session hosts.",
+      "remediation": "Disable clipboard redirection through Group Policy or the RemoteDesktopServices policy CSP unless the workspace model explicitly requires it.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\Terminal Services",
+        "name": "fDisableClip",
+        "operator": "Equals",
+        "expected": 1
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-remotedesktopservices"
+      ],
+      "tags": [
+        "avd",
+        "redirection",
+        "clipboard"
+      ]
+    },
+    {
+      "id": "HL-AVD-002",
+      "title": "Session drive redirection is disabled",
+      "category": "Remote Administration",
+      "severity": "Medium",
+      "probe": "RegistryValue",
+      "description": "Checks the machine policy that disables client drive mapping in remote sessions.",
+      "rationale": "Drive redirection exposes client file systems inside the session host and enables bulk data movement outside managed storage paths.",
+      "remediation": "Disable drive redirection through Group Policy or the RemoteDesktopServices policy CSP unless a documented workflow depends on it.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\Terminal Services",
+        "name": "fDisableCdm",
+        "operator": "Equals",
+        "expected": 1
+      },
+      "references": [
+        "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-remotedesktopservices"
+      ],
+      "tags": [
+        "avd",
+        "redirection",
+        "drives"
+      ]
+    },
+    {
+      "id": "HL-AVD-003",
+      "title": "Screen capture protection is enabled",
+      "category": "Remote Administration",
+      "severity": "Medium",
+      "probe": "RegistryValue",
+      "description": "Checks the machine policy that blocks screen capture of remote session content.",
+      "rationale": "Screen capture protection reduces uncontrolled duplication of sensitive session content on shared or externally accessed session hosts.",
+      "remediation": "Enable screen capture protection for Azure Virtual Desktop session hosts through Group Policy or Intune after confirming client support.",
+      "parameters": {
+        "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\Terminal Services",
+        "name": "fEnableScreenCaptureProtect",
+        "operator": "In",
+        "expected": [
+          1,
+          2
+        ]
+      },
+      "references": [
+        "https://learn.microsoft.com/azure/virtual-desktop/screen-capture-protection"
+      ],
+      "tags": [
+        "avd",
+        "screen-capture"
       ]
     }
   ]

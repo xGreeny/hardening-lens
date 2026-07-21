@@ -121,6 +121,11 @@ function Get-HLProbeRegistry {
             ParameterNames = @()
             Handler = { param($control, $systemContext, $context) Invoke-HLCredentialGuardProbe }
         }
+        DeviceGuardService = [pscustomobject]@{
+            RequiredCommands = @('Get-CimInstance')
+            ParameterNames = @('serviceId', 'serviceName')
+            Handler = { param($control, $systemContext, $context) Invoke-HLDeviceGuardServiceProbe -Control $control -CollectionContext $context }
+        }
         LapsBackup = [pscustomobject]@{
             RequiredCommands = @()
             ParameterNames = @()

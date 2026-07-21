@@ -1,16 +1,16 @@
 {
-  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.1.1/src/HardeningLens/Schema/result.schema.json",
+  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.0/src/HardeningLens/Schema/result.schema.json",
   "schemaVersion": "1.1",
   "scan": {
     "id": "e747bf2b-e9de-4e5a-bffe-514e51b86fe8",
     "collectedAt": "2026-06-12T09:38:02.1200000Z",
-    "moduleVersion": "1.1.1",
+    "moduleVersion": "1.2.0",
     "redacted": false,
     "readOnly": true,
     "elevated": true,
     "partialCollection": false,
     "exceptionRegisterUsed": true,
-    "selectedControlCount": 53,
+    "selectedControlCount": 54,
     "collectionDurationMs": 1298
   },
   "system": {
@@ -33,7 +33,7 @@
   "baseline": {
     "name": "MemberServer",
     "displayName": "Windows Member Server",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "description": "Posture profile for domain-joined or centrally managed Windows member servers.",
     "source": "BuiltIn",
     "sourceBasis": [
@@ -43,15 +43,15 @@
     "supportedRoles": [
       "MemberServer"
     ],
-    "controlCount": 53,
+    "controlCount": 54,
     "notes": [
       "Application roles can require documented exceptions. The profile does not infer application-specific firewall, service, or authentication requirements."
     ]
   },
   "provenance": {
-    "catalogVersion": "1.0.1",
-    "catalogDigest": "ee4f598239afe802f2a85018ad261c93faecc681e47fc8bcab6811f515be3d81",
-    "baselineDigest": "96c57d4164756855bc63f42ffe093f38c735fae9b1295aafb4333bcfc80e74cd",
+    "catalogVersion": "1.1.0",
+    "catalogDigest": "96c64d2c508f3e0a6edfc6da41494808a243046a50c9e00de5499e9e185958f8",
+    "baselineDigest": "14c95413f6e477b4a1e1fdebbbf9270a56df02567bd1b0c8a0572c5ccedf056e",
     "capabilities": [
       {
         "name": "AsrRules",
@@ -90,6 +90,11 @@
       },
       {
         "name": "DefenderStatus",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "DeviceGuardService",
         "available": true,
         "detail": "Synthetic demo fixture"
       },
@@ -167,17 +172,17 @@
     "exceptionDigest": "a6147cdc628a44eb56a5bf4fff58bbd0672c9947b33b512b421c14636318538a"
   },
   "summary": {
-    "Total": 53,
-    "Applicable": 53,
-    "Pass": 41,
+    "Total": 54,
+    "Applicable": 54,
+    "Pass": 42,
     "Fail": 6,
     "Warning": 3,
     "Excepted": 1,
     "Unknown": 1,
     "Error": 1,
     "NotApplicable": 0,
-    "HardeningScore": 79.2,
-    "EvidenceCoverage": 96.2,
+    "HardeningScore": 79.6,
+    "EvidenceCoverage": 96.3,
     "HighestOpenSeverity": "High",
     "ScoringModel": "Severity-weighted pass percentage. Exceptions, unknowns, warnings, and errors receive no pass credit; not-applicable and informational controls are excluded."
   },
@@ -1881,6 +1886,36 @@
       },
       "collectedAt": "2026-06-12T09:38:02.1200000Z",
       "probeDurationMs": 4
+    },
+    {
+      "controlId": "HL-VBS-001",
+      "title": "Memory integrity (HVCI) is running",
+      "category": "Platform Security",
+      "severity": "High",
+      "status": "Pass",
+      "originalStatus": null,
+      "expected": "Memory integrity (HVCI) running",
+      "actual": "Memory integrity (HVCI) running",
+      "message": "The effective state matches the selected baseline.",
+      "evidence": {
+        "Source": "Synthetic demo fixture",
+        "Probe": "DeviceGuardService",
+        "Resolved": true
+      },
+      "rationale": "Memory integrity prevents kernel-mode code injection and driver tampering by enforcing code integrity in a hypervisor-protected environment.",
+      "remediation": "Enable memory integrity through Windows Security, Intune, or Group Policy after validating driver compatibility.",
+      "references": [
+        "https://learn.microsoft.com/windows/security/hardware-security/enable-virtualization-based-protection-of-code-integrity"
+      ],
+      "tags": [
+        "vbs",
+        "hvci",
+        "memory-integrity"
+      ],
+      "probe": "DeviceGuardService",
+      "exception": null,
+      "collectedAt": "2026-06-12T09:38:02.1200000Z",
+      "probeDurationMs": 5
     }
   ]
 }

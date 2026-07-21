@@ -3,7 +3,7 @@
   "schemaVersion": "1.0",
   "name": "Workstation",
   "displayName": "Windows Workstation",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Opinionated posture profile for enterprise Windows 10/11 workstations managed through Group Policy, Intune, or equivalent controls.",
   "sourceBasis": [
     "Microsoft Security Compliance Toolkit and current Microsoft Windows security guidance",
@@ -183,6 +183,12 @@
     },
     {
       "id": "HL-RA-001"
+    },
+    {
+      "id": "HL-VBS-001"
+    },
+    {
+      "id": "HL-SUDO-001"
     }
   ],
   "notes": [

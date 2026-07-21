@@ -1,6 +1,6 @@
 @{
     RootModule           = 'HardeningLens.psm1'
-    ModuleVersion        = '1.1.1'
+    ModuleVersion        = '1.2.0'
     GUID                 = '1b1d694c-40f9-4db4-a7ad-b6ca5ad934af'
     Author               = 'xGreeny'
     CompanyName          = 'xGreeny'
@@ -13,6 +13,7 @@
         'Invoke-HardeningLens',
         'Invoke-HardeningLensFleet',
         'Export-HardeningLensReport',
+        'Export-HardeningLensFleetReport',
         'Compare-HardeningLensResult',
         'Get-HardeningLensBaseline',
         'Get-HardeningLensControl',
@@ -32,7 +33,7 @@
             Tags         = @('Windows', 'Security', 'Hardening', 'Audit', 'PowerShell', 'Baseline', 'Drift', 'SecOps')
             LicenseUri   = 'https://github.com/xGreeny/hardening-lens/blob/main/LICENSE'
             ProjectUri   = 'https://github.com/xGreeny/hardening-lens'
-            ReleaseNotes = 'Maintenance release restoring advanced audit policy collection on Windows PowerShell 5.1 and treating optional features removed from the operating system as absent.'
+            ReleaseNotes = 'Locale-independent error classification, third-party antivirus awareness, aggregated fleet HTML reporting, and catalog 1.1.0 with six new controls for VBS, session security, Sudo, and domain-controller print spooler exposure.'
         }
     }
 }

@@ -32,3 +32,56 @@ function ConvertTo-HLInteger {
         return $null
     }
 }
+
+function Get-HLErrorCodeChain {
+    [CmdletBinding()]
+    param(
+        [AllowNull()]
+        [object]$Exception
+    )
+
+    $codes = New-Object System.Collections.Generic.List[int64]
+    $current = $Exception
+    $depth = 0
+    while ($null -ne $current -and $depth -lt 8) {
+        $codes.Add(([int64]$current.HResult) -band 4294967295)
+        if ($current -is [System.ComponentModel.Win32Exception]) {
+            $codes.Add([int64]$current.NativeErrorCode)
+        }
+        $current = $current.InnerException
+        $depth++
+    }
+    return $codes.ToArray()
+}
+
+function Test-HLErrorMatchesCode {
+    [CmdletBinding()]
+    param(
+        [AllowNull()]
+        [object]$Exception,
+
+        [Parameter(Mandatory)]
+        [int64[]]$Code
+    )
+
+    if ($null -eq $Exception) {
+        return $false
+    }
+
+    $normalized = @($Code | ForEach-Object { ([int64]$_) -band 4294967295 })
+    foreach ($observed in @(Get-HLErrorCodeChain -Exception $Exception)) {
+        if ($observed -in $normalized) {
+            return $true
+        }
+    }
+
+    # Provider messages are localized, but embedded hexadecimal error codes
+    # are not; use them as a locale-independent fallback signal.
+    $message = [string]$Exception.Message
+    foreach ($value in $normalized) {
+        if ($value -gt 65535 -and $message -match ('(?i)0x{0:x8}' -f $value)) {
+            return $true
+        }
+    }
+    return $false
+}

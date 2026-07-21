@@ -8,7 +8,7 @@
   <img alt="PowerShell 5.1 and 7" src="https://img.shields.io/badge/PowerShell-5.1%20%7C%207-5391FE?logo=powershell&logoColor=white">
   <img alt="Windows" src="https://img.shields.io/badge/platform-Windows-0078D4?logo=windows&logoColor=white">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-55e69d"></a>
-  <a href="docs/CONTROL_REFERENCE.md"><img alt="58 controls" src="https://img.shields.io/badge/controls-58-55e69d"></a>
+  <a href="docs/CONTROL_REFERENCE.md"><img alt="64 controls" src="https://img.shields.io/badge/controls-64-55e69d"></a>
 </p>
 
 **Hardening Lens turns effective Windows security configuration into evidence you can review, diff, and govern.** It evaluates a local device against a role-aware baseline, explains every finding, applies only valid time-bounded exceptions, and exports a self-contained report without changing Windows configuration.
@@ -37,7 +37,7 @@ Hardening Lens makes those distinctions explicit in a stable result schema.
 
 | Capability | Implementation |
 |---|---|
-| **58 controls** | Curated checks for identity, credentials, network protection, remote administration, Defender, ASR, audit policy, logging, BitLocker, Secure Boot, and PowerShell |
+| **64 controls** | Curated checks for identity, credentials, network protection, remote administration, session security, Defender, ASR, VBS, audit policy, logging, BitLocker, Secure Boot, and PowerShell |
 | **Four role baselines** | `Workstation`, `MemberServer`, `DomainController`, `AVDSessionHost` |
 | **Read-only collection** | Registry, CIM, Windows APIs, and native Microsoft cmdlets; no remediation mode |
 | **Evidence-first results** | Expected state, actual state, status, message, rationale, remediation, references, and raw evidence |
@@ -66,8 +66,8 @@ The wrapper runs the assessment, writes HTML/JSON/CSV, and returns an automation
 
 ```text
 HARDENING LENS // SRV-DEMO-01
-Baseline: Windows Member Server 1.0.1 | Score: 77.1% | Coverage: 96.2%
-PASS 40  FAIL 7  WARN 3  EXCEPTED 1  UNKNOWN 1  ERROR 1  N/A 0
+Baseline: Windows Member Server 1.1.0 | Score: 77.6% | Coverage: 96.3%
+PASS 41  FAIL 7  WARN 3  EXCEPTED 1  UNKNOWN 1  ERROR 1  N/A 0
 
 Top findings:
 [HIGH    ] [FAIL    ] HL-ASR-001   Core Attack Surface Reduction rules are enforced
@@ -100,6 +100,7 @@ $result | Export-HardeningLensReport `
 | `Invoke-HardeningLens` | Run a local read-only assessment |
 | `Invoke-HardeningLensFleet` | Run complete, artifact-backed assessments across remote hosts |
 | `Export-HardeningLensReport` | Export HTML, JSON, and CSV |
+| `Export-HardeningLensFleetReport` | Export one aggregated HTML report for a fleet run |
 | `Compare-HardeningLensResult` | Compare two scan results |
 | `Get-HardeningLensBaseline` | Inspect or resolve baselines |
 | `Get-HardeningLensControl` | Query the control catalog |
@@ -113,10 +114,10 @@ $result | Export-HardeningLensReport `
 
 | Baseline | Controls | Selection | Intended use |
 |---|---:|---|---|
-| `Workstation` | 54 | Automatic for Windows client role | Managed enterprise endpoints |
-| `MemberServer` | 53 | Automatic for member-server role | Domain-joined or centrally managed servers |
-| `DomainController` | 55 | Automatic for domain-controller role | AD DS with stricter identity, LDAP, LAPS, audit, and log checks |
-| `AVDSessionHost` | 53 | Explicit | Pooled or personal Azure Virtual Desktop session hosts |
+| `Workstation` | 56 | Automatic for Windows client role | Managed enterprise endpoints |
+| `MemberServer` | 54 | Automatic for member-server role | Domain-joined or centrally managed servers |
+| `DomainController` | 57 | Automatic for domain-controller role | AD DS with stricter identity, LDAP, LAPS, audit, and log checks |
+| `AVDSessionHost` | 58 | Explicit | Pooled or personal Azure Virtual Desktop session hosts with session-security controls |
 
 ```powershell
 Get-HardeningLensBaseline
@@ -136,7 +137,8 @@ The catalog covers:
 - **Endpoint protection:** Defender real-time, cloud, behavior, IOAV, PUA, tamper protection, signatures, network protection, SmartScreen;
 - **Attack surface:** curated ASR enforcement, AutoRun/AutoPlay, Windows PowerShell 2.0;
 - **Security telemetry:** Script Block, Module, and process command-line logging; advanced audit subcategories; event-log capacity;
-- **Platform and data:** Secure Boot and BitLocker;
+- **Platform and data:** Secure Boot, BitLocker, and memory integrity (HVCI);
+- **Session security:** clipboard and drive redirection plus screen capture protection for session hosts, and Sudo for Windows;
 - **Domain controllers:** LDAP signing, channel binding, LM hash storage, and DSRM password management.
 
 Every catalog reference points to first-party Microsoft guidance. The catalog is Microsoft-aligned operational engineering, not a copied Microsoft Security Baseline or a compliance claim.

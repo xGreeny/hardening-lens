@@ -65,6 +65,7 @@ jobs:
           Import-Module -Name $manifestPath -Force -ErrorAction Stop
           $expected = @(
             'Compare-HardeningLensResult'
+            'Export-HardeningLensFleetReport'
             'Export-HardeningLensReport'
             'Get-HardeningLensBaseline'
             'Get-HardeningLensControl'
@@ -112,3 +113,17 @@ jobs:
             --title "Hardening Lens $version" `
             --generate-notes `
             --verify-tag
+      - name: Publish to PowerShell Gallery
+        shell: pwsh
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:PSGALLERY_API_KEY)) {
+            Write-Host 'PSGALLERY_API_KEY is not configured; skipping PowerShell Gallery publication.'
+            exit 0
+          }
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          $modulePath = Join-Path $PWD "dist/HardeningLens/$version"
+          Publish-Module -Path $modulePath -NuGetApiKey $env:PSGALLERY_API_KEY -ErrorAction Stop
+          Write-Host "Published HardeningLens $version to the PowerShell Gallery."

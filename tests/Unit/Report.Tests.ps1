@@ -32,7 +32,7 @@ Describe 'Report export' {
         $content | Should -Match 'HL-SMB-003'
         $content | Should -Match 'Prioritized findings'
         $content | Should -Match 'Assessment provenance'
-        $content | Should -Match 'ee4f598239afe802f2a85018ad261c93faecc681e47fc8bcab6811f515be3d81'
+        $content | Should -Match '96c64d2c508f3e0a6edfc6da41494808a243046a50c9e00de5499e9e185958f8'
         $content | Should -Match 'report schema 1\.1'
         $content | Should -Not -Match '<script[^>]+src='
         $content | Should -Not -Match '<link[^>]+stylesheet'
@@ -54,8 +54,8 @@ Describe 'Report export' {
         $json = Get-Content -LiteralPath (Join-Path -Path $TestDrive -ChildPath 'portable.json') -Raw | ConvertFrom-Json
         $csv = @(Import-Csv -LiteralPath (Join-Path -Path $TestDrive -ChildPath 'portable.csv'))
 
-        @($json.results).Count | Should -Be 53
-        $csv.Count | Should -Be 53
+        @($json.results).Count | Should -Be 54
+        $csv.Count | Should -Be 54
         @($csv | Where-Object ControlId -eq 'HL-SMB-003').Status | Should -Be 'Fail'
     }
 

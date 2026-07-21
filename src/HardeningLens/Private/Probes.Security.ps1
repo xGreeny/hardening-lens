@@ -99,9 +99,18 @@ function Invoke-HLSecureBootProbe {
         return Get-HLProbeResult -Status Fail -Expected 'Enabled' -Actual 'Disabled' -Message 'Secure Boot is supported but disabled.'
     }
     catch {
-        $message = [string]$_.Exception.Message
-        if ($message -match '(?i:not supported|unsupported|not UEFI)') {
+        $exception = $_.Exception
+        $message = [string]$exception.Message
+        # Classify by exception type and error code first; provider message
+        # text is localized and matches only on English systems.
+        if ($exception -is [PlatformNotSupportedException] -or
+            (Test-HLErrorMatchesCode -Exception $exception -Code 0xC0000002) -or
+            $message -match '(?i:not supported|unsupported|not UEFI)') {
             return Get-HLProbeResult -Status Fail -Expected 'Enabled' -Actual 'Unsupported by current firmware or virtual hardware' -Message $message
+        }
+        if ($exception -is [UnauthorizedAccessException] -or
+            (Test-HLErrorMatchesCode -Exception $exception -Code 0x80070005, 1314, 0x80070522)) {
+            return Get-HLProbeResult -Status Unknown -Expected 'Enabled' -Actual $null -Message 'Querying Secure Boot requires an elevated session. Collect with elevation to resolve this control.'
         }
         return Get-HLProbeResult -Status Error -Expected 'Enabled' -Actual $null -Message "Unable to query Secure Boot: $message"
     }

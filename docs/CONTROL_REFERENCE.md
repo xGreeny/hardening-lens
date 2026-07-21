@@ -1,6 +1,6 @@
 # Control reference
 
-Catalog version **1.0.1**, dated **2026-07-14**. The catalog contains **58** read-only controls. Every control records expected state, effective state, status, evidence, rationale, remediation guidance, and first-party Microsoft references.
+Catalog version **1.1.0**, dated **2026-07-21**. The catalog contains **64** read-only controls. Every control records expected state, effective state, status, evidence, rationale, remediation guidance, and first-party Microsoft references.
 
 > The catalog is an operational assessment model. It is not a verbatim Microsoft Security Baseline,
 > CIS Benchmark, certification, or replacement for workload-specific risk assessment.
@@ -9,10 +9,10 @@ Catalog version **1.0.1**, dated **2026-07-14**. The catalog contains **58** rea
 
 | Baseline | Controls | Intended role |
 |---|---:|---|
-| `Workstation` | 54 | Opinionated posture profile for enterprise Windows 10/11 workstations managed through Group Policy, Intune, or equivalent controls. |
-| `MemberServer` | 53 | Posture profile for domain-joined or centrally managed Windows member servers. |
-| `DomainController` | 55 | Role-aware posture profile for Active Directory domain controllers with stricter identity, LDAP, LAPS, audit, and log-retention checks. |
-| `AVDSessionHost` | 53 | Posture profile for pooled or personal Azure Virtual Desktop session hosts, balancing endpoint controls with multi-session operations. |
+| `Workstation` | 56 | Opinionated posture profile for enterprise Windows 10/11 workstations managed through Group Policy, Intune, or equivalent controls. |
+| `MemberServer` | 54 | Posture profile for domain-joined or centrally managed Windows member servers. |
+| `DomainController` | 57 | Role-aware posture profile for Active Directory domain controllers with stricter identity, LDAP, LAPS, audit, and log-retention checks. |
+| `AVDSessionHost` | 58 | Posture profile for pooled or personal Azure Virtual Desktop session hosts, balancing endpoint controls with multi-session operations. |
 
 ## Category index
 
@@ -22,13 +22,13 @@ Catalog version **1.0.1**, dated **2026-07-14**. The catalog contains **58** rea
 | [Attack Surface Reduction](#attack-surface-reduction) | 2 |
 | [Credential Protection](#credential-protection) | 7 |
 | [Data Protection](#data-protection) | 1 |
-| [Domain Controller](#domain-controller) | 4 |
+| [Domain Controller](#domain-controller) | 5 |
 | [Endpoint Protection](#endpoint-protection) | 10 |
 | [Identity](#identity) | 3 |
 | [Network Protection](#network-protection) | 8 |
-| [Platform Security](#platform-security) | 1 |
-| [Privilege Management](#privilege-management) | 3 |
-| [Remote Administration](#remote-administration) | 5 |
+| [Platform Security](#platform-security) | 2 |
+| [Privilege Management](#privilege-management) | 4 |
+| [Remote Administration](#remote-administration) | 8 |
 | [Scripting Security](#scripting-security) | 1 |
 | [Security Logging](#security-logging) | 6 |
 
@@ -48,6 +48,9 @@ Catalog version **1.0.1**, dated **2026-07-14**. The catalog contains **58** rea
 | [`HL-AUD-006`](#hl-aud-006) | Medium | Advanced Auditing | ✓ | ✓ | ✓ | ✓ |
 | [`HL-AUD-007`](#hl-aud-007) | High | Advanced Auditing | ✓ | ✓ | ✓ | ✓ |
 | [`HL-AUTORUN-001`](#hl-autorun-001) | Medium | Attack Surface Reduction | ✓ | ✓ | ✓ | ✓ |
+| [`HL-AVD-001`](#hl-avd-001) | Medium | Remote Administration | — | — | — | ✓ |
+| [`HL-AVD-002`](#hl-avd-002) | Medium | Remote Administration | — | — | — | ✓ |
+| [`HL-AVD-003`](#hl-avd-003) | Medium | Remote Administration | — | — | — | ✓ |
 | [`HL-BIT-001`](#hl-bit-001) | High | Data Protection | ✓ | ✓ | — | — |
 | [`HL-BOOT-001`](#hl-boot-001) | Medium | Platform Security | ✓ | ✓ | ✓ | ✓ |
 | [`HL-CRED-001`](#hl-cred-001) | High | Credential Protection | ✓ | ✓ | ✓ | ✓ |
@@ -88,10 +91,13 @@ Catalog version **1.0.1**, dated **2026-07-14**. The catalog contains **58** rea
 | [`HL-SMB-003`](#hl-smb-003) | High | Network Protection | ✓ | ✓ | ✓ | ✓ |
 | [`HL-SMB-004`](#hl-smb-004) | High | Network Protection | ✓ | ✓ | ✓ | ✓ |
 | [`HL-SMB-005`](#hl-smb-005) | High | Network Protection | ✓ | ✓ | ✓ | ✓ |
+| [`HL-SPOOL-001`](#hl-spool-001) | High | Domain Controller | — | — | ✓ | — |
+| [`HL-SUDO-001`](#hl-sudo-001) | Medium | Privilege Management | ✓ | — | — | ✓ |
 | [`HL-SVC-001`](#hl-svc-001) | Medium | Remote Administration | ✓ | ✓ | ✓ | ✓ |
 | [`HL-UAC-001`](#hl-uac-001) | Critical | Privilege Management | ✓ | ✓ | ✓ | ✓ |
 | [`HL-UAC-002`](#hl-uac-002) | High | Privilege Management | ✓ | ✓ | ✓ | ✓ |
 | [`HL-UAC-003`](#hl-uac-003) | Medium | Privilege Management | ✓ | ✓ | ✓ | ✓ |
+| [`HL-VBS-001`](#hl-vbs-001) | High | Platform Security | ✓ | ✓ | ✓ | ✓ |
 | [`HL-WINRM-001`](#hl-winrm-001) | High | Remote Administration | ✓ | ✓ | ✓ | ✓ |
 | [`HL-WINRM-002`](#hl-winrm-002) | High | Remote Administration | ✓ | ✓ | ✓ | ✓ |
 
@@ -731,6 +737,33 @@ No control-specific parameters.
 
 - [https://learn.microsoft.com/windows-server/identity/laps/laps-management-policy-settings](https://learn.microsoft.com/windows-server/identity/laps/laps-management-policy-settings)
 
+### HL-SPOOL-001 — Print Spooler is disabled on domain controllers
+
+**Severity:** High  
+**Probe:** `Service`  
+**Baselines:** `DomainController`  
+**Tags:** `service`, `print-spooler`, `domain-controller`
+
+Checks that the Print Spooler service is disabled and stopped on domain controllers.
+
+**Why it matters.** The Print Spooler service on domain controllers has repeatedly enabled remote code execution and privilege escalation and is rarely required there.
+
+**Remediation.** Disable and stop the Print Spooler service on domain controllers unless printing from the domain controller is an explicit, documented requirement.
+
+**Parameters**
+
+```json
+{
+  "name": "Spooler",
+  "requireStopped": true,
+  "startupType": "Disabled"
+}
+```
+
+**Microsoft guidance**
+
+- [https://learn.microsoft.com/windows-server/security/windows-services/security-guidelines-for-disabling-system-services-in-windows-server](https://learn.microsoft.com/windows-server/security/windows-services/security-guidelines-for-disabling-system-services-in-windows-server)
+
 
 ## Endpoint Protection
 
@@ -1340,8 +1373,63 @@ No control-specific parameters.
 
 - [https://learn.microsoft.com/windows-hardware/design/device-experiences/oem-secure-boot](https://learn.microsoft.com/windows-hardware/design/device-experiences/oem-secure-boot)
 
+### HL-VBS-001 — Memory integrity (HVCI) is running
+
+**Severity:** High  
+**Probe:** `DeviceGuardService`  
+**Baselines:** `Workstation`, `MemberServer`, `DomainController`, `AVDSessionHost`  
+**Tags:** `vbs`, `hvci`, `memory-integrity`
+
+Checks that hypervisor-enforced code integrity is reported as a running virtualization-based security service.
+
+**Why it matters.** Memory integrity prevents kernel-mode code injection and driver tampering by enforcing code integrity in a hypervisor-protected environment.
+
+**Remediation.** Enable memory integrity through Windows Security, Intune, or Group Policy after validating driver compatibility.
+
+**Parameters**
+
+```json
+{
+  "serviceId": 2,
+  "serviceName": "Memory integrity (HVCI)"
+}
+```
+
+**Microsoft guidance**
+
+- [https://learn.microsoft.com/windows/security/hardware-security/enable-virtualization-based-protection-of-code-integrity](https://learn.microsoft.com/windows/security/hardware-security/enable-virtualization-based-protection-of-code-integrity)
+
 
 ## Privilege Management
+
+### HL-SUDO-001 — Sudo for Windows is disabled
+
+**Severity:** Medium  
+**Probe:** `RegistryValue`  
+**Baselines:** `Workstation`, `AVDSessionHost`  
+**Tags:** `sudo`, `elevation`
+
+Checks that the Sudo for Windows elevation shortcut introduced with Windows 11 24H2 is disabled or absent.
+
+**Why it matters.** Sudo for Windows adds an additional inline elevation path from a terminal that bypasses established elevation workflows and their auditing expectations.
+
+**Remediation.** Disable Sudo for Windows through Settings, Intune, or Group Policy unless the elevation model explicitly permits it.
+
+**Parameters**
+
+```json
+{
+  "expected": 0,
+  "missingIsPass": true,
+  "name": "Enabled",
+  "operator": "Equals",
+  "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Sudo"
+}
+```
+
+**Microsoft guidance**
+
+- [https://learn.microsoft.com/windows/sudo/](https://learn.microsoft.com/windows/sudo/)
 
 ### HL-UAC-001 — User Account Control is enabled
 
@@ -1435,6 +1523,93 @@ Checks Admin Approval Mode for the built-in Administrator account.
 
 
 ## Remote Administration
+
+### HL-AVD-001 — Session clipboard redirection is disabled
+
+**Severity:** Medium  
+**Probe:** `RegistryValue`  
+**Baselines:** `AVDSessionHost`  
+**Tags:** `avd`, `redirection`, `clipboard`
+
+Checks the machine policy that disables clipboard redirection into and out of remote sessions.
+
+**Why it matters.** Clipboard redirection is a common unmonitored data exfiltration and malware introduction path on shared session hosts.
+
+**Remediation.** Disable clipboard redirection through Group Policy or the RemoteDesktopServices policy CSP unless the workspace model explicitly requires it.
+
+**Parameters**
+
+```json
+{
+  "expected": 1,
+  "name": "fDisableClip",
+  "operator": "Equals",
+  "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\Terminal Services"
+}
+```
+
+**Microsoft guidance**
+
+- [https://learn.microsoft.com/windows/client-management/mdm/policy-csp-remotedesktopservices](https://learn.microsoft.com/windows/client-management/mdm/policy-csp-remotedesktopservices)
+
+### HL-AVD-002 — Session drive redirection is disabled
+
+**Severity:** Medium  
+**Probe:** `RegistryValue`  
+**Baselines:** `AVDSessionHost`  
+**Tags:** `avd`, `redirection`, `drives`
+
+Checks the machine policy that disables client drive mapping in remote sessions.
+
+**Why it matters.** Drive redirection exposes client file systems inside the session host and enables bulk data movement outside managed storage paths.
+
+**Remediation.** Disable drive redirection through Group Policy or the RemoteDesktopServices policy CSP unless a documented workflow depends on it.
+
+**Parameters**
+
+```json
+{
+  "expected": 1,
+  "name": "fDisableCdm",
+  "operator": "Equals",
+  "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\Terminal Services"
+}
+```
+
+**Microsoft guidance**
+
+- [https://learn.microsoft.com/windows/client-management/mdm/policy-csp-remotedesktopservices](https://learn.microsoft.com/windows/client-management/mdm/policy-csp-remotedesktopservices)
+
+### HL-AVD-003 — Screen capture protection is enabled
+
+**Severity:** Medium  
+**Probe:** `RegistryValue`  
+**Baselines:** `AVDSessionHost`  
+**Tags:** `avd`, `screen-capture`
+
+Checks the machine policy that blocks screen capture of remote session content.
+
+**Why it matters.** Screen capture protection reduces uncontrolled duplication of sensitive session content on shared or externally accessed session hosts.
+
+**Remediation.** Enable screen capture protection for Azure Virtual Desktop session hosts through Group Policy or Intune after confirming client support.
+
+**Parameters**
+
+```json
+{
+  "expected": [
+    1,
+    2
+  ],
+  "name": "fEnableScreenCaptureProtect",
+  "operator": "In",
+  "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\Terminal Services"
+}
+```
+
+**Microsoft guidance**
+
+- [https://learn.microsoft.com/azure/virtual-desktop/screen-capture-protection](https://learn.microsoft.com/azure/virtual-desktop/screen-capture-protection)
 
 ### HL-RA-001 — Solicited Remote Assistance is disabled
 

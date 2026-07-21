@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.1.1/src/HardeningLens/Schema/comparison.schema.json",
+  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.0/src/HardeningLens/Schema/comparison.schema.json",
   "schemaVersion": "1.1",
   "comparedAt": "2026-07-12T10:06:04.0000000Z",
   "computerName": "SRV-DEMO-01",
@@ -7,24 +7,24 @@
   "baselineContext": {
     "Reference": {
       "Name": "MemberServer",
-      "Version": "1.0.1",
-      "Digest": "96c57d4164756855bc63f42ffe093f38c735fae9b1295aafb4333bcfc80e74cd"
+      "Version": "1.1.0",
+      "Digest": "14c95413f6e477b4a1e1fdebbbf9270a56df02567bd1b0c8a0572c5ccedf056e"
     },
     "Difference": {
       "Name": "MemberServer",
-      "Version": "1.0.1",
-      "Digest": "96c57d4164756855bc63f42ffe093f38c735fae9b1295aafb4333bcfc80e74cd"
+      "Version": "1.1.0",
+      "Digest": "14c95413f6e477b4a1e1fdebbbf9270a56df02567bd1b0c8a0572c5ccedf056e"
     },
     "Changed": false
   },
   "catalogContext": {
     "Reference": {
-      "Version": "1.0.1",
-      "Digest": "ee4f598239afe802f2a85018ad261c93faecc681e47fc8bcab6811f515be3d81"
+      "Version": "1.1.0",
+      "Digest": "96c64d2c508f3e0a6edfc6da41494808a243046a50c9e00de5499e9e185958f8"
     },
     "Difference": {
-      "Version": "1.0.1",
-      "Digest": "ee4f598239afe802f2a85018ad261c93faecc681e47fc8bcab6811f515be3d81"
+      "Version": "1.1.0",
+      "Digest": "96c64d2c508f3e0a6edfc6da41494808a243046a50c9e00de5499e9e185958f8"
     },
     "Changed": false
   },
@@ -32,9 +32,9 @@
     "Id": "e747bf2b-e9de-4e5a-bffe-514e51b86fe8",
     "CollectedAt": "2026-06-12T09:38:02.1200000Z",
     "ResultSchemaVersion": "1.1",
-    "ModuleVersion": "1.1.1",
-    "Score": 79.2,
-    "EvidenceCoverage": 96.2,
+    "ModuleVersion": "1.2.0",
+    "Score": 79.6,
+    "EvidenceCoverage": 96.3,
     "CollectionDurationMs": 1298,
     "ExceptionDigest": "a6147cdc628a44eb56a5bf4fff58bbd0672c9947b33b512b421c14636318538a",
     "Capabilities": [
@@ -75,6 +75,11 @@
       },
       {
         "name": "DefenderStatus",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "DeviceGuardService",
         "available": true,
         "detail": "Synthetic demo fixture"
       },
@@ -154,9 +159,9 @@
     "Id": "8fc7045c-a95e-4f23-bdb7-2bb858322c52",
     "CollectedAt": "2026-07-12T09:42:18.4210000Z",
     "ResultSchemaVersion": "1.1",
-    "ModuleVersion": "1.1.1",
-    "Score": 77.1,
-    "EvidenceCoverage": 96.2,
+    "ModuleVersion": "1.2.0",
+    "Score": 77.6,
+    "EvidenceCoverage": 96.3,
     "CollectionDurationMs": 1432,
     "ExceptionDigest": "a6147cdc628a44eb56a5bf4fff58bbd0672c9947b33b512b421c14636318538a",
     "Capabilities": [
@@ -197,6 +202,11 @@
       },
       {
         "name": "DefenderStatus",
+        "available": true,
+        "detail": "Synthetic demo fixture"
+      },
+      {
+        "name": "DeviceGuardService",
         "available": true,
         "detail": "Synthetic demo fixture"
       },
@@ -273,14 +283,14 @@
     ]
   },
   "summary": {
-    "ScoreDelta": -2.1,
+    "ScoreDelta": -2.0,
     "CoverageDelta": 0.0,
     "NewFindings": 2,
     "Resolved": 1,
     "Changed": 1,
     "AddedControls": 0,
     "RemovedControls": 0,
-    "Unchanged": 49
+    "Unchanged": 50
   },
   "changes": [
     {
@@ -2503,6 +2513,42 @@
       "AfterStatus": "Fail",
       "BeforeActual": 0,
       "AfterActual": 0
+    },
+    {
+      "ControlId": "HL-VBS-001",
+      "Title": "Memory integrity (HVCI) is running",
+      "Severity": "High",
+      "Category": "Platform Security",
+      "ChangeType": "Unchanged",
+      "ChangedFields": [],
+      "Before": {
+        "Status": "Pass",
+        "Severity": "High",
+        "Expected": "Memory integrity (HVCI) running",
+        "Actual": "Memory integrity (HVCI) running",
+        "Evidence": {
+          "Source": "Synthetic demo fixture",
+          "Probe": "DeviceGuardService",
+          "Resolved": true
+        },
+        "Exception": null
+      },
+      "After": {
+        "Status": "Pass",
+        "Severity": "High",
+        "Expected": "Memory integrity (HVCI) running",
+        "Actual": "Memory integrity (HVCI) running",
+        "Evidence": {
+          "Source": "Synthetic demo fixture",
+          "Probe": "DeviceGuardService",
+          "Resolved": true
+        },
+        "Exception": null
+      },
+      "BeforeStatus": "Pass",
+      "AfterStatus": "Pass",
+      "BeforeActual": "Memory integrity (HVCI) running",
+      "AfterActual": "Memory integrity (HVCI) running"
     },
     {
       "ControlId": "HL-WINRM-001",
