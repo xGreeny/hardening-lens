@@ -235,7 +235,9 @@ Describe 'Fleet publish move retry' {
             Test-Path -LiteralPath $script:staging | Should -BeFalse
         }
         finally {
-            if (-not $stream.SafeFileHandle.IsClosed) { $stream.Dispose() }
+            # FileStream.Dispose is idempotent; probing SafeFileHandle after a
+            # dispose throws on some .NET Framework builds.
+            try { $stream.Dispose() } catch { Write-Verbose 'Stream already disposed.' }
             $job | Remove-Job -Force -ErrorAction SilentlyContinue
         }
     }
