@@ -89,3 +89,79 @@ Describe 'ASR probe normalization' {
         }
     }
 }
+
+Describe 'Windows optional feature probe normalization' {
+    InModuleScope HardeningLens {
+        BeforeAll {
+            if ($null -eq (Get-Command -Name Get-WindowsOptionalFeature -ErrorAction SilentlyContinue)) {
+                Set-Item -Path Function:Get-WindowsOptionalFeature -Value {
+                    [CmdletBinding()]
+                    param(
+                        [switch]$Online,
+                        [string]$FeatureName
+                    )
+                    throw 'The test stub must be replaced by a Pester mock.'
+                }
+            }
+
+            $script:featureControl = [pscustomobject]@{
+                parameters = [pscustomobject]@{
+                    features       = @('RetiredFeatureRoot', 'RetiredFeature')
+                    expectedState  = 'Disabled'
+                    evaluationMode = 'AllDisabled'
+                }
+            }
+        }
+
+        BeforeEach {
+            Mock Get-Command {
+                [pscustomobject]@{ Name = 'Get-WindowsOptionalFeature' }
+            } -ParameterFilter { $Name -eq 'Get-WindowsOptionalFeature' }
+        }
+
+        It 'treats a feature removed from the operating system as compliant' {
+            Mock Get-WindowsOptionalFeature { $null }
+
+            $result = Invoke-HLWindowsOptionalFeatureProbe -Control $script:featureControl
+            $result.Status | Should -Be 'Pass'
+            $result.Actual | Should -Be 'Feature not present'
+            foreach ($entry in @($result.Evidence)) {
+                $entry.Present | Should -BeFalse
+                $entry.State | Should -Be 'NotPresent'
+                $entry.Error | Should -BeNullOrEmpty
+            }
+        }
+
+        It 'evaluates only present features when others are absent' {
+            Mock Get-WindowsOptionalFeature { $null } -ParameterFilter { $FeatureName -eq 'RetiredFeatureRoot' }
+            Mock Get-WindowsOptionalFeature {
+                [pscustomobject]@{ FeatureName = 'RetiredFeature'; State = 'Disabled' }
+            } -ParameterFilter { $FeatureName -eq 'RetiredFeature' }
+
+            $result = Invoke-HLWindowsOptionalFeatureProbe -Control $script:featureControl
+            $result.Status | Should -Be 'Pass'
+            $result.Actual | Should -Be 'Disabled'
+            @($result.Evidence | Where-Object { $_.FeatureName -eq 'RetiredFeatureRoot' }).Evaluated | Should -BeFalse
+            @($result.Evidence | Where-Object { $_.FeatureName -eq 'RetiredFeature' }).Evaluated | Should -BeTrue
+        }
+
+        It 'fails when a present feature is enabled' {
+            Mock Get-WindowsOptionalFeature { $null } -ParameterFilter { $FeatureName -eq 'RetiredFeatureRoot' }
+            Mock Get-WindowsOptionalFeature {
+                [pscustomobject]@{ FeatureName = 'RetiredFeature'; State = 'Enabled' }
+            } -ParameterFilter { $FeatureName -eq 'RetiredFeature' }
+
+            $result = Invoke-HLWindowsOptionalFeatureProbe -Control $script:featureControl
+            $result.Status | Should -Be 'Fail'
+            $result.Actual | Should -Be 'RetiredFeature=Enabled'
+        }
+
+        It 'keeps unexpected query failures as collection errors' {
+            Mock Get-WindowsOptionalFeature { throw 'The service cannot be started.' }
+
+            $result = Invoke-HLWindowsOptionalFeatureProbe -Control $script:featureControl
+            $result.Status | Should -Be 'Error'
+            $result.Message | Should -Match 'Unable to query one or more optional features'
+        }
+    }
+}

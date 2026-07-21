@@ -2,7 +2,7 @@ function Initialize-HLAuditNativeType {
     [CmdletBinding()]
     param()
 
-    if ($script:HLAuditNativeLoaded -or ('HardeningLens.NativeAuditPolicy' -as [type])) {
+    if ($script:HLAuditNativeLoaded -or ('HardeningLens.NativeAuditPolicy2' -as [type])) {
         $script:HLAuditNativeLoaded = $true
         return
     }
@@ -13,7 +13,7 @@ using System.Runtime.InteropServices;
 
 namespace HardeningLens
 {
-    public static class NativeAuditPolicy
+    public static class NativeAuditPolicy2
     {
         [StructLayout(LayoutKind.Sequential)]
         public struct AUDIT_POLICY_INFORMATION
@@ -25,14 +25,39 @@ namespace HardeningLens
 
         [DllImport("advapi32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.U1)]
-        public static extern bool AuditQuerySystemPolicy(
+        private static extern bool AuditQuerySystemPolicy(
             [In] Guid[] pSubCategoryGuids,
             UInt32 PolicyCount,
             out IntPtr ppAuditPolicy
         );
 
         [DllImport("advapi32.dll")]
-        public static extern void AuditFree(IntPtr buffer);
+        private static extern void AuditFree(IntPtr buffer);
+
+        // Marshalling stays in C# because the PowerShell 5.1 binder can select
+        // the PtrToStructure(IntPtr, object) overload and fail at runtime.
+        public static AUDIT_POLICY_INFORMATION QuerySinglePolicy(Guid subCategoryGuid)
+        {
+            IntPtr buffer = IntPtr.Zero;
+            bool success = AuditQuerySystemPolicy(new Guid[] { subCategoryGuid }, 1, out buffer);
+            if (!success)
+            {
+                int errorCode = Marshal.GetLastWin32Error();
+                throw new System.ComponentModel.Win32Exception(
+                    errorCode,
+                    "AuditQuerySystemPolicy failed with Win32 error " + errorCode + "."
+                );
+            }
+
+            try
+            {
+                return (AUDIT_POLICY_INFORMATION)Marshal.PtrToStructure(buffer, typeof(AUDIT_POLICY_INFORMATION));
+            }
+            finally
+            {
+                AuditFree(buffer);
+            }
+        }
     }
 }
 '@
@@ -51,30 +76,14 @@ function Get-HLAuditPolicySetting {
     Assert-HLWindows
     Initialize-HLAuditNativeType
 
-    $buffer = [IntPtr]::Zero
-    $guids = [guid[]]@($SubcategoryGuid)
-    $success = [HardeningLens.NativeAuditPolicy]::AuditQuerySystemPolicy($guids, 1, [ref]$buffer)
-    if (-not $success) {
-        $errorCode = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
-        throw "AuditQuerySystemPolicy failed with Win32 error $errorCode."
-    }
-
-    try {
-        $type = [type][HardeningLens.NativeAuditPolicy+AUDIT_POLICY_INFORMATION]
-        $information = [Runtime.InteropServices.Marshal]::PtrToStructure($buffer, $type)
-        $raw = [uint32]$information.AuditingInformation
-        return [pscustomobject][ordered]@{
-            SubcategoryGuid = $SubcategoryGuid.ToString()
-            RawValue        = $raw
-            Success         = [bool](($raw -band 1) -eq 1)
-            Failure         = [bool](($raw -band 2) -eq 2)
-            None            = [bool](($raw -band 4) -eq 4)
-        }
-    }
-    finally {
-        if ($buffer -ne [IntPtr]::Zero) {
-            [HardeningLens.NativeAuditPolicy]::AuditFree($buffer)
-        }
+    $information = [HardeningLens.NativeAuditPolicy2]::QuerySinglePolicy($SubcategoryGuid)
+    $raw = [uint32]$information.AuditingInformation
+    return [pscustomobject][ordered]@{
+        SubcategoryGuid = $SubcategoryGuid.ToString()
+        RawValue        = $raw
+        Success         = [bool](($raw -band 1) -eq 1)
+        Failure         = [bool](($raw -band 2) -eq 2)
+        None            = [bool](($raw -band 4) -eq 4)
     }
 }
 

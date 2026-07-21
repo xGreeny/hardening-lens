@@ -118,11 +118,23 @@ function Invoke-HLWindowsOptionalFeatureProbe {
 
     foreach ($featureName in @($Control.parameters.features)) {
         try {
-            $feature = Get-WindowsOptionalFeature -Online -FeatureName ([string]$featureName) -ErrorAction Stop
+            $feature = @(Get-WindowsOptionalFeature -Online -FeatureName ([string]$featureName) -ErrorAction Stop | Where-Object { $null -ne $_ })
+            if ($feature.Count -eq 0) {
+                # Windows 11 24H2 removes retired features such as PowerShell 2.0
+                # entirely; the query then returns nothing instead of failing.
+                $evidence.Add([pscustomobject][ordered]@{
+                    FeatureName = [string]$featureName
+                    Present     = $false
+                    State       = 'NotPresent'
+                    Error       = $null
+                    Evaluated   = $false
+                })
+                continue
+            }
             $evidence.Add([pscustomobject][ordered]@{
                 FeatureName = [string]$featureName
                 Present     = $true
-                State       = [string]$feature.State
+                State       = [string]$feature[0].State
                 Error       = $null
                 Evaluated   = $false
             })

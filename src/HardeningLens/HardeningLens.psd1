@@ -1,6 +1,6 @@
 @{
     RootModule           = 'HardeningLens.psm1'
-    ModuleVersion        = '1.1.0'
+    ModuleVersion        = '1.1.1'
     GUID                 = '1b1d694c-40f9-4db4-a7ad-b6ca5ad934af'
     Author               = 'xGreeny'
     CompanyName          = 'xGreeny'
@@ -32,7 +32,7 @@
             Tags         = @('Windows', 'Security', 'Hardening', 'Audit', 'PowerShell', 'Baseline', 'Drift', 'SecOps')
             LicenseUri   = 'https://github.com/xGreeny/hardening-lens/blob/main/LICENSE'
             ProjectUri   = 'https://github.com/xGreeny/hardening-lens'
-            ReleaseNotes = 'Operational release with collection provenance and caching, explainable drift, first-class fleet orchestration, policy gates, baseline validation, and governed exception lifecycle updates.'
+            ReleaseNotes = 'Maintenance release restoring advanced audit policy collection on Windows PowerShell 5.1 and treating optional features removed from the operating system as absent.'
         }
     }
 }

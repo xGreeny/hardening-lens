@@ -2,6 +2,13 @@
 
 All notable changes are documented here. The project follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] - 2026-07-21
+
+### Fixed
+
+- Marshal the advanced audit policy structure inside the embedded native helper. The Windows PowerShell 5.1 method binder could select the `PtrToStructure(IntPtr, object)` overload and fail every `HL-AUD-*` control with "The specified structure must be blittable or have layout information."
+- Treat an optional feature that the operating system no longer ships as absent instead of a collection error. Windows 11 24H2 removes the Windows PowerShell 2.0 features entirely, which previously turned `HL-PS-001` into `Error` even though absence satisfies the control.
+
 ## [1.1.0] - 2026-07-14
 
 ### Added
