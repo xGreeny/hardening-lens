@@ -162,3 +162,81 @@ Describe 'Legacy fleet assessment wrapper' {
         Should -Invoke Write-HLAtomicUtf8File -ModuleName HardeningLens -Times 1 -Exactly -ParameterFilter { $NoClobber }
     }
 }
+
+Describe 'Fleet publish move retry' {
+    BeforeDiscovery {
+        $script:IsWindowsPlatform = [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
+    }
+
+    BeforeAll {
+        $script:MoveFleetDirectory = {
+            param($Source, $Target, $Attempts, $DelayMs)
+            & (Get-Module HardeningLens) {
+                param($s, $t, $a, $d)
+                Move-HLFleetDirectory -Path $s -Destination $t -MaximumAttempts $a -RetryDelayMilliseconds $d
+            } $Source $Target $Attempts $DelayMs
+        }
+    }
+
+    BeforeEach {
+        $script:parent = Join-Path -Path $TestDrive -ChildPath ([guid]::NewGuid().ToString('N'))
+        [void](New-Item -Path $script:parent -ItemType Directory -Force)
+        $script:staging = Join-Path -Path $script:parent -ChildPath 'staging'
+        $script:destination = Join-Path -Path $script:parent -ChildPath 'committed'
+        [void](New-Item -Path $script:staging -ItemType Directory -Force)
+        Set-Content -LiteralPath (Join-Path -Path $script:staging -ChildPath 'artifact.json') -Value '{}' -Encoding Ascii
+    }
+
+    It 'moves a staged directory without any lock' {
+        & $script:MoveFleetDirectory $script:staging $script:destination 5 50
+        Test-Path -LiteralPath $script:destination -PathType Container | Should -BeTrue
+        Test-Path -LiteralPath $script:staging | Should -BeFalse
+    }
+
+    It 'fails fast when the source directory is missing' {
+        $missing = Join-Path -Path $script:parent -ChildPath 'does-not-exist'
+        $stopwatch = [Diagnostics.Stopwatch]::StartNew()
+        { & $script:MoveFleetDirectory $missing $script:destination 5 500 } | Should -Throw
+        $stopwatch.Stop()
+        $stopwatch.ElapsedMilliseconds | Should -BeLessThan 1500
+    }
+
+    It 'rethrows after bounded attempts while the lock persists' -Skip:(-not $IsWindowsPlatform) {
+        $lockFile = Join-Path -Path $script:staging -ChildPath 'artifact.json'
+        $stream = [IO.File]::Open($lockFile, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None)
+        try {
+            { & $script:MoveFleetDirectory $script:staging $script:destination 2 50 } | Should -Throw
+            Test-Path -LiteralPath $script:staging -PathType Container | Should -BeTrue
+            Test-Path -LiteralPath $script:destination | Should -BeFalse
+        }
+        finally {
+            $stream.Dispose()
+        }
+    }
+
+    It 'recovers when a transient lock is released during the retry window' -Skip:(-not $IsWindowsPlatform) {
+        $lockFile = Join-Path -Path $script:staging -ChildPath 'artifact.json'
+        $stream = [IO.File]::Open($lockFile, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None)
+        $job = Start-Job -ScriptBlock {
+            param($module, $source, $target)
+            Import-Module -Name $module -Force
+            & (Get-Module HardeningLens) {
+                param($s, $t)
+                Move-HLFleetDirectory -Path $s -Destination $t -MaximumAttempts 20 -RetryDelayMilliseconds 250
+            } $source $target
+        } -ArgumentList $script:ModulePath, $script:staging, $script:destination
+        try {
+            Start-Sleep -Milliseconds 1500
+            $stream.Dispose()
+            $null = $job | Wait-Job -Timeout 60
+            $job.State | Should -Be 'Completed'
+            Receive-Job -Job $job -ErrorAction Stop
+            Test-Path -LiteralPath $script:destination -PathType Container | Should -BeTrue
+            Test-Path -LiteralPath $script:staging | Should -BeFalse
+        }
+        finally {
+            if (-not $stream.SafeFileHandle.IsClosed) { $stream.Dispose() }
+            $job | Remove-Job -Force -ErrorAction SilentlyContinue
+        }
+    }
+}

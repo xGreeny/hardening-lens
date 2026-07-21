@@ -1,6 +1,6 @@
 @{
     RootModule           = 'HardeningLens.psm1'
-    ModuleVersion        = '1.2.0'
+    ModuleVersion        = '1.2.1'
     GUID                 = '1b1d694c-40f9-4db4-a7ad-b6ca5ad934af'
     Author               = 'xGreeny'
     CompanyName          = 'xGreeny'
@@ -33,7 +33,7 @@
             Tags         = @('Windows', 'Security', 'Hardening', 'Audit', 'PowerShell', 'Baseline', 'Drift', 'SecOps')
             LicenseUri   = 'https://github.com/xGreeny/hardening-lens/blob/main/LICENSE'
             ProjectUri   = 'https://github.com/xGreeny/hardening-lens'
-            ReleaseNotes = 'Locale-independent error classification, third-party antivirus awareness, aggregated fleet HTML reporting, and catalog 1.1.0 with six new controls for VBS, session security, Sudo, and domain-controller print spooler exposure.'
+            ReleaseNotes = 'Maintenance release: one cached optional-feature listing per scan, role-aware Guest account evaluation on domain controllers, truthful BitLocker and firewall results, and retry-hardened fleet run publication.'
         }
     }
 }

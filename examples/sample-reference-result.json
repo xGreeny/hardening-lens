@@ -1,10 +1,10 @@
 {
-  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.0/src/HardeningLens/Schema/result.schema.json",
+  "$schema": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.1/src/HardeningLens/Schema/result.schema.json",
   "schemaVersion": "1.1",
   "scan": {
     "id": "e747bf2b-e9de-4e5a-bffe-514e51b86fe8",
     "collectedAt": "2026-06-12T09:38:02.1200000Z",
-    "moduleVersion": "1.2.0",
+    "moduleVersion": "1.2.1",
     "redacted": false,
     "readOnly": true,
     "elevated": true,

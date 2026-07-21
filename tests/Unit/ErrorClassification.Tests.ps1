@@ -231,6 +231,28 @@ Describe 'Defender service unavailability classification' {
             $result.Status | Should -Be 'Fail'
             $result.Evidence.AMRunningMode | Should -Be 'Passive Mode'
             @($result.Evidence.ThirdPartyAntivirus)[0].DisplayName | Should -Be 'Acme Endpoint Security'
+            $result.Message | Should -Not -Match 'active antimalware engine'
+        }
+
+        It 'explains a switched-off protection while Defender runs in normal mode' {
+            Mock Get-MpComputerStatus {
+                [pscustomobject]@{
+                    RealTimeProtectionEnabled = $false
+                    AntivirusEnabled          = $true
+                    AMRunningMode             = 'Normal'
+                }
+            }
+            $control = [pscustomobject]@{
+                parameters = [pscustomobject]@{
+                    property = 'RealTimeProtectionEnabled'
+                    operator = 'Equals'
+                    expected = $true
+                }
+            }
+
+            $result = Invoke-HLDefenderStatusProbe -Control $control -CollectionContext $null
+            $result.Status | Should -Be 'Fail'
+            $result.Message | Should -Match 'active antimalware engine'
         }
     }
 }

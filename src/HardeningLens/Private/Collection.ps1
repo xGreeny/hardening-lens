@@ -114,7 +114,7 @@ function Get-HLProbeRegistry {
         LocalGuestAccount = [pscustomobject]@{
             RequiredCommands = @('Get-CimInstance')
             ParameterNames = @()
-            Handler = { param($control, $systemContext, $context) Invoke-HLLocalGuestAccountProbe }
+            Handler = { param($control, $systemContext, $context) Invoke-HLLocalGuestAccountProbe -SystemContext $systemContext }
         }
         CredentialGuard = [pscustomobject]@{
             RequiredCommands = @('Get-CimInstance')
@@ -154,7 +154,7 @@ function Get-HLProbeRegistry {
         WindowsOptionalFeature = [pscustomobject]@{
             RequiredCommands = @('Get-WindowsOptionalFeature')
             ParameterNames = @('evaluationMode', 'expectedState', 'features')
-            Handler = { param($control, $systemContext, $context) Invoke-HLWindowsOptionalFeatureProbe -Control $control }
+            Handler = { param($control, $systemContext, $context) Invoke-HLWindowsOptionalFeatureProbe -Control $control -CollectionContext $context }
         }
         SmbServer = [pscustomobject]@{
             RequiredCommands = @('Get-SmbServerConfiguration')
@@ -214,7 +214,7 @@ function Get-HLProbeRegistry {
         BitLocker = [pscustomobject]@{
             RequiredCommands = @('Get-BitLockerVolume')
             ParameterNames = @('mountPoint')
-            Handler = { param($control, $systemContext, $context) Invoke-HLBitLockerProbe -Control $control }
+            Handler = { param($control, $systemContext, $context) Invoke-HLBitLockerProbe -Control $control -SystemContext $systemContext }
         }
         SecureBoot = [pscustomobject]@{
             RequiredCommands = @('Confirm-SecureBootUEFI')

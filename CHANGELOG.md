@@ -2,6 +2,20 @@
 
 All notable changes are documented here. The project follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] - 2026-07-21
+
+### Fixed
+
+- Evaluate the domain built-in Guest account (RID 501) on domain controllers instead of returning `Unknown`; domain controllers have no local SAM. The Unknown path now records search evidence instead of null.
+- Report a server without the installed BitLocker feature as `Fail` ('BitLocker feature not installed') instead of `Unknown`; on server SKUs the absent optional feature proves the volume is unprotected. Client SKUs keep `Unknown` as a collection gap.
+- Give `HL-FW-002` its own expected state and message when firewall profiles are disabled, instead of repeating the profile-enablement wording of `HL-FW-001`.
+
+### Changed
+
+- Resolve every optional-feature control from one cached `Get-WindowsOptionalFeature` listing per scan instead of separate per-feature DISM queries, roughly halving collection time on typical servers. The per-feature query path remains as fallback when the listing itself fails.
+- Retry fleet run directory moves within a small bounded window when antivirus or indexing services briefly lock freshly written files. Genuine permission errors and missing directories still fail immediately, and the transactional commit guarantees are unchanged.
+- Explain Defender status failures that occur while `AMRunningMode` is `Normal`: the checked protection is switched off rather than superseded by a third-party platform.
+
 ## [1.2.0] - 2026-07-21
 
 ### Added

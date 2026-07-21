@@ -301,6 +301,43 @@ function Write-HLFleetCsvFile {
     Write-HLAtomicUtf8File -Path $Path -Content $content
 }
 
+function Move-HLFleetDirectory {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Internal transaction primitive controlled by the public command Force contract.')]
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path,
+
+        [Parameter(Mandatory)]
+        [string]$Destination,
+
+        [ValidateRange(1, 20)]
+        [int]$MaximumAttempts = 5,
+
+        [ValidateRange(0, 5000)]
+        [int]$RetryDelayMilliseconds = 250
+    )
+
+    for ($attempt = 1; $attempt -le $MaximumAttempts; $attempt++) {
+        try {
+            [IO.Directory]::Move($Path, $Destination)
+            return
+        }
+        catch [IO.DirectoryNotFoundException] {
+            # A missing source or destination parent never becomes movable.
+            throw
+        }
+        catch [IO.IOException], [UnauthorizedAccessException] {
+            # Antivirus and indexing services briefly lock freshly written
+            # files; retry within a small bounded window before failing.
+            if ($attempt -ge $MaximumAttempts) {
+                throw
+            }
+        }
+        Start-Sleep -Milliseconds $RetryDelayMilliseconds
+    }
+}
+
 function Publish-HLFleetRunDirectory {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '', Justification = 'Internal transaction commit controlled by the public command Force contract.')]
     [CmdletBinding()]
@@ -325,7 +362,7 @@ function Publish-HLFleetRunDirectory {
     }
 
     if (-not (Test-Path -LiteralPath $destinationFullPath)) {
-        [IO.Directory]::Move($stagingFullPath, $destinationFullPath)
+        Move-HLFleetDirectory -Path $stagingFullPath -Destination $destinationFullPath
         return
     }
     if (-not $Force) {
@@ -333,15 +370,15 @@ function Publish-HLFleetRunDirectory {
     }
 
     $backupPath = Join-Path -Path $parentPath -ChildPath ('.{0}.backup-{1}' -f [IO.Path]::GetFileName($destinationFullPath), [guid]::NewGuid().ToString('N'))
-    [IO.Directory]::Move($destinationFullPath, $backupPath)
+    Move-HLFleetDirectory -Path $destinationFullPath -Destination $backupPath
     try {
         try {
-            [IO.Directory]::Move($stagingFullPath, $destinationFullPath)
+            Move-HLFleetDirectory -Path $stagingFullPath -Destination $destinationFullPath
         }
         catch {
             $publishError = $_
             if ((Test-Path -LiteralPath $backupPath -PathType Container) -and -not (Test-Path -LiteralPath $destinationFullPath)) {
-                [IO.Directory]::Move($backupPath, $destinationFullPath)
+                Move-HLFleetDirectory -Path $backupPath -Destination $destinationFullPath
             }
             throw $publishError
         }
@@ -357,7 +394,7 @@ function Publish-HLFleetRunDirectory {
     }
     catch {
         if ((Test-Path -LiteralPath $backupPath -PathType Container) -and -not (Test-Path -LiteralPath $destinationFullPath)) {
-            [IO.Directory]::Move($backupPath, $destinationFullPath)
+            Move-HLFleetDirectory -Path $backupPath -Destination $destinationFullPath
         }
         throw
     }
@@ -782,7 +819,7 @@ function Invoke-HLFleetAssessment {
     $summary = Get-HLFleetAggregateSummary -HostResults $hostResultArray
     $completedAt = Get-HLFleetUtcNow
     $fleetResult = [pscustomobject][ordered]@{
-        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.0/src/HardeningLens/Schema/fleet-result.schema.json'
+        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.1/src/HardeningLens/Schema/fleet-result.schema.json'
         schemaVersion = '1.1'
         run           = [pscustomobject][ordered]@{
             id                = $runId

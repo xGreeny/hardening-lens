@@ -5,9 +5,9 @@ BeforeAll {
 }
 
 Describe 'Module manifest and public surface' {
-    It 'loads as version 1.2.0 on the current PowerShell edition' {
+    It 'loads as version 1.2.1 on the current PowerShell edition' {
         $manifest = Test-ModuleManifest -Path $script:ModulePath
-        $manifest.Version.ToString() | Should -Be '1.2.0'
+        $manifest.Version.ToString() | Should -Be '1.2.1'
         $manifest.PowerShellVersion | Should -Be ([version]'5.1')
     }
 

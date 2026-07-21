@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.0/src/HardeningLens/Schema/fleet-result.schema.json",
+  "$id": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.1/src/HardeningLens/Schema/fleet-result.schema.json",
   "title": "Hardening Lens fleet assessment result",
   "type": "object",
   "required": [
@@ -226,7 +226,7 @@
       "additionalProperties": false
     },
     "assessment": {
-      "$ref": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.0/src/HardeningLens/Schema/result.schema.json"
+      "$ref": "https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.1/src/HardeningLens/Schema/result.schema.json"
     },
     "hostResult": {
       "type": "object",

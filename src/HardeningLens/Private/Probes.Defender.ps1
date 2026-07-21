@@ -86,7 +86,13 @@ function Invoke-HLDefenderStatusProbe {
             $thirdParty = Get-HLThirdPartyAntivirusSnapshot -CollectionContext $CollectionContext
             $evidence | Add-Member -NotePropertyName ThirdPartyAntivirus -NotePropertyValue $(if ($null -ne $thirdParty) { @($thirdParty) } else { $null })
         }
-        return Get-HLValueProbeResult -Actual $actual -Expected $Control.parameters.expected -Operator ([string]$Control.parameters.operator) -Evidence $evidence
+        $failureMessage = if ([string]$evidence.AMRunningMode -eq 'Normal') {
+            'The effective value does not match the baseline. Microsoft Defender is the active antimalware engine (AMRunningMode Normal); the checked protection is switched off rather than superseded by a third-party platform.'
+        }
+        else {
+            'The effective value does not match the baseline.'
+        }
+        return Get-HLValueProbeResult -Actual $actual -Expected $Control.parameters.expected -Operator ([string]$Control.parameters.operator) -FailureMessage $failureMessage -Evidence $evidence
     }
     catch {
         $unavailable = Get-HLDefenderServiceUnavailableResult -CollectionContext $CollectionContext -ErrorRecord $_ -Expected $Control.parameters.expected

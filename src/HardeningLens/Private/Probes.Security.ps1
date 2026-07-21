@@ -53,10 +53,23 @@ function Invoke-HLBitLockerProbe {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [object]$Control
+        [object]$Control,
+
+        [AllowNull()]
+        [object]$SystemContext
     )
 
     if ($null -eq (Get-Command -Name Get-BitLockerVolume -ErrorAction SilentlyContinue)) {
+        $productType = if ($null -ne $SystemContext) { [int]$SystemContext.ProductType } else { 0 }
+        if ($productType -in @(2, 3)) {
+            # On server SKUs the BitLocker feature is optional; its absence
+            # proves the volume is unprotected rather than unresolvable.
+            $evidence = [pscustomobject][ordered]@{
+                BitLockerFeatureInstalled = $false
+                ProductType               = $productType
+            }
+            return Get-HLProbeResult -Status Fail -Expected 'BitLocker protection enabled' -Actual 'BitLocker feature not installed' -Message 'The BitLocker feature is not installed on this server, so the operating system volume is not protected by BitLocker.' -Evidence $evidence
+        }
         return Get-HLProbeResult -Status Unknown -Expected 'BitLocker protection enabled' -Actual $null -Message 'Get-BitLockerVolume is not available.'
     }
 

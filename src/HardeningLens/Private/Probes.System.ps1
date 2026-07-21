@@ -1,16 +1,47 @@
 function Invoke-HLLocalGuestAccountProbe {
     [CmdletBinding()]
-    param()
+    param(
+        [AllowNull()]
+        [object]$SystemContext
+    )
 
+    $isDomainController = $null -ne $SystemContext -and [string]$SystemContext.DetectedRole -eq 'DomainController'
     try {
-        $accounts = @(Get-CimInstance -ClassName Win32_UserAccount -Filter 'LocalAccount=True' -ErrorAction Stop)
-        $guest = $accounts | Where-Object { [string]$_.SID -match '-501$' } | Select-Object -First 1
+        if ($isDomainController) {
+            # Domain controllers have no local SAM; the built-in Guest is the
+            # RID 501 account of the DC's own domain. Lookups stay SID-based
+            # because the account name is localized.
+            $scope = 'Domain accounts (RID 501)'
+            $accounts = @(Get-CimInstance -ClassName Win32_UserAccount -Filter "SID LIKE '%-501'" -ErrorAction Stop)
+            # Win32_UserAccount reports the NetBIOS domain, which can differ
+            # from the DNS prefix; prefer the match, fall back to the only hit.
+            $domainLabel = (([string]$SystemContext.Domain) -split '\.')[0]
+            $guest = $accounts | Where-Object { [string]$_.Domain -ieq $domainLabel } | Select-Object -First 1
+            if ($null -eq $guest) {
+                $guest = $accounts | Select-Object -First 1
+            }
+        }
+        else {
+            $scope = 'Local accounts'
+            $accounts = @(Get-CimInstance -ClassName Win32_UserAccount -Filter 'LocalAccount=True' -ErrorAction Stop)
+            $guest = $accounts | Where-Object { [string]$_.SID -match '-501$' } | Select-Object -First 1
+        }
+
         if ($null -eq $guest) {
-            return Get-HLProbeResult -Status Unknown -Expected 'Disabled' -Actual 'Built-in Guest account not located' -Message 'The RID 501 local account could not be located.'
+            $searchEvidence = [pscustomobject][ordered]@{
+                Scope            = $scope
+                SidSuffix        = '-501'
+                DetectedRole     = if ($null -ne $SystemContext) { [string]$SystemContext.DetectedRole } else { $null }
+                Domain           = if ($null -ne $SystemContext) { [string]$SystemContext.Domain } else { $null }
+                AccountsExamined = $accounts.Count
+            }
+            return Get-HLProbeResult -Status Unknown -Expected 'Disabled' -Actual 'Built-in Guest account not located' -Message 'The RID 501 built-in Guest account could not be located in the examined scope.' -Evidence $searchEvidence
         }
 
         $evidence = [pscustomobject][ordered]@{
             Name     = [string]$guest.Name
+            Domain   = [string]$guest.Domain
+            Scope    = $scope
             SID      = [string]$guest.SID
             Disabled = [bool]$guest.Disabled
             Status   = [string]$guest.Status
@@ -21,7 +52,7 @@ function Invoke-HLLocalGuestAccountProbe {
         return Get-HLProbeResult -Status Fail -Expected 'Disabled' -Actual 'Enabled' -Message 'The built-in Guest account is enabled.' -Evidence $evidence
     }
     catch {
-        return Get-HLProbeResult -Status Error -Expected 'Disabled' -Actual $null -Message "Unable to query local accounts: $($_.Exception.Message)"
+        return Get-HLProbeResult -Status Error -Expected 'Disabled' -Actual $null -Message "Unable to query the built-in Guest account: $($_.Exception.Message)"
     }
 }
 
@@ -126,7 +157,11 @@ function Invoke-HLFirewallProfilesProbe {
         $requireInboundBlock = (Test-HLProperty -InputObject $Control.parameters -Name 'requireDefaultInboundBlock') -and [bool]$Control.parameters.requireDefaultInboundBlock
 
         if ($disabled.Count -gt 0) {
-            return Get-HLProbeResult -Status Fail -Expected 'All firewall profiles enabled' -Actual ('Disabled or unresolved: {0}' -f (@($disabled.Name) -join ', ')) -Message 'One or more Windows Firewall profiles are disabled.' -Evidence $evidence
+            $disabledNames = @($disabled.Name) -join ', '
+            if ($requireInboundBlock) {
+                return Get-HLProbeResult -Status Fail -Expected 'Default inbound action Block on every enabled profile' -Actual ('Profile disabled: {0}' -f $disabledNames) -Message 'The default inbound action cannot take effect because one or more Windows Firewall profiles are disabled.' -Evidence $evidence
+            }
+            return Get-HLProbeResult -Status Fail -Expected 'All firewall profiles enabled' -Actual ('Disabled or unresolved: {0}' -f $disabledNames) -Message 'One or more Windows Firewall profiles are disabled.' -Evidence $evidence
         }
         if ($requireInboundBlock -and $notBlocking.Count -gt 0) {
             return Get-HLProbeResult -Status Fail -Expected 'Default inbound action Block for all profiles' -Actual ('Not blocking: {0}' -f (@($notBlocking.Name) -join ', ')) -Message 'One or more firewall profiles do not use a default inbound Block action.' -Evidence $evidence
@@ -144,7 +179,10 @@ function Invoke-HLWindowsOptionalFeatureProbe {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [object]$Control
+        [object]$Control,
+
+        [AllowNull()]
+        [object]$CollectionContext
     )
 
     if ($null -eq (Get-Command -Name Get-WindowsOptionalFeature -ErrorAction SilentlyContinue)) {
@@ -155,7 +193,48 @@ function Invoke-HLWindowsOptionalFeatureProbe {
     $evidence = New-Object System.Collections.Generic.List[object]
     $queryErrors = New-Object System.Collections.Generic.List[string]
 
+    # One full listing serves every optional-feature control in a scan; the
+    # per-feature query path below remains the fallback when the listing fails.
+    $listing = Get-HLProviderSnapshot -CollectionContext $CollectionContext -Name 'WindowsOptionalFeatures' -Factory {
+        try {
+            @(Get-WindowsOptionalFeature -Online -ErrorAction Stop | Where-Object { $null -ne $_ })
+        }
+        catch {
+            $null
+        }
+    }
+
+    $featureStates = $null
+    if ($null -ne $listing) {
+        $featureStates = New-Object 'System.Collections.Generic.Dictionary[string,string]' ([StringComparer]::OrdinalIgnoreCase)
+        foreach ($item in @($listing)) {
+            $featureStates[[string]$item.FeatureName] = [string]$item.State
+        }
+    }
+
     foreach ($featureName in @($Control.parameters.features)) {
+        if ($null -ne $featureStates) {
+            if ($featureStates.ContainsKey([string]$featureName)) {
+                $evidence.Add([pscustomobject][ordered]@{
+                    FeatureName = [string]$featureName
+                    Present     = $true
+                    State       = $featureStates[[string]$featureName]
+                    Error       = $null
+                    Evaluated   = $false
+                })
+            }
+            else {
+                $evidence.Add([pscustomobject][ordered]@{
+                    FeatureName = [string]$featureName
+                    Present     = $false
+                    State       = 'NotPresent'
+                    Error       = $null
+                    Evaluated   = $false
+                })
+            }
+            continue
+        }
+
         try {
             $feature = @(Get-WindowsOptionalFeature -Online -FeatureName ([string]$featureName) -ErrorAction Stop | Where-Object { $null -ne $_ })
             if ($feature.Count -eq 0) {
