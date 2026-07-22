@@ -39,7 +39,7 @@ function New-HardeningLensExceptionFile {
         [switch]$Force
     )
 
-    $fullPath = [IO.Path]::GetFullPath($Path)
+    $fullPath = ConvertTo-HLFullPath -Path $Path
     if ((Test-Path -LiteralPath $fullPath) -and -not $Force) {
         throw "File already exists: $fullPath. Use -Force to overwrite."
     }

@@ -74,6 +74,23 @@ function Get-HLModuleVersion {
     }
 }
 
+function ConvertTo-HLFullPath {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Path
+    )
+
+    if ([IO.Path]::IsPathRooted($Path)) {
+        return [IO.Path]::GetFullPath($Path)
+    }
+    # .NET resolves relative paths against the process working directory,
+    # which PowerShell does not update on Set-Location; anchor to $PWD.
+    $currentLocation = (Get-Location -PSProvider FileSystem).ProviderPath
+    return [IO.Path]::GetFullPath((Join-Path -Path $currentLocation -ChildPath $Path))
+}
+
 function Get-HLSeverityWeight {
     [CmdletBinding()]
     param(

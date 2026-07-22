@@ -819,7 +819,7 @@ function Invoke-HLFleetAssessment {
     $summary = Get-HLFleetAggregateSummary -HostResults $hostResultArray
     $completedAt = Get-HLFleetUtcNow
     $fleetResult = [pscustomobject][ordered]@{
-        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.1/src/HardeningLens/Schema/fleet-result.schema.json'
+        '$schema'     = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.2/src/HardeningLens/Schema/fleet-result.schema.json'
         schemaVersion = '1.1'
         run           = [pscustomobject][ordered]@{
             id                = $runId

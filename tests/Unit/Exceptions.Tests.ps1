@@ -80,6 +80,17 @@ Describe 'Exception register validation' {
         { New-HardeningLensExceptionFile @parameters } | Should -Throw '*CompensatingControl*'
     }
 
+    It 'resolves a relative register path against the PowerShell location' {
+        Push-Location -LiteralPath $TestDrive
+        try {
+            $null = New-HardeningLensExceptionFile -Path .\relative-register.json
+        }
+        finally {
+            Pop-Location
+        }
+        Join-Path -Path $TestDrive -ChildPath 'relative-register.json' | Should -Exist
+    }
+
     It 'creates a valid Approved exception entry' {
         $path = Join-Path -Path $TestDrive -ChildPath 'approved-exception.json'
         $null = New-HardeningLensExceptionFile `

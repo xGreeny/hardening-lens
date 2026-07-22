@@ -2,6 +2,12 @@
 
 All notable changes are documented here. The project follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.2] - 2026-07-21
+
+### Fixed
+
+- Resolve relative output paths against the PowerShell location instead of the process working directory. `Compare-HardeningLensResult -OutputPath .\drift.md`, `New-HardeningLensExceptionFile`, and the atomic register writer previously created files in the directory where the PowerShell process started rather than the caller's current directory.
+
 ## [1.2.1] - 2026-07-21
 
 ### Fixed

@@ -5,7 +5,7 @@ function Get-HLFileLockName {
         [string]$Path
     )
 
-    $pathKey = [IO.Path]::GetFullPath($Path)
+    $pathKey = ConvertTo-HLFullPath -Path $Path
     $isWindows = [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
     if ($isWindows) {
         $pathKey = $pathKey.ToUpperInvariant()
@@ -34,7 +34,7 @@ function Enter-HLFileLock {
         [int]$TimeoutMilliseconds = 15000
     )
 
-    $fullPath = [IO.Path]::GetFullPath($Path)
+    $fullPath = ConvertTo-HLFullPath -Path $Path
     $mutexName = Get-HLFileLockName -Path $fullPath
     $mutex = New-Object System.Threading.Mutex($false, $mutexName)
     $acquired = $false
@@ -89,7 +89,7 @@ function Write-HLAtomicUtf8File {
         [switch]$NoClobber
     )
 
-    $fullPath = [IO.Path]::GetFullPath($Path)
+    $fullPath = ConvertTo-HLFullPath -Path $Path
     $parent = Split-Path -Path $fullPath -Parent
     if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
         throw "Parent directory does not exist: $parent"

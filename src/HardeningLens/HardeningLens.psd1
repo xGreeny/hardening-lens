@@ -1,6 +1,6 @@
 @{
     RootModule           = 'HardeningLens.psm1'
-    ModuleVersion        = '1.2.1'
+    ModuleVersion        = '1.2.2'
     GUID                 = '1b1d694c-40f9-4db4-a7ad-b6ca5ad934af'
     Author               = 'xGreeny'
     CompanyName          = 'xGreeny'
@@ -33,7 +33,7 @@
             Tags         = @('Windows', 'Security', 'Hardening', 'Audit', 'PowerShell', 'Baseline', 'Drift', 'SecOps')
             LicenseUri   = 'https://github.com/xGreeny/hardening-lens/blob/main/LICENSE'
             ProjectUri   = 'https://github.com/xGreeny/hardening-lens'
-            ReleaseNotes = 'Maintenance release: one cached optional-feature listing per scan, role-aware Guest account evaluation on domain controllers, truthful BitLocker and firewall results, and retry-hardened fleet run publication.'
+            ReleaseNotes = 'Maintenance release: relative output paths for drift reports and exception registers now resolve against the PowerShell location instead of the process working directory.'
         }
     }
 }

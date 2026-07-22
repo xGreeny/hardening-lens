@@ -199,6 +199,19 @@ Describe 'Posture drift comparison' {
         { Compare-HardeningLensResult -Reference $reference -Difference $difference -AllowCrossBaselineComparison } | Should -Not -Throw
     }
 
+    It 'resolves a relative OutputPath against the PowerShell location' {
+        # Regression: [IO.Path]::GetFullPath resolves against the process
+        # working directory, which PowerShell does not update on Set-Location.
+        Push-Location -LiteralPath $TestDrive
+        try {
+            $null = Compare-HardeningLensResult -Reference $script:ReferencePath -Difference $script:DifferencePath -Format Markdown -OutputPath .\relative-drift.md
+        }
+        finally {
+            Pop-Location
+        }
+        Join-Path -Path $TestDrive -ChildPath 'relative-drift.md' | Should -Exist
+    }
+
     It 'writes deterministic Markdown and JSON contracts' {
         $markdownPath = Join-Path -Path $TestDrive -ChildPath 'drift.md'
         $jsonPath = Join-Path -Path $TestDrive -ChildPath 'drift.json'

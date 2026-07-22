@@ -82,12 +82,13 @@ function Compare-HardeningLensResult {
     $comparison = Compare-HLScanResult -Reference $referenceResult -Difference $differenceResult
 
     if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
-        $parent = Split-Path -Path $OutputPath -Parent
+        $resolvedOutputPath = ConvertTo-HLFullPath -Path $OutputPath
+        $parent = Split-Path -Path $resolvedOutputPath -Parent
         if (-not [string]::IsNullOrWhiteSpace($parent) -and -not (Test-Path -LiteralPath $parent -PathType Container)) {
             [void](New-Item -Path $parent -ItemType Directory -Force)
         }
         $content = if ($Format -eq 'Json') { ($comparison | ConvertTo-Json -Depth 30) + [Environment]::NewLine } else { (ConvertTo-HLComparisonMarkdown -Comparison $comparison) + [Environment]::NewLine }
-        Write-HLUtf8File -Path ([IO.Path]::GetFullPath($OutputPath)) -Content $content
+        Write-HLUtf8File -Path $resolvedOutputPath -Content $content
     }
 
     $PSCmdlet.WriteObject($comparison, $false)

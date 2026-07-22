@@ -458,7 +458,7 @@ function Compare-HLScanResult {
     $differenceCapabilities = if ($null -ne $differenceCapabilityValue) { @($differenceCapabilityValue) } else { @() }
 
     return [pscustomobject][ordered]@{
-        '$schema'      = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.1/src/HardeningLens/Schema/comparison.schema.json'
+        '$schema'      = 'https://raw.githubusercontent.com/xGreeny/hardening-lens/v1.2.2/src/HardeningLens/Schema/comparison.schema.json'
         schemaVersion  = '1.1'
         comparedAt     = (Get-Date).ToUniversalTime().ToString('o')
         computerName   = [string]$Difference.system.ComputerName
