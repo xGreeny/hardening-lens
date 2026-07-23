@@ -10,6 +10,7 @@
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-55e69d"></a>
   <a href="docs/CONTROL_REFERENCE.md"><img alt="64 controls" src="https://img.shields.io/badge/controls-64-55e69d"></a>
   <a href="https://www.powershellgallery.com/packages/HardeningLens"><img alt="PowerShell Gallery" src="https://img.shields.io/powershellgallery/v/HardeningLens?label=PSGallery&color=55e69d"></a>
+  <a href="https://www.powershellgallery.com/packages/HardeningLens"><img alt="PSGallery Downloads" src="https://img.shields.io/powershellgallery/dt/HardeningLens?label=downloads&color=55e69d"></a>
 </p>
 
 **Hardening Lens turns effective Windows security configuration into evidence you can review, diff, and govern.** It evaluates a local device against a role-aware baseline, explains every finding, applies only valid time-bounded exceptions, and exports a self-contained report without changing Windows configuration.
@@ -282,6 +283,10 @@ Pipe the run into `Export-HardeningLensFleetReport` for one aggregated, self-con
 Invoke-HardeningLensFleet -ComputerName SRV-APP-01, SRV-FILE-01 -Baseline MemberServer -OutputDirectory .\fleet-results |
     Export-HardeningLensFleetReport -OutputDirectory .\fleet-results
 ```
+
+<p align="center">
+  <img src="docs/assets/sample-fleet-report.png" alt="Hardening Lens fleet report showing aggregated metrics and a filterable per-host table with scores, status counts, and a failed collection" width="92%">
+</p>
 
 See the [operations guide](docs/OPERATIONS.md).
 

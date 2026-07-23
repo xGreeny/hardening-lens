@@ -2,6 +2,12 @@
 
 All notable changes are documented here. The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Show the recorded error message for failed hosts in the fleet HTML report instead of the raw error object JSON.
+
 ## [1.2.2] - 2026-07-21
 
 ### Fixed

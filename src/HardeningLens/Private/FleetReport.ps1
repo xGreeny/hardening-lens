@@ -179,7 +179,12 @@ a{color:var(--accent)}code,pre,.mono{font-family:"Cascadia Code","SFMono-Regular
             [void]$builder.AppendLine(('<tr data-status="{0}" data-search="{1}"><td><strong class="mono">{2}</strong></td><td><span class="badge {3}">{0}</span></td><td class="mono">{4}</td><td class="mono">{5}</td><td>{6}</td><td>{7}</td><td>{8}</td><td>{9}</td><td>{10}</td><td>{11}</td><td class="severity {12}">{13}</td><td class="small">{14}</td></tr>' -f (ConvertTo-HLHtmlEncoded $status),(ConvertTo-HLHtmlEncoded $searchText),(ConvertTo-HLHtmlEncoded $hostName),$statusClass,(ConvertTo-HLHtmlEncoded $hostScore),(ConvertTo-HLHtmlEncoded $hostCoverage),(ConvertTo-HLHtmlEncoded $hostSummary.Pass),(ConvertTo-HLHtmlEncoded $hostSummary.Fail),(ConvertTo-HLHtmlEncoded $hostSummary.Warning),(ConvertTo-HLHtmlEncoded $hostSummary.Excepted),(ConvertTo-HLHtmlEncoded $hostSummary.Unknown),(ConvertTo-HLHtmlEncoded $hostSummary.Error),(Get-HLSeverityClass -Severity ([string]$hostSummary.HighestOpenSeverity)),(ConvertTo-HLHtmlEncoded $hostSummary.HighestOpenSeverity),(ConvertTo-HLHtmlEncoded $detail)))
         }
         else {
-            $errorText = if ((Test-HLProperty -InputObject $hostEntry -Name 'error') -and $null -ne $hostEntry.error) { ConvertTo-HLDisplayString -Value $hostEntry.error } else { 'No detail recorded.' }
+            $errorText = if ((Test-HLProperty -InputObject $hostEntry -Name 'error') -and $null -ne $hostEntry.error) {
+                if (Test-HLProperty -InputObject $hostEntry.error -Name 'message') { [string]$hostEntry.error.message } else { ConvertTo-HLDisplayString -Value $hostEntry.error }
+            }
+            else {
+                'No detail recorded.'
+            }
             [void]$builder.AppendLine(('<tr data-status="{0}" data-search="{1}"><td><strong class="mono">{2}</strong></td><td><span class="badge {3}">{0}</span></td><td class="mono">n/a</td><td class="mono">n/a</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td class="small">{4}</td></tr>' -f (ConvertTo-HLHtmlEncoded $status),(ConvertTo-HLHtmlEncoded $searchText),(ConvertTo-HLHtmlEncoded $hostName),$statusClass,(ConvertTo-HLHtmlEncoded $errorText)))
         }
     }
