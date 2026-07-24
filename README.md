@@ -364,4 +364,4 @@ Hardening Lens does **not** remediate settings, prove management-plane intent, c
 
 ## License
 
-[MIT](LICENSE) © 2026 xGreeny
+[MIT](LICENSE) © 2026 Flurin Gubler
